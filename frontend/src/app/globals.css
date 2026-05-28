@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-deep: #0a2353;
+  --color-brand-navy: #112c71;
+  --color-brand-indigo: #5b58eb;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #0a2353;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(91, 88, 235, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(91, 88, 235, 0.5);
+}
+
+/* Light Glassmorphic Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(17, 44, 113, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(10, 35, 83, 0.03);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-panel-hover:hover {
+  border-color: rgba(91, 88, 235, 0.3);
+  box-shadow: 0 12px 40px 0 rgba(91, 88, 235, 0.08);
+  transform: translateY(-2px);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(17, 44, 113, 0.18) !important;
+  color: #0a2353 !important;
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-input:focus {
+  border-color: rgba(91, 88, 235, 0.6) !important;
+  box-shadow: 0 0 12px rgba(91, 88, 235, 0.12) !important;
+  outline: none;
+  background: #ffffff !important;
+}
+.glass-input::placeholder {
+  color: rgba(17, 44, 113, 0.4) !important;
+}
+
+/* Solid Buttons (Single Color Theme) */
+.btn-primary {
+  background-color: #5b58eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  box-shadow: 0 4px 14px 0 rgba(91, 88, 235, 0.25);
+}
+.btn-primary:hover {
+  background-color: #4643d3;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px 0 rgba(91, 88, 235, 0.4);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background-color: #ffffff;
+  color: #112c71;
+  border: 1px solid rgba(17, 44, 113, 0.2);
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.btn-secondary:hover {
+  background-color: rgba(91, 88, 235, 0.05);
+  border-color: rgba(91, 88, 235, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Accent Glows */
+.glow-text-brand {
+  text-shadow: 0 0 10px rgba(91, 88, 235, 0.15);
+}
+.glow-border-brand {
+  box-shadow: 0 0 10px rgba(91, 88, 235, 0.08);
+}

@@ -1,0 +1,1561 @@
+"use client";
+
+import { useEffect, useState, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
+import {
+  User,
+  LogOut,
+  FolderOpen,
+  Award,
+  BarChart3,
+  Save,
+  FileText,
+  Upload,
+  Plus,
+  Trash2,
+  Globe,
+  Settings,
+  FileCheck,
+  RefreshCw,
+  Sparkles,
+  Zap,
+  Download,
+} from "lucide-react";
+
+function DashboardContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"profile" | "generate" | "batch" | "archive">("profile");
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
+  const [deleteCertId, setDeleteCertId] = useState<string | null>(null);
+
+  const triggerToast = (message: string, type: "success" | "error" | "info" = "info") => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast((prev) => (prev?.message === message ? null : prev));
+    }, 4000);
+  };
+
+  // Profile data state
+  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [profileRaw, setProfileRaw] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [parsingCv, setParsingCv] = useState(false);
+
+  // Master CV storage URL
+  const [masterCvUrl, setMasterCvUrl] = useState<string | null>(null);
+
+  // Certificates state
+  const [certificates, setCertificates] = useState<any[]>([]);
+  const [certUrls, setCertUrls] = useState<{ [id: string]: string }>({});
+  const [newCertName, setNewCertName] = useState("");
+  const [manualCertText, setManualCertText] = useState("");
+  const [certPdfFile, setCertPdfFile] = useState<File | null>(null);
+  const [uploadingCert, setUploadingCert] = useState(false);
+  const [previewCert, setPreviewCert] = useState<any | null>(null);
+
+  // Stats
+  const [stats, setStats] = useState({ appsCount: 0, certsCount: 0, avgAts: 0 });
+
+  // Job Scraper & Gen state
+  const [inputMethod, setInputMethod] = useState<"scrape" | "paste">("scrape");
+  const [jobUrl, setJobUrl] = useState("");
+  const [jobText, setJobText] = useState("");
+  const [isGeneral, setIsGeneral] = useState(false);
+  const [includeCoverLetter, setIncludeCoverLetter] = useState(false);
+  const [pendingPayment, setPendingPayment] = useState<{ amount: string; description: string; onConfirm: () => void } | null>(null);
+  const [selectedResume, setSelectedResume] = useState("ui_ux_pro_max_resume.html");
+  const [selectedCl, setSelectedCl] = useState("caleb_foster_cover_letter.html");
+  const [customInstructions, setCustomInstructions] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [genSteps, setGenSteps] = useState<string[]>([]);
+
+  // Batch autopilot
+  const [batchFile, setBatchFile] = useState<File | null>(null);
+  const [batchProcessing, setBatchProcessing] = useState(false);
+  const [batchLogs, setBatchLogs] = useState<string[]>([]);
+  const [batchProgress, setBatchProgress] = useState(0);
+
+  // Archive
+  const [applications, setApplications] = useState<any[]>([]);
+
+  // File inputs
+  const cvFileInputRef = useRef<HTMLInputElement>(null);
+  const certFileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        const checkoutType = searchParams.get("checkout");
+        const jobs = searchParams.get("jobs");
+        const bType = searchParams.get("batchType");
+        let redirectUrl = "/login?redirect=/dashboard";
+        if (checkoutType) {
+          redirectUrl += `?checkout=${checkoutType}`;
+          if (jobs) redirectUrl += `%26jobs=${jobs}`;
+          if (bType) redirectUrl += `%26batchType=${bType}`;
+        }
+        router.push(redirectUrl);
+      } else {
+        setUser(user);
+        await loadUserData(user.id);
+
+        // Check if redirect query parameters contain checkout info
+        const checkoutType = searchParams.get("checkout");
+        if (checkoutType) {
+          if (checkoutType === "resume") {
+            setPendingPayment({
+              amount: "R 18.00",
+              description: "Tailored Resume Only Plan",
+              onConfirm: () => {
+                triggerToast("Payment successful! Access granted.", "success");
+                router.replace("/dashboard");
+              }
+            });
+          } else if (checkoutType === "combo") {
+            setPendingPayment({
+              amount: "R 25.00",
+              description: "Tailored Resume & Cover Letter Combo",
+              onConfirm: () => {
+                triggerToast("Payment successful! Access granted.", "success");
+                router.replace("/dashboard");
+              }
+            });
+          } else if (checkoutType === "batch") {
+            const jobs = parseInt(searchParams.get("jobs") || "5") || 5;
+            const bType = searchParams.get("batchType") === "resume" ? "resume" : "combo";
+            const price = jobs * (bType === "resume" ? 18 : 25) * 0.922;
+            setPendingPayment({
+              amount: `R ${price.toFixed(2)}`,
+              description: `Batch Autopilot: ${jobs} Tailored Applications (${bType === "resume" ? "Resume Only" : "Combo"})`,
+              onConfirm: () => {
+                triggerToast("Payment successful! Access granted.", "success");
+                router.replace("/dashboard");
+              }
+            });
+          }
+        }
+      }
+      setLoading(false);
+    };
+    checkUser();
+  }, [router, searchParams]);
+
+  const loadUserData = async (userId: string) => {
+    try {
+      // 1. Fetch Profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("raw_info, username, first_name, last_name, phone")
+        .eq("id", userId)
+        .single();
+
+      let activeRawInfo = profile?.raw_info || "";
+
+      if (profile) {
+        setUsername(profile.username || "");
+        setFirstName(profile.first_name || "");
+        setLastName(profile.last_name || "");
+        setPhone(profile.phone || "");
+      }
+
+      // Fallback/Sync: If raw_info is empty, check if Master_CV.txt exists in storage
+      if (!activeRawInfo.trim()) {
+        try {
+          const { data: textData } = await supabase.storage
+            .from("resumes")
+            .download(`${userId}/master_cv/Master_CV.txt`);
+          if (textData) {
+            const textContent = await textData.text();
+            if (textContent.trim()) {
+              activeRawInfo = textContent;
+              // Sync back to database
+              await supabase.from("profiles").upsert({
+                id: userId,
+                raw_info: textContent,
+                updated_at: new Date().toISOString(),
+              });
+            }
+          }
+        } catch (e) {
+          // file may not exist yet
+        }
+      }
+      setProfileRaw(activeRawInfo);
+
+      // 2. Fetch Master CV File Download URL if exists in storage
+      try {
+        const { data: cvSignRes } = await supabase.storage
+          .from("resumes")
+          .createSignedUrl(`${userId}/master_cv/Master_CV.pdf`, 7200);
+        if (cvSignRes?.signedUrl) {
+          setMasterCvUrl(cvSignRes.signedUrl);
+        } else {
+          setMasterCvUrl(null);
+        }
+      } catch (e) {
+        setMasterCvUrl(null);
+      }
+
+      // 3. Fetch Certificates
+      const { data: certs } = await supabase
+        .from("certificates")
+        .select("*")
+        .eq("user_id", userId);
+      
+      const loadedCerts = certs || [];
+      setCertificates(loadedCerts);
+
+      // Fetch signed URLs for certificates
+      const loadedCertUrls: { [id: string]: string } = {};
+      for (const cert of loadedCerts) {
+        try {
+          const { data: cSignRes } = await supabase.storage
+            .from("resumes")
+            .createSignedUrl(`${userId}/certificates/${cert.id}.pdf`, 7200);
+          if (cSignRes?.signedUrl) {
+            loadedCertUrls[cert.id] = cSignRes.signedUrl;
+          }
+        } catch (e) {
+          // File might not exist
+        }
+      }
+      setCertUrls(loadedCertUrls);
+
+      // 4. Fetch Applications
+      const { data: apps } = await supabase
+        .from("applications")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      const loadedApps = apps || [];
+      setApplications(loadedApps);
+
+      // 5. Calculate Stats
+      const scoreRows = loadedApps.filter((a) => a.ats_score !== null);
+      const avg = scoreRows.length > 0
+        ? Math.round(scoreRows.reduce((sum, a) => sum + (a.ats_score || 0), 0) / scoreRows.length)
+        : 0;
+
+      setStats({
+        appsCount: loadedApps.length,
+        certsCount: loadedCerts.length,
+        avgAts: avg,
+      });
+    } catch (err) {
+      console.error("Error loading user data:", err);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    try {
+      const { error } = await supabase.from("profiles").upsert({
+        id: user.id,
+        username,
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        updated_at: new Date().toISOString(),
+      });
+      if (error) throw error;
+      triggerToast("Personal profile info saved successfully!", "success");
+    } catch (err: any) {
+      triggerToast("Failed to update profile: " + err.message, "error");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleUpdateMasterCvText = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    try {
+      // 1. Save text to database
+      const { error } = await supabase.from("profiles").upsert({
+        id: user.id,
+        raw_info: profileRaw,
+        updated_at: new Date().toISOString(),
+      });
+      if (error) throw error;
+
+      // 2. Compile Master CV to PDF and upload to Supabase Storage
+      const compileRes = await api.compileMasterCv(user.id, profileRaw);
+      if (compileRes.download_url) {
+        setMasterCvUrl(compileRes.download_url);
+      }
+
+      // 3. Upload raw text as a text file to Supabase Storage
+      const textBlob = new Blob([profileRaw], { type: "text/plain" });
+      const textFile = new File([textBlob], "Master_CV.txt", { type: "text/plain" });
+      await supabase.storage
+        .from("resumes")
+        .upload(`${user.id}/master_cv/Master_CV.txt`, textFile, { upsert: true });
+
+      triggerToast("Master CV raw text saved and PDF compiled successfully!", "success");
+    } catch (err: any) {
+      triggerToast("Failed to save CV text: " + err.message, "error");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleParseCvPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setParsingCv(true);
+    try {
+      // 1. Upload original PDF to Supabase Storage
+      await supabase.storage
+        .from("resumes")
+        .upload(`${user.id}/master_cv/Master_CV.pdf`, file, { upsert: true });
+
+      // 2. Call API to extract text and save it to the database
+      const res = await api.parseCv(file, user.id);
+      setProfileRaw(res.extracted_text);
+
+      // Upload raw text as a text file to Supabase Storage
+      const textBlob = new Blob([res.extracted_text], { type: "text/plain" });
+      const textFile = new File([textBlob], "Master_CV.txt", { type: "text/plain" });
+      await supabase.storage
+        .from("resumes")
+        .upload(`${user.id}/master_cv/Master_CV.txt`, textFile, { upsert: true });
+
+      // 3. Reload download URL
+      const { data: cvSignRes } = await supabase.storage
+        .from("resumes")
+        .createSignedUrl(`${user.id}/master_cv/Master_CV.pdf`, 7200);
+      if (cvSignRes?.signedUrl) {
+        setMasterCvUrl(cvSignRes.signedUrl);
+      }
+
+      triggerToast("Master CV PDF parsed, saved, and text updated successfully!", "success");
+    } catch (err: any) {
+      triggerToast("Parsing failed: " + err.message, "error");
+    } finally {
+      setParsingCv(false);
+      if (cvFileInputRef.current) cvFileInputRef.current.value = "";
+    }
+  };
+
+  const handleUploadCertificate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !newCertName.trim()) return;
+
+    setUploadingCert(true);
+    try {
+      let finalExtractedText = manualCertText;
+
+      // 1. Parse PDF in memory if uploaded
+      if (certPdfFile) {
+        const res = await api.parseCv(certPdfFile, user.id);
+        finalExtractedText = res.extracted_text;
+      }
+
+      if (!finalExtractedText.trim()) {
+        triggerToast("Please add text details or upload a valid credential PDF.", "error");
+        return;
+      }
+
+      // 2. Insert record into database certificates table
+      const { data: certRecord, error: insertError } = await supabase
+        .from("certificates")
+        .insert({
+          user_id: user.id,
+          name: newCertName,
+          extracted_text: finalExtractedText,
+        })
+        .select("id")
+        .single();
+
+      if (insertError) throw insertError;
+
+      // 3. Upload file to Supabase Storage using certificate ID
+      if (certPdfFile && certRecord) {
+        await supabase.storage
+          .from("resumes")
+          .upload(`${user.id}/certificates/${certRecord.id}.pdf`, certPdfFile, { upsert: true });
+      }
+
+      setNewCertName("");
+      setManualCertText("");
+      setCertPdfFile(null);
+      if (certFileInputRef.current) certFileInputRef.current.value = "";
+      
+      await loadUserData(user.id);
+      triggerToast("Credential uploaded and saved successfully!", "success");
+    } catch (err: any) {
+      triggerToast("Failed to save credential: " + err.message, "error");
+    } finally {
+      setUploadingCert(false);
+    }
+  };
+
+  const handleDeleteCert = (certId: string) => {
+    setDeleteCertId(certId);
+  };
+
+  const executeDeleteCert = async (certId: string) => {
+    try {
+      // 1. Delete from database
+      const { error } = await supabase.from("certificates").delete().eq("id", certId);
+      if (error) throw error;
+
+      // 2. Delete file from storage if it exists
+      try {
+        await supabase.storage.from("resumes").remove([`${user!.id}/certificates/${certId}.pdf`]);
+      } catch (se) {
+        // file might not exist
+      }
+
+      await loadUserData(user!.id);
+      triggerToast("Credential deleted successfully!", "success");
+    } catch (err: any) {
+      triggerToast("Failed to delete certificate: " + err.message, "error");
+    }
+  };
+
+  const handleLogOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
+  const handleGenerateWorkflow = async () => {
+    if (!profileRaw.trim()) {
+      triggerToast("Please load your Master CV Data in the Profile tab first.", "error");
+      return;
+    }
+
+    // 1. Detect multiple links in single job tailoring (URL scraper or pasted text)
+    if (!isGeneral) {
+      const textToSearch = inputMethod === "scrape" ? jobUrl : jobText;
+      const urlMatches = textToSearch?.match(/https?:\/\/[^\s]+/g);
+      if (urlMatches && urlMatches.length > 1) {
+        triggerToast(`Multiple job links detected (${urlMatches.length} links)! Which specific job should it tailor for? Please paste only a single job URL in this field, or use Batch Autopilot mode.`, "error");
+        return;
+      }
+    }
+
+    // Determine ZAR price based on the cover letter inclusion checkbox
+    const isCombo = includeCoverLetter;
+    const price = isCombo ? 25 : 18;
+    const desc = isCombo ? "Tailored Resume & Cover Letter Combo" : "Tailored Resume Only";
+
+    // Show Payment Gateway immediately (it is impossible to tailor/compile without paying first)
+    setPendingPayment({
+      amount: `R ${price.toFixed(2)}`,
+      description: desc,
+      onConfirm: () => {
+        executeGenerateWorkflow();
+      }
+    });
+  };
+
+  const executeGenerateWorkflow = async () => {
+    setGenerating(true);
+    setGenSteps(["Analyzing job description..."]);
+
+    try {
+      let company = "General";
+      let title = "Resume";
+      let requirements = { resume: true, cover_letter: includeCoverLetter };
+      let jobDescriptionText = "";
+
+      if (isGeneral) {
+        requirements = { resume: true, cover_letter: false };
+      } else {
+        let activeInputMethod = inputMethod;
+        let activeJobUrl = jobUrl;
+
+        // Auto-detect single URL pasted into job text area
+        if (inputMethod === "paste") {
+          const trimmed = jobText.trim();
+          const isUrl = /^https?:\/\/[^\s]+$/i.test(trimmed);
+          if (isUrl) {
+            activeInputMethod = "scrape";
+            activeJobUrl = trimmed;
+            setGenSteps((prev) => [...prev, "URL link detected in pasted text. Automatically scraping job details..."]);
+          }
+        }
+
+        if (activeInputMethod === "scrape") {
+          setGenSteps((prev) => [...prev, "Contacting scraping proxy server..."]);
+          const scrapeRes = await api.scrapeJob(activeJobUrl);
+          setGenSteps((prev) => [
+            ...prev,
+            `Successfully scraped! Detected: ${scrapeRes.job_title} at ${scrapeRes.company_name}`,
+          ]);
+          company = scrapeRes.company_name;
+          title = scrapeRes.job_title;
+          requirements = {
+            resume: true,
+            cover_letter: includeCoverLetter || scrapeRes.requirements.cover_letter
+          };
+          jobDescriptionText = scrapeRes.job_description;
+        } else {
+          jobDescriptionText = jobText;
+          company = "Extracted Company";
+          title = "Pasted Role";
+          requirements = { resume: true, cover_letter: includeCoverLetter };
+        }
+      }
+
+      await runSingleTailoring(company, title, requirements, jobDescriptionText);
+    } catch (err: any) {
+      setGenerating(false);
+      triggerToast("Failed to analyze job description: " + err.message, "error");
+    }
+  };
+
+  const runSingleTailoring = async (
+    company: string,
+    title: string,
+    requirements: { resume: boolean; cover_letter: boolean },
+    jobDescriptionText: string
+  ) => {
+    setGenerating(true);
+    setGenSteps((prev) => [...prev, "Payment confirmed. Beginning tailoring pipeline..."]);
+    try {
+      // Compile personal data including certs
+      let personalDataCombined = profileRaw;
+      if (firstName || lastName) {
+        personalDataCombined = `Name: ${firstName} ${lastName}\n` + (phone ? `Phone: ${phone}\n` : "") + personalDataCombined;
+      }
+      if (certificates.length > 0) {
+        personalDataCombined += "\n\n--- USER'S OFFICIALLY VERIFIED CERTIFICATES & CREDENTIALS ---\n";
+        certificates.forEach((c) => {
+          personalDataCombined += `Certificate: ${c.name}\nSkills & Text Extracted:\n${c.extracted_text}\n\n`;
+        });
+      }
+
+      let generatedResumeJson = null;
+      let generatedClJson = null;
+
+      setGenSteps((prev) => [...prev, "Generating content via OpenAI GPT-4o-mini..."]);
+      
+      if (requirements.resume) {
+        setGenSteps((prev) => [...prev, "Cooking tailored ATS Resume in JSON format..."]);
+        generatedResumeJson = await api.generateDoc(
+          jobDescriptionText,
+          personalDataCombined,
+          isGeneral ? "general_resume" : "resume",
+          customInstructions
+        );
+      }
+
+      if (requirements.cover_letter) {
+        setGenSteps((prev) => [...prev, "Writing matching Cover Letter JSON document..."]);
+        generatedClJson = await api.generateDoc(
+          jobDescriptionText,
+          personalDataCombined,
+          "cover_letter",
+          customInstructions
+        );
+      }
+
+      let currentAts = null;
+      if (requirements.resume && !isGeneral) {
+        setGenSteps((prev) => [...prev, "Running ATS match scan and keyword audit..."]);
+        currentAts = await api.getAtsScore(jobDescriptionText, generatedResumeJson);
+      }
+
+      setGenSteps((prev) => [...prev, "Success! Directing to Editor workspace..."]);
+
+      // Save to localStorage for editor access
+      localStorage.setItem("edit_resume_json", JSON.stringify(generatedResumeJson));
+      localStorage.setItem("edit_cl_json", JSON.stringify(generatedClJson));
+      localStorage.setItem("edit_company", company);
+      localStorage.setItem("edit_job_title", title);
+      localStorage.setItem("edit_ats_score", JSON.stringify(currentAts));
+      localStorage.setItem("edit_selected_resume_template", selectedResume);
+      localStorage.setItem("edit_selected_cl_template", selectedCl);
+
+      setTimeout(() => {
+        router.push("/editor");
+      }, 1000);
+    } catch (err: any) {
+      triggerToast("AI tailer pipeline failed: " + err.message, "error");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleBatchAutoPilot = async () => {
+    if (!batchFile || !profileRaw.trim()) {
+      triggerToast("Ensure you have a valid urls file uploaded and Master CV details loaded.", "error");
+      return;
+    }
+
+    try {
+      const text = await batchFile.text();
+      const urls = text.split("\n").map((u) => u.trim()).filter((u) => u.length > 0);
+      
+      if (urls.length === 0) {
+        triggerToast("No links found in file.", "error");
+        return;
+      }
+
+      // Calculate batch price: R25 combo per url with 7.8% discount
+      const baseCost = urls.length * 25;
+      const finalCost = baseCost * 0.922;
+
+      // Open payment gateway
+      setPendingPayment({
+        amount: `R ${finalCost.toFixed(2)}`,
+        description: `Batch Autopilot: ${urls.length} Tailored Applications (7.8% Discount Applied)`,
+        onConfirm: () => {
+          runAutopilotLoop(urls);
+        }
+      });
+    } catch (err: any) {
+      triggerToast("Autopilot setup failed: " + err.message, "error");
+    }
+  };
+
+  const runAutopilotLoop = async (urls: string[]) => {
+    setBatchProcessing(true);
+    setBatchLogs([]);
+    setBatchProgress(0);
+
+    try {
+      setBatchLogs((prev) => [...prev, `Found ${urls.length} target job listings to process.`]);
+
+      let personalDataCombined = profileRaw;
+      if (firstName || lastName) {
+        personalDataCombined = `Name: ${firstName} ${lastName}\n` + (phone ? `Phone: ${phone}\n` : "") + personalDataCombined;
+      }
+      if (certificates.length > 0) {
+        personalDataCombined += "\n\n--- USER'S OFFICIALLY VERIFIED CERTIFICATES ---\n";
+        certificates.forEach((c) => {
+          personalDataCombined += `Certificate: ${c.name}\n${c.extracted_text}\n\n`;
+        });
+      }
+
+      for (let i = 0; i < urls.length; i++) {
+        const url = urls[i];
+        setBatchLogs((prev) => [...prev, `[Job ${i + 1}/${urls.length}] Scraping URL: ${url.slice(0, 50)}...`]);
+        
+        try {
+          const sRes = await api.scrapeJob(url);
+          const cName = sRes.company_name;
+          const jTitle = sRes.job_title;
+          setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Processing ${jTitle} at ${cName}`]);
+
+          let resumeUrl = null;
+          let clUrl = null;
+          let appScore = null;
+
+          if (sRes.requirements.resume) {
+            setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Generating CV...`]);
+            const rJson = await api.generateDoc(sRes.job_description, personalDataCombined, "resume", customInstructions);
+            
+            setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Compiling CV PDF...`]);
+            const cRes = await api.compileDoc({
+              json_data: rJson,
+              template_name: selectedResume,
+              company_name: cName,
+              job_title: jTitle,
+              user_id: user.id,
+              doc_type: "resume"
+            });
+            resumeUrl = cRes.download_url;
+
+            // Score
+            const scRes = await api.getAtsScore(sRes.job_description, rJson);
+            appScore = scRes.score;
+          }
+
+          if (sRes.requirements.cover_letter) {
+            setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Generating Letter...`]);
+            const clJson = await api.generateDoc(sRes.job_description, personalDataCombined, "cover_letter", customInstructions);
+            
+            setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Compiling Letter PDF...`]);
+            const clcRes = await api.compileDoc({
+              json_data: clJson,
+              template_name: selectedCl,
+              company_name: cName,
+              job_title: jTitle,
+              user_id: user.id,
+              doc_type: "cover_letter"
+            });
+            clUrl = clcRes.download_url;
+          }
+
+          // Insert application
+          await supabase.from("applications").insert({
+            user_id: user.id,
+            company_name: cName,
+            job_title: jTitle,
+            ats_score: appScore,
+            resume_url: resumeUrl,
+            cover_letter_url: clUrl
+          });
+
+          setBatchLogs((prev) => [...prev, `✅ [Job ${i + 1}] Finished and logged into archive.`]);
+        } catch (e: any) {
+          setBatchLogs((prev) => [...prev, `❌ [Job ${i + 1}] Failed: ${e.message}`]);
+        }
+
+        setBatchProgress(Math.round(((i + 1) / urls.length) * 100));
+      }
+
+      await loadUserData(user.id);
+      setBatchLogs((prev) => [...prev, `Autopilot run complete!`]);
+    } catch (err: any) {
+      triggerToast("Autopilot run failed: " + err.message, "error");
+    } finally {
+      setBatchProcessing(false);
+    }
+  };
+
+  if (loading || !user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-brand-indigo border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-sm text-brand-navy/60">Loading user workspace...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col min-h-screen">
+      {/* Top Navbar */}
+      <nav className="glass-panel sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-t-0 border-x-0">
+        <div className="flex items-center gap-3">
+          <Sparkles className="w-6 h-6 text-brand-indigo animate-pulse" />
+          <span className="font-extrabold text-xl tracking-tight text-brand-deep">
+            ATS SaaS Suite
+          </span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-sm text-brand-navy">
+            <User className="w-4 h-4 text-brand-indigo" />
+            <span className="font-mono text-xs max-w-[120px] truncate">{username || user.email}</span>
+          </div>
+          <button
+            onClick={handleLogOut}
+            className="flex items-center gap-1.5 px-3 py-1.5 btn-secondary text-xs"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Log Out
+          </button>
+        </div>
+      </nav>
+
+      {/* Main Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-4 md:gap-6">
+          <div className="glass-panel p-6 rounded-xl text-center relative overflow-hidden group">
+            <div className="absolute right-0 top-0 w-24 h-24 bg-brand-indigo/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
+            <div className="text-3xl md:text-4xl font-extrabold text-brand-deep mb-1">{stats.appsCount}</div>
+            <div className="text-xs uppercase tracking-wider text-brand-navy/70 font-semibold flex items-center justify-center gap-1.5">
+              <FolderOpen className="w-3.5 h-3.5 text-brand-indigo" />
+              Tailored Apps
+            </div>
+          </div>
+
+          <div className="glass-panel p-6 rounded-xl text-center relative overflow-hidden group">
+            <div className="absolute right-0 top-0 w-24 h-24 bg-brand-indigo/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
+            <div className="text-3xl md:text-4xl font-extrabold text-brand-deep mb-1">{stats.certsCount}</div>
+            <div className="text-xs uppercase tracking-wider text-brand-navy/70 font-semibold flex items-center justify-center gap-1.5">
+              <Award className="w-3.5 h-3.5 text-brand-indigo" />
+              Credentials
+            </div>
+          </div>
+
+          <div className="glass-panel p-6 rounded-xl text-center relative overflow-hidden group">
+            <div className="absolute right-0 top-0 w-24 h-24 bg-brand-indigo/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
+            <div className="text-3xl md:text-4xl font-extrabold text-brand-deep mb-1">{stats.avgAts}%</div>
+            <div className="text-xs uppercase tracking-wider text-brand-navy/70 font-semibold flex items-center justify-center gap-1.5">
+              <BarChart3 className="w-3.5 h-3.5 text-brand-indigo" />
+              Average Match
+            </div>
+          </div>
+        </div>
+
+        {/* Workspace Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+          {/* Left Panel Sidebar Settings */}
+          <div className="glass-panel p-6 rounded-xl space-y-6 lg:sticky lg:top-24">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-brand-navy flex items-center gap-2 border-b border-brand-navy/15 pb-3">
+              <Settings className="w-4 h-4 text-brand-indigo" />
+              Parameters
+            </h3>
+
+            {/* Template selections */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-semibold text-brand-navy/70 uppercase mb-2">
+                  Resume Template
+                </label>
+                <select
+                  value={selectedResume}
+                  onChange={(e) => setSelectedResume(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-brand-navy/15 rounded-lg text-xs text-brand-deep focus:outline-none focus:border-brand-indigo"
+                >
+                  <option value="ui_ux_pro_max_resume.html">UI/UX Pro Max (Tailored)</option>
+                  <option value="ats_resume_template.html">ATS Clean Blueprint</option>
+                  <option value="david_turner_resume.html">David Turner (Modern Classic)</option>
+                  <option value="amy_stein_resume.html">Amy Stein (Elegant Design)</option>
+                  <option value="ava_martinez_resume.html">Ava Martinez (Minimalist)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold text-brand-navy/70 uppercase mb-2">
+                  Cover Letter Template
+                </label>
+                <select
+                  value={selectedCl}
+                  onChange={(e) => setSelectedCl(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-brand-navy/15 rounded-lg text-xs text-brand-deep focus:outline-none focus:border-brand-indigo"
+                >
+                  <option value="caleb_foster_cover_letter.html">Caleb Foster (Modern Bold)</option>
+                  <option value="takanori_ito_cover_letter.html">Takanori Ito (Formal)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold text-brand-navy/70 uppercase mb-2">
+                  AI Focus Instructions
+                </label>
+                <textarea
+                  value={customInstructions}
+                  onChange={(e) => setCustomInstructions(e.target.value)}
+                  placeholder="e.g. Focus heavily on my cloud engineering, keep the tone aggressive..."
+                  className="w-full h-24 px-3 py-2 bg-white border border-brand-navy/15 rounded-lg text-xs text-brand-deep placeholder-brand-navy/30 focus:outline-none focus:border-brand-indigo resize-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Panel Main Tabs */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Navigation Tabs */}
+            <div className="flex border-b border-brand-navy/15 gap-6">
+              {[
+                { id: "profile", label: "My Profile & CV" },
+                { id: "generate", label: "Tailor (Single Job)" },
+                { id: "batch", label: "Batch Autopilot" },
+                { id: "archive", label: "Saved Archives" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`pb-3 text-sm font-medium transition-all relative ${
+                    activeTab === tab.id
+                      ? "text-brand-deep font-semibold"
+                      : "text-brand-navy/70 hover:text-brand-deep"
+                  }`}
+                >
+                  {tab.label}
+                  {activeTab === tab.id && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand-indigo"></span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* TAB A: PROFILE & MASTER DOCUMENTS */}
+            {activeTab === "profile" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <div className="glass-panel p-6 rounded-xl space-y-6">
+                  <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
+                    <User className="w-5 h-5 text-brand-indigo" />
+                    Personal Information
+                  </h3>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs text-brand-navy/70 mb-1">Username</label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 glass-input text-sm"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-brand-navy/70 mb-1">First Name</label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 glass-input text-sm"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-brand-navy/70 mb-1">Last Name</label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 glass-input text-sm"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-brand-navy/70 mb-1">Mobile Number</label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 glass-input text-sm"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      onClick={handleUpdateProfile}
+                      disabled={savingProfile}
+                      className="w-full py-2 btn-secondary text-sm flex items-center justify-center gap-2"
+                    >
+                      <Save className="w-4 h-4 text-brand-indigo" />
+                      {savingProfile ? "Saving..." : "Update Profile Info"}
+                    </button>
+                  </div>
+
+                  <div className="pt-4 border-t border-brand-navy/15">
+                    <h4 className="text-sm font-bold text-brand-deep mb-2">Master CV Text Data</h4>
+                    <p className="text-xs text-brand-navy/70 mb-4">
+                      This represents your core background resume text. AI will use it as base data.
+                    </p>
+                    <textarea
+                      value={profileRaw}
+                      onChange={(e) => setProfileRaw(e.target.value)}
+                      className="w-full h-48 px-3 py-2 glass-input text-xs"
+                      placeholder="Paste your general resume experience details..."
+                    />
+                    <button
+                      onClick={handleUpdateMasterCvText}
+                      disabled={savingProfile}
+                      className="w-full py-2 btn-secondary text-sm mt-3 flex items-center justify-center gap-2"
+                    >
+                      <Save className="w-4 h-4 text-brand-indigo" />
+                      Save Master CV Text
+                    </button>
+                  </div>
+                </div>
+
+                <div className="glass-panel p-6 rounded-xl space-y-6">
+                  <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
+                    <Upload className="w-5 h-5 text-brand-indigo" />
+                    Load CV & Certificates
+                  </h3>
+
+                  <div className="space-y-4">
+                    <div className="p-4 border border-dashed border-brand-navy/20 rounded-xl bg-brand-navy/[0.01] hover:bg-brand-navy/[0.03] transition-colors relative flex flex-col items-center justify-center text-center">
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        ref={cvFileInputRef}
+                        onChange={handleParseCvPdf}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={parsingCv}
+                      />
+                      <FileText className="w-8 h-8 text-brand-indigo mb-2" />
+                      <span className="text-xs font-semibold text-brand-deep">Parse Master CV from PDF</span>
+                      <span className="text-[10px] text-brand-navy/60 mt-1">Upload PDF to overwrite text history</span>
+                      {parsingCv && <span className="text-xs text-brand-indigo animate-pulse mt-2">Reading PDF text...</span>}
+                    </div>
+
+                    {/* Master CV File details preview/download */}
+                    {masterCvUrl && (
+                      <div className="p-3.5 rounded-lg bg-brand-navy/5 border border-brand-navy/10 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4.5 h-4.5 text-brand-indigo" />
+                          <span className="text-xs font-bold text-brand-deep">Active Master CV PDF</span>
+                        </div>
+                        <a
+                          href={masterCvUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1 px-2.5 btn-secondary text-[10px] font-bold flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3 text-brand-indigo" />
+                          Download
+                        </a>
+                      </div>
+                    )}
+
+                    <div className="pt-4 border-t border-brand-navy/15 space-y-4">
+                      <h4 className="text-sm font-bold text-brand-deep flex items-center gap-1.5">
+                        <Award className="w-4 h-4 text-brand-indigo" />
+                        Credentials & Certificates
+                      </h4>
+
+                      {certificates.length === 0 ? (
+                        <p className="text-xs text-brand-navy/60 italic">No certificates loaded yet.</p>
+                      ) : (
+                        <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                          {certificates.map((cert) => (
+                            <div
+                              key={cert.id}
+                              className="flex items-center justify-between p-2.5 rounded-lg bg-brand-navy/5 border border-brand-navy/10 hover:border-brand-indigo/30 transition-colors"
+                            >
+                              <button
+                                onClick={() => setPreviewCert(cert)}
+                                className="text-xs font-medium text-brand-deep truncate max-w-[50%] hover:underline text-left"
+                              >
+                                {cert.name}
+                              </button>
+                              
+                              <div className="flex items-center gap-2">
+                                {certUrls[cert.id] && (
+                                  <a
+                                    href={certUrls[cert.id]}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="p-1 px-2 btn-secondary text-[9px] font-bold flex items-center gap-0.5"
+                                  >
+                                    <Download className="w-2.5 h-2.5 text-brand-indigo" />
+                                    PDF
+                                  </a>
+                                )}
+                                <button
+                                  onClick={() => handleDeleteCert(cert.id)}
+                                  className="text-brand-navy/60 hover:text-red-500 transition-colors p-1"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <form onSubmit={handleUploadCertificate} className="space-y-3 pt-2">
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. AWS Solutions Architect"
+                          className="w-full px-3 py-2 glass-input text-xs"
+                          value={newCertName}
+                          onChange={(e) => setNewCertName(e.target.value)}
+                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="file"
+                            accept=".pdf"
+                            ref={certFileInputRef}
+                            onChange={(e) => setCertPdfFile(e.target.files?.[0] || null)}
+                            className="text-xs text-brand-navy/70 w-full"
+                          />
+                        </div>
+                        <textarea
+                          placeholder="Or paste credential text description here..."
+                          className="w-full h-20 px-3 py-2 glass-input text-xs"
+                          value={manualCertText}
+                          onChange={(e) => setManualCertText(e.target.value)}
+                        />
+                        <button
+                          type="submit"
+                          disabled={uploadingCert}
+                          className="w-full py-2 btn-primary text-xs flex items-center justify-center gap-1.5"
+                        >
+                          <Plus className="w-4 h-4" />
+                          {uploadingCert ? "Processing..." : "Add New Credential"}
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB B: TAILOR (SINGLE JOB) */}
+            {activeTab === "generate" && (
+              <div className="glass-panel p-6 rounded-xl space-y-6">
+                <div className="flex items-center justify-between border-b border-brand-navy/15 pb-3">
+                  <h3 className="text-base font-bold text-brand-deep flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-brand-indigo" />
+                    AI Resume Generation Pipeline
+                  </h3>
+                  <div className="flex items-center gap-4 text-xs">
+                    <label className="flex items-center gap-1.5 text-brand-navy/70 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isGeneral}
+                        onChange={(e) => setIsGeneral(e.target.checked)}
+                        className="rounded accent-brand-indigo"
+                      />
+                      Generalize CV
+                    </label>
+                  </div>
+                </div>
+
+                {!isGeneral && (
+                  <div className="space-y-4">
+                    <div className="flex gap-4 border-b border-brand-navy/10 pb-2">
+                      <button
+                        type="button"
+                        onClick={() => setInputMethod("scrape")}
+                        className={`text-xs font-semibold pb-1 ${
+                          inputMethod === "scrape" ? "text-brand-indigo border-b-2 border-brand-indigo" : "text-brand-navy/50"
+                        }`}
+                      >
+                        Scrape Job URL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setInputMethod("paste")}
+                        className={`text-xs font-semibold pb-1 ${
+                          inputMethod === "paste" ? "text-brand-indigo border-b-2 border-brand-indigo" : "text-brand-navy/50"
+                        }`}
+                      >
+                        Paste Job Text
+                      </button>
+                    </div>
+
+                    {inputMethod === "scrape" ? (
+                      <div>
+                        <label className="block text-xs font-semibold text-brand-navy/70 uppercase mb-2">
+                          Job Description Listing URL
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="url"
+                            placeholder="https://www.linkedin.com/jobs/view/..."
+                            className="w-full px-4 py-2.5 glass-input text-sm"
+                            value={jobUrl}
+                            onChange={(e) => setJobUrl(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-xs font-semibold text-brand-navy/70 uppercase mb-2">
+                          Paste Job Description Text
+                        </label>
+                        <textarea
+                          placeholder="Copy and paste the listing description here..."
+                          className="w-full h-40 px-3 py-2 glass-input text-sm"
+                          value={jobText}
+                          onChange={(e) => setJobText(e.target.value)}
+                        />
+                      </div>
+                    )}
+
+                    <div className="pt-2">
+                      <label className="flex items-center gap-1.5 text-xs text-brand-navy/70 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={includeCoverLetter}
+                          onChange={(e) => setIncludeCoverLetter(e.target.checked)}
+                          className="rounded accent-brand-indigo"
+                        />
+                        Include Tailored Cover Letter (Combo rate of R25 applies)
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleGenerateWorkflow}
+                  disabled={generating}
+                  className="w-full py-3.5 btn-primary text-sm flex items-center justify-center gap-2"
+                >
+                  {generating ? (
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4.5 h-4.5" />
+                      Compile & Taylor (AI)
+                    </>
+                  )}
+                </button>
+
+                {/* Loading status panel */}
+                {generating && (
+                  <div className="p-4 rounded-xl border border-brand-navy/15 bg-brand-navy/[0.03] space-y-2.5 font-mono text-xs">
+                    <div className="text-brand-navy/70 flex items-center justify-between border-b border-brand-navy/10 pb-2">
+                      <span>Pipeline execution log:</span>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-brand-indigo" />
+                    </div>
+                    <div className="space-y-1 max-h-40 overflow-y-auto text-brand-deep">
+                      {genSteps.map((step, idx) => (
+                        <div key={idx} className="flex gap-2 items-start">
+                          <span className="text-brand-indigo">›</span>
+                          <span>{step}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB C: BATCH AUTOPILOT */}
+            {activeTab === "batch" && (
+              <div className="glass-panel p-6 rounded-xl space-y-6">
+                <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-brand-indigo" />
+                  Batch Auto-Pilot Mode
+                </h3>
+                <p className="text-xs text-brand-navy/70">
+                  Upload a plain text `.txt` file containing job description URLs (one URL per line). The AI builder will read each URL, generate, score, compile, and upload PDFs directly to your history.
+                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-brand-navy/70 uppercase mb-2">
+                      Upload Links file (.txt)
+                    </label>
+                    <input
+                      type="file"
+                      accept=".txt"
+                      className="w-full text-sm text-brand-navy/60"
+                      onChange={(e) => setBatchFile(e.target.files?.[0] || null)}
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleBatchAutoPilot}
+                    disabled={batchProcessing}
+                    className="w-full py-3 btn-primary text-sm flex items-center justify-center gap-2"
+                  >
+                    {batchProcessing ? (
+                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4" />
+                        Trigger Batch Run
+                      </>
+                    )}
+                  </button>
+
+                  {batchProcessing && (
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-xs text-brand-navy/70">
+                        <span>Overall Progress</span>
+                        <span>{batchProgress}%</span>
+                      </div>
+                      <div className="w-full bg-brand-navy/5 border border-brand-navy/10 h-2.5 rounded-full overflow-hidden">
+                        <div
+                          className="bg-brand-indigo h-full rounded-full transition-all duration-300"
+                          style={{ width: `${batchProgress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(batchProcessing || batchLogs.length > 0) && (
+                    <div className="p-4 rounded-xl border border-brand-navy/15 bg-brand-navy/[0.03] space-y-2 font-mono text-xs max-h-60 overflow-y-auto">
+                      {batchLogs.map((log, idx) => (
+                        <div key={idx} className="text-brand-deep">
+                          {log}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB D: SAVED ARCHIVES */}
+            {activeTab === "archive" && (
+              <div className="glass-panel p-6 rounded-xl space-y-6">
+                <div className="flex justify-between items-center border-b border-brand-navy/15 pb-3">
+                  <h3 className="text-base font-bold text-brand-deep flex items-center gap-2">
+                    <FolderOpen className="w-5 h-5 text-brand-indigo" />
+                    Applications Archives
+                  </h3>
+                  <button
+                    onClick={() => loadUserData(user.id)}
+                    className="p-2 btn-secondary hover:text-brand-indigo flex items-center gap-1.5 text-xs"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Refresh
+                  </button>
+                </div>
+
+                {applications.length === 0 ? (
+                  <p className="text-sm text-brand-navy/50 italic text-center py-10">
+                    No tailored applications generated yet. Use the Generation Pipeline to get started!
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {applications.map((app) => (
+                      <div
+                        key={app.id}
+                        className="glass-panel p-5 rounded-xl border border-brand-navy/10 hover:border-brand-indigo/30 transition-all flex flex-col justify-between"
+                      >
+                        <div className="space-y-2">
+                          <div className="text-[10px] text-brand-navy/60 font-mono">
+                            Compiled on {app.created_at?.slice(0, 10)}
+                          </div>
+                          <div className="text-sm font-bold text-brand-deep">
+                            {app.job_title} at <span className="text-brand-indigo">{app.company_name}</span>
+                          </div>
+                          <div className="inline-flex items-center gap-1 bg-brand-navy/5 border border-brand-navy/10 px-2 py-0.5 rounded text-[10px] text-brand-navy">
+                            ATS score: {app.ats_score !== null ? `${app.ats_score}%` : "N/A"}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-brand-navy/10">
+                          {app.resume_url ? (
+                            <a
+                              href={app.resume_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="py-1.5 btn-secondary text-xs text-center flex items-center justify-center gap-1"
+                            >
+                              <FileCheck className="w-3.5 h-3.5 text-brand-indigo" />
+                              Download CV
+                            </a>
+                          ) : (
+                            <span className="text-xs text-brand-navy/40 italic text-center self-center">No CV compiled</span>
+                          )}
+
+                          {app.cover_letter_url ? (
+                            <a
+                              href={app.cover_letter_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="py-1.5 btn-secondary text-xs text-center flex items-center justify-center gap-1"
+                            >
+                              <FileCheck className="w-3.5 h-3.5 text-brand-indigo" />
+                              Download Letter
+                            </a>
+                          ) : (
+                            <span className="text-xs text-brand-navy/40 italic text-center self-center">No CL compiled</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Preview Certificate Modal */}
+      {previewCert && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="glass-panel max-w-2xl w-full rounded-2xl p-6 relative">
+            <h3 className="text-lg font-bold text-brand-deep mb-2 flex items-center gap-2">
+              <Award className="w-5 h-5 text-brand-indigo" />
+              Credential: {previewCert.name}
+            </h3>
+            <p className="text-xs text-brand-navy/60 border-b border-brand-navy/10 pb-3 mb-4">
+              Here is the parsed verification context used during CV compiling.
+            </p>
+            <textarea
+              className="w-full h-80 px-3 py-2 bg-white border border-brand-navy/15 rounded-lg text-xs text-brand-navy/80 focus:outline-none"
+              value={previewCert.extracted_text}
+              readOnly
+            />
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setPreviewCert(null)}
+                className="px-4 py-2 btn-secondary text-xs"
+              >
+                Close View
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Certificate Confirmation Modal */}
+      {deleteCertId && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="glass-panel max-w-sm w-full rounded-2xl p-6 relative space-y-4 bg-white border border-brand-navy/15">
+            <h3 className="text-base font-bold text-brand-deep">Delete Credential</h3>
+            <p className="text-xs text-brand-navy/70 leading-relaxed">
+              Are you sure you want to permanently delete this credential? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setDeleteCertId(null)}
+                className="px-4 py-2 btn-secondary text-xs cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const id = deleteCertId;
+                  setDeleteCertId(null);
+                  executeDeleteCert(id);
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-xs transition-colors cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-5 right-5 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
+          <div className={`p-4 rounded-xl border shadow-lg flex items-center gap-2 max-w-sm ${
+            toast.type === "success" 
+              ? "bg-white border-green-200 text-green-800" 
+              : toast.type === "error" 
+              ? "bg-white border-red-200 text-red-800" 
+              : "bg-white border-brand-indigo/35 text-brand-deep"
+          }`}>
+            <span className="text-xs font-semibold">{toast.message}</span>
+            <button onClick={() => setToast(null)} className="text-xs ml-auto opacity-75 hover:opacity-100 font-bold px-1.5 py-0.5 cursor-pointer">×</button>
+          </div>
+        </div>
+      )}
+
+      {/* Stripe Checkout payment gateway modal */}
+      {pendingPayment && (
+        <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="glass-panel max-w-md w-full rounded-2xl p-6 relative space-y-6 bg-white border border-brand-navy/15 shadow-xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-brand-navy/10 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-brand-indigo rounded-full animate-pulse"></span>
+                <h3 className="text-base font-bold text-brand-deep">Stripe Secure Checkout</h3>
+              </div>
+              <span className="text-[10px] text-brand-navy/60 font-mono">Test Mode</span>
+            </div>
+
+            <div className="space-y-1.5 p-4 bg-brand-navy/5 rounded-xl border border-brand-navy/10">
+              <div className="text-[10px] text-brand-navy/60 uppercase font-semibold">Product Description</div>
+              <div className="text-xs font-bold text-brand-deep">{pendingPayment.description}</div>
+              <div className="flex justify-between items-baseline pt-2 border-t border-brand-navy/10 mt-2">
+                <span className="text-xs font-semibold text-brand-navy/70">Amount Due:</span>
+                <span className="text-xl font-extrabold text-brand-indigo">{pendingPayment.amount}</span>
+              </div>
+            </div>
+
+            {/* Mock Credit Card Fields */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                // Simulate payment processing
+                const payBtn = document.getElementById("stripe-pay-btn");
+                if (payBtn) {
+                  payBtn.innerText = "Processing secure transaction...";
+                  payBtn.setAttribute("disabled", "true");
+                }
+                setTimeout(() => {
+                  triggerToast("Payment successful! Transacting via Stripe gateway.", "success");
+                  const callback = pendingPayment.onConfirm;
+                  setPendingPayment(null);
+                  callback();
+                }, 2000);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-brand-navy/70 mb-1">Cardholder Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Jane Smith"
+                  className="w-full px-3 py-2 glass-input text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-brand-navy/70 mb-1">Card Number</label>
+                <input
+                  type="text"
+                  required
+                  pattern="\d{16}"
+                  maxLength={16}
+                  placeholder="4242 •••• •••• ••••"
+                  className="w-full px-3 py-2 glass-input text-xs font-mono"
+                  onChange={(e) => {
+                    // Only allow numbers
+                    e.target.value = e.target.value.replace(/\D/g, "");
+                  }}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-brand-navy/70 mb-1">Expiration (MM/YY)</label>
+                  <input
+                    type="text"
+                    required
+                    pattern="\d{2}/\d{2}"
+                    maxLength={5}
+                    placeholder="MM/YY"
+                    className="w-full px-3 py-2 glass-input text-xs font-mono"
+                    onChange={(e) => {
+                      let val = e.target.value.replace(/\D/g, "");
+                      if (val.length > 2) {
+                        val = val.substring(0, 2) + "/" + val.substring(2, 4);
+                      }
+                      e.target.value = val;
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-brand-navy/70 mb-1">CVV Code</label>
+                  <input
+                    type="password"
+                    required
+                    pattern="\d{3}"
+                    maxLength={3}
+                    placeholder="•••"
+                    className="w-full px-3 py-2 glass-input text-xs font-mono"
+                    onChange={(e) => {
+                      e.target.value = e.target.value.replace(/\D/g, "");
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingPayment(null);
+                    if (searchParams.get("checkout")) {
+                      router.replace("/dashboard");
+                    }
+                  }}
+                  className="flex-1 py-3 btn-secondary text-xs cursor-pointer"
+                >
+                  Cancel Transaction
+                </button>
+                <button
+                  type="submit"
+                  id="stripe-pay-btn"
+                  className="flex-1 py-3 btn-primary text-xs cursor-pointer"
+                >
+                  Authorize Payment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-brand-indigo border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-sm text-brand-navy/60">Loading user workspace...</p>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
+  );
+}
