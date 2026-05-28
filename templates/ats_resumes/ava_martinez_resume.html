@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+    body {
+        font-family: 'Helvetica', 'Arial', sans-serif;
+        font-size: 9.5pt;
+        line-height: 1.3; /* Tighter line height */
+        color: #000;
+        margin: 0;
+        padding: 0;
+        height: 297mm;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    .top-bar {
+        background-color: #a02020; /* Dark Red */
+        height: 15px;
+        width: 100%;
+    }
+    .header-box {
+        background-color: #f2f2f2;
+        text-align: center;
+        padding: 20px;
+    }
+    .header-box h1 {
+        font-size: 32pt;
+        margin: 0 0 5px 0;
+    }
+    .header-box h1 .first-name { font-weight: bold; }
+    .header-box h1 .last-name { font-weight: normal; }
+    .header-box h2 {
+        font-size: 12pt;
+        font-weight: normal;
+        margin: 0 0 10px 0;
+    }
+    .contact {
+        font-size: 9pt;
+    }
+    .summary {
+        text-align: center;
+        padding: 15px 40px;
+        font-style: italic;
+    }
+    .content-area {
+        padding: 0 40px;
+    }
+    .section-header {
+        font-size: 14pt;
+        font-weight: bold;
+        color: #000;
+        border-bottom: 2px solid #000;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        padding-bottom: 2px;
+    }
+    .job { margin-bottom: 15px; }
+    .job-top { display: block; font-weight: bold; }
+    ul { margin-top: 5px; padding-left: 20px; }
+</style>
+</head>
+<body>
+    <div class="top-bar"></div>
+    <div class="header-box">
+        <h1>
+            <span class="first-name">{{ contact_info.name.split(' ')[0] }}</span>
+            <span class="last-name">{{ contact_info.name.split(' ')[1:] | join(' ') }}</span>
+        </h1>
+        <h2>Professional Target</h2>
+        <div class="contact">
+            {{ contact_info.phone }} - {{ contact_info.location }} - {{ contact_info.email }}
+            {% if contact_info.linkedin %} - {{ contact_info.linkedin }}{% endif %}
+        </div>
+    </div>
+
+    <div class="summary">
+        {{ professional_summary }}
+    </div>
+
+    <div class="content-area">
+        <div class="section">
+            <div class="section-header">Professional Experience</div>
+            {% for job in experience %}
+            <div class="job">
+                <div class="job-top">{{ job.title }} | {{ job.company }} | {{ job.dates }}</div>
+                <ul>
+                    {% for achievement in job.achievements %}
+                    <li>{{ achievement }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="section">
+            <div class="section-header">Education</div>
+            {% for edu in education %}
+            <div class="job">
+                <span class="job-top">{{ edu.degree }} | {{ edu.institution }} | {{ edu.dates }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="section">
+            <div class="section-header">Key Skills</div>
+            <ul>
+                {% for skill in skills %}
+                <li>{{ skill }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        {% if volunteering %}
+        <div class="section">
+            <div class="section-header">Volunteer Experience</div>
+            {% for vol in volunteering %}
+            <div class="job">
+                <div class="job-top">{{ vol.role }} | {{ vol.organization }} | {{ vol.dates }}</div>
+                <ul>
+                    <li>{{ vol.description }}</li>
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if certifications %}
+        <div class="section">
+            <div class="section-header">Certifications</div>
+            <ul>
+                {% for cert in certifications %}
+                <li>{{ cert.name }}, {{ cert.issuer }}, {{ cert.date }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

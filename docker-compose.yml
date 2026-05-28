@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  resume-builder:
+    build: .
+    container_name: resume_builder_app
+    ports:
+      - "8501:8501"
+    volumes:
+      # Mount the generated applications to the host machine so they persist
+      - ./generated_applications:/app/generated_applications
+      # Mount my_information so you can update your base PDFs without rebuilding the container
+      - ./my_information:/app/my_information
+    environment:
+      # Connect to the Ollama instance running on the host machine
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    restart: unless-stopped

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /app/static/sitemap.xml
+Disallow: /app/static/resumes/
+Disallow: /_stcore/
+Disallow: /healthz
+Disallow: /stream
+
+Sitemap: https://resume-builder-saas.onrender.com/app/static/sitemap.xml

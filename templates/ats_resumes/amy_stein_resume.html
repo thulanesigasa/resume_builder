@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        font-size: 9.5pt;
+        line-height: 1.3; /* Tighter line height */
+        color: #000;
+        margin: 0;
+        padding: 25mm 25mm 25mm 40mm; /* Reduced padding, space for left border */
+        height: 297mm;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    .page-border {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 25px;
+        background-color: #d2b48c; /* Tan/Beige */
+    }
+    .header h1 {
+        font-size: 38pt;
+        margin: 0 0 5px 0;
+    }
+    .header h1 .first-name { font-weight: bold; }
+    .header h1 .last-name { font-weight: normal; }
+    .contact {
+        font-size: 9pt;
+        margin-bottom: 10px;
+    }
+    .divider {
+        border-top: 1px solid #000;
+        margin-bottom: 10px;
+    }
+    .section-header {
+        font-size: 14pt;
+        font-weight: bold;
+        border-bottom: 1px solid #000;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        padding-bottom: 2px;
+    }
+    .job { margin-bottom: 15px; }
+    .job-top { display: block; }
+    .job-title { font-weight: bold; }
+    .job-date { margin-bottom: 5px; font-style: italic;}
+    ul { margin-top: 5px; padding-left: 20px; }
+    .skills-container {
+        column-count: 2;
+        column-gap: 40px;
+    }
+</style>
+</head>
+<body>
+    <div class="page-border"></div>
+    <div class="header">
+        <h1>
+            <span class="first-name">{{ contact_info.name.split(' ')[0] }}</span>
+            <span class="last-name">{{ contact_info.name.split(' ')[1:] | join(' ') }}</span>
+        </h1>
+        <div class="contact">
+            {{ contact_info.phone }} - {{ contact_info.location }} - {{ contact_info.email }}
+            {% if contact_info.linkedin %} - {{ contact_info.linkedin }}{% endif %}
+        </div>
+    </div>
+    
+    <div class="divider"></div>
+    <p>{{ professional_summary }}</p>
+
+    <div class="section">
+        <div class="section-header">Education</div>
+        {% for edu in education %}
+        <div class="job">
+            {{ edu.degree }} | {{ edu.institution }} | {{ edu.dates }}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="section">
+        <div class="section-header">Key Skills</div>
+        <div class="skills-container">
+            <ul>
+                {% for skill in skills %}
+                <li>{{ skill }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">Professional Experience</div>
+        {% for job in experience %}
+        <div class="job">
+            <div class="job-top"><span class="job-title">{{ job.title }}</span> | {{ job.company }}</div>
+            <div class="job-date">{{ job.dates }}</div>
+            <ul>
+                {% for achievement in job.achievements %}
+                <li>{{ achievement }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if certifications %}
+    <div class="section">
+        <div class="section-header">Certifications</div>
+        <ul>
+            {% for cert in certifications %}
+            <li>{{ cert.name }}, {{ cert.issuer }}, {{ cert.date }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</body>
+</html>

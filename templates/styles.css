@@ -1,0 +1,132 @@
+/* Core Document Setup for PDF */
+body {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 9pt; /* Reduced from 10pt */
+    line-height: 1.25; /* Tighter line height */
+    color: #000;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+/* Force one page constraint */
+.page-container {
+    width: 210mm;
+    height: 297mm;
+    padding: 10mm; /* Reduced from 15mm */
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+    background: white;
+}
+
+/* Header Styling - Split Layout */
+.header-container {
+    display: table;
+    width: 100%;
+    margin-bottom: 10px;
+}
+.header-left {
+    display: table-cell;
+    vertical-align: bottom;
+}
+.header-right {
+    display: table-cell;
+    vertical-align: bottom;
+    text-align: right;
+    font-size: 9.5pt;
+    line-height: 1.4;
+}
+
+.header-left h1 {
+    margin: 0;
+    font-size: 36pt;
+    text-transform: uppercase;
+    font-weight: normal;
+    line-height: 1;
+    letter-spacing: 1px;
+}
+.header-left h1 .last-name {
+    font-weight: bold;
+    display: block;
+}
+
+.divider {
+    border-top: 2px solid #000;
+    margin-bottom: 30px;
+}
+
+/* Cover Letter specific layout */
+.letter-layout {
+    display: table;
+    width: 100%;
+}
+.letter-left {
+    display: table-cell;
+    width: 70%;
+    padding-right: 30px;
+    vertical-align: top;
+}
+.letter-right {
+    display: table-cell;
+    width: 30%;
+    text-align: right;
+    vertical-align: top;
+    font-size: 9.5pt;
+    line-height: 1.5;
+}
+
+.greeting {
+    color: #1a73e8; /* Blue accent from image */
+    font-weight: bold;
+    font-size: 11pt;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.letter-body p {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.sign-off {
+    margin-top: 30px;
+}
+
+/* Resume specific sections */
+.section {
+    margin-bottom: 15px; /* Reduced from 25px */
+}
+.section h2 {
+    font-size: 12pt;
+    text-transform: uppercase;
+    color: #1a73e8; /* Match the blue accent */
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+.job {
+    margin-bottom: 10px; /* Reduced from 15px */
+    page-break-inside: avoid;
+}
+.job-title {
+    font-weight: bold;
+}
+.company-dates {
+    margin-bottom: 5px;
+    font-style: italic;
+}
+.dates {
+    float: right;
+    font-style: normal;
+}
+.clearfix::after {
+    content: "";
+    clear: both;
+    display: table;
+}
+ul {
+    margin-top: 5px;
+    padding-left: 20px;
+    margin-bottom: 0;
+}

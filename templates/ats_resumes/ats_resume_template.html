@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="page-container">
+        <!-- SPLIT HEADER SECTION -->
+        <div class="header-container">
+            <div class="header-left">
+                <h1>
+                    {{ contact_info.name.split(' ')[0] }}
+                    <span class="last-name">{{ contact_info.name.split(' ')[1:] | join(' ') }}</span>
+                </h1>
+            </div>
+            <div class="header-right">
+                {{ contact_info.location }}<br>
+                {{ contact_info.phone }}<br>
+                {{ contact_info.email }}
+                {% if contact_info.linkedin %}<br>{{ contact_info.linkedin }}{% endif %}
+                {% if contact_info.github %}<br>{{ contact_info.github }}{% endif %}
+            </div>
+        </div>
+        
+        <div class="divider"></div>
+
+        <!-- OBJECTIVE / SUMMARY -->
+        <div class="section">
+            <h2>Professional Summary</h2>
+            <p>{{ professional_summary }}</p>
+        </div>
+
+        <!-- EXPERIENCE -->
+        <div class="section">
+            <h2>Experience</h2>
+            {% for job in experience %}
+            <div class="job">
+                <div class="clearfix">
+                    <span class="job-title">{{ job.title }}</span>
+                    <span class="dates">{{ job.dates }}</span>
+                </div>
+                <div class="company-dates">
+                    {{ job.company }}
+                </div>
+                <ul>
+                    {% for achievement in job.achievements %}
+                    <li>{{ achievement }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- EDUCATION -->
+        <div class="section">
+            <h2>Education</h2>
+            <div class="grid-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                {% for edu in education %}
+                <div class="job" style="margin-bottom: 5px;">
+                    <div class="clearfix">
+                        <span class="job-title" style="font-size: 9pt;">{{ edu.degree or edu.qualification }}</span>
+                        <span class="dates" style="font-size: 8pt;">{{ edu.dates }}</span>
+                    </div>
+                    <div class="company-dates" style="font-size: 8pt;">
+                        {{ edu.institution }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <!-- CERTIFICATIONS -->
+                {% if certifications %}
+                <div class="section">
+                    <h2>Certifications</h2>
+                    {% for cert in certifications %}
+                    <div class="job" style="margin-bottom: 3px;">
+                        <div class="clearfix">
+                            <span class="job-title" style="font-size: 9pt;">{{ cert.name or cert.qualification }}</span>
+                            <span class="dates" style="font-size: 8pt;">{{ cert.date or cert.dates }}</span>
+                        </div>
+                        <div class="company-dates" style="font-size: 8pt;">
+                            {{ cert.issuer }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- MEMBERSHIPS -->
+                {% if professional_memberships %}
+                <div class="section">
+                    <h2>Professional Memberships</h2>
+                    {% for mem in professional_memberships %}
+                    <div class="job" style="margin-bottom: 3px;">
+                        <div class="clearfix">
+                            <span class="job-title" style="font-size: 9pt;">{{ mem.qualification or mem.name }}</span>
+                            <span class="dates" style="font-size: 8pt;">{{ mem.dates }}</span>
+                        </div>
+                        <div class="company-dates" style="font-size: 8pt;">
+                            {{ mem.institution }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div>
+                <!-- SKILLS -->
+                <div class="section">
+                    <h2>Technical Skills</h2>
+                    <p style="font-size: 9pt;">{{ (skills or technical_skills) | join(' • ') }}</p>
+                </div>
+
+                <!-- LANGUAGES -->
+                {% if languages %}
+                <div class="section">
+                    <h2>Languages</h2>
+                    <p style="font-size: 9pt;">{{ languages | join(' • ') }}</p>
+                </div>
+                {% endif %}
+
+                <!-- DEVELOPMENT -->
+                {% if professional_development %}
+                <div class="section">
+                    <h2>Professional Development</h2>
+                    {% for dev in professional_development %}
+                    <div class="job" style="margin-bottom: 3px;">
+                        <div class="clearfix">
+                            <span class="job-title" style="font-size: 9pt;">{{ dev.qualification }}</span>
+                        </div>
+                        <div class="company-dates" style="font-size: 8pt;">
+                            {{ dev.issuer }} {{ dev.dates }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- SPLIT HEADER SECTION -->
+    <div class="header-container">
+        <div class="header-left">
+            <h1>
+                {{ contact_info.name.split(' ')[0] }}
+                <span class="last-name">{{ contact_info.name.split(' ')[1:] | join(' ') }}</span>
+            </h1>
+        </div>
+        <div class="header-right">
+            {{ contact_info.location }}<br>
+            {{ contact_info.phone }}<br>
+            {{ contact_info.email }}
+            {% if contact_info.linkedin %}<br>{{ contact_info.linkedin }}{% endif %}
+            {% if contact_info.github %}<br>{{ contact_info.github }}{% endif %}
+        </div>
+    </div>
+    
+    <div class="divider"></div>
+
+    <!-- SPLIT COVER LETTER BODY -->
+    <div class="letter-layout">
+        <!-- LEFT COLUMN (Main Text) -->
+        <div class="letter-left">
+            <p class="greeting">{{ greeting }}</p>
+            
+            <div class="letter-body">
+                <p>{{ opening_paragraph }}</p>
+                
+                {% for paragraph in body_paragraphs %}
+                <p>{{ paragraph }}</p>
+                {% endfor %}
+                
+                <p>{{ closing_paragraph }}</p>
+            </div>
+            
+            <div class="sign-off">
+                <p>{{ sign_off }}<br>{{ applicant_name }}</p>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN (Recipient Details) -->
+        <div class="letter-right">
+            <p style="text-transform: uppercase;">{{ date }}</p>
+            <br><br>
+            <p>
+                {{ recipient_name }}<br>
+                {{ company_name }}
+            </p>
+        </div>
+    </div>
+</body>
+</html>

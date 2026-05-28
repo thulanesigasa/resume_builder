@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+    body {
+        font-family: 'Helvetica', 'Arial', sans-serif;
+        font-size: 10pt;
+        line-height: 1.4;
+        color: #000;
+        margin: 0;
+        padding: 40px;
+    }
+    .header {
+        margin-bottom: 30px;
+        text-align: left;
+    }
+    .header h1 {
+        font-size: 30pt;
+        margin: 0 0 5px 0;
+        color: #b01b2e; /* Dark red */
+        text-transform: uppercase;
+        letter-spacing: 6px;
+        font-weight: bold;
+    }
+    .contact-info {
+        font-size: 9pt;
+        color: #000;
+    }
+    .letter-header {
+        margin-bottom: 30px;
+    }
+    .letter-body p {
+        margin-bottom: 15px;
+    }
+    .sign-off {
+        margin-top: 30px;
+    }
+</style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ contact_info.name }}</h1>
+        <div class="contact-info">
+            {{ contact_info.location }} | {{ contact_info.phone }} | {{ contact_info.email }} | {{ contact_info.linkedin }}
+            {% if contact_info.github %} | {{ contact_info.github }}{% endif %}
+        </div>
+    </div>
+    
+    <div class="letter-header">
+        <p>{{ date }}</p>
+        <br>
+        <p>{{ recipient_name }}<br>{{ company_name }}</p>
+    </div>
+    
+    <div class="letter-body">
+        <p>{{ greeting }}</p>
+        <p>{{ opening_paragraph }}</p>
+        
+        {% for paragraph in body_paragraphs %}
+        <p>{{ paragraph }}</p>
+        {% endfor %}
+        
+        <p>{{ closing_paragraph }}</p>
+        
+        <div class="sign-off">
+            <p>{{ sign_off }}<br>{{ applicant_name }}</p>
+        </div>
+    </div>
+</body>
+</html>
