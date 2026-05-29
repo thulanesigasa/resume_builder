@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { UserPlus, Mail, Key, Phone, User, Sparkles } from "lucide-react";
+import { UserPlus, Mail, Key, Phone, User, Briefcase } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -56,7 +56,7 @@ export default function RegisterPage() {
             A PRODUCT BY T.S INDUSTRIES
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight mb-2 text-brand-deep">
-            AI ATS <span className="text-brand-indigo glow-text-brand">Resume Builder</span>
+            rbptech <span className="text-brand-indigo glow-text-brand">Resume Builder</span>
           </h1>
           <p className="text-sm text-brand-navy/70">
             Join us and start generating ATS-optimized templates today.
@@ -186,7 +186,7 @@ export default function RegisterPage() {
                   <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
+                    <Briefcase className="w-4 h-4" />
                     Register Account
                   </>
                 )}

@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { LogIn, Key, Mail, Sparkles } from "lucide-react";
+import { LogIn, Key, Mail, Briefcase } from "lucide-react";
 
 function LoginContent() {
   const router = useRouter();
@@ -55,7 +55,7 @@ function LoginContent() {
             A PRODUCT BY T.S INDUSTRIES
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight mb-2 text-brand-deep">
-            AI ATS <span className="text-brand-indigo glow-text-brand">Resume Builder</span>
+            rbptech <span className="text-brand-indigo glow-text-brand">Resume Builder</span>
           </h1>
           <p className="text-sm text-brand-navy/70">
             Deploy resumes & cover letters matching industry profiles instantly.
@@ -119,7 +119,7 @@ function LoginContent() {
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4" />
+                  <Briefcase className="w-4 h-4" />
                   Access Dashboard
                 </>
               )}

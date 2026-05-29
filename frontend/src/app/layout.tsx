@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ATS SaaS Suite | Next-Gen AI Resume Compiler",
+  title: "rbptech | Next-Gen AI Resume Compiler",
   description: "Scan target job requirements, tailor CV experience bullet points on the fly, audit ATS keyword scores, and compile print-ready PDFs instantly.",
 };
 

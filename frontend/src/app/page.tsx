@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Sparkles, FileText, ArrowRight, Layers, Cpu } from "lucide-react";
+import { Briefcase, FileText, ArrowRight, Layers, Cpu } from "lucide-react";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -23,12 +23,12 @@ export default function LandingPage() {
         {/* Header navigation bar */}
         <header className="flex justify-between items-center">
           <div className="flex items-center gap-2.5">
-            <Sparkles className="w-5.5 h-5.5 text-brand-indigo animate-pulse" />
+            <Briefcase className="w-5 h-5 text-brand-indigo" />
             <span className="font-extrabold text-lg tracking-tight text-brand-deep">
-              ATS SaaS Suite
+              rbptech
             </span>
           </div>
-
+          
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push("/pricing")}
@@ -86,7 +86,7 @@ export default function LandingPage() {
             <Cpu className="w-6 h-6 text-brand-indigo" />
             <h3 className="text-sm font-bold text-brand-deep">AI Tailoring Pipeline</h3>
             <p className="text-xs text-brand-navy/70 leading-normal">
-              Structured JSON generations using GPT-4o-mini aligned to scraped job description criteria.
+              Optimized CV customization aligned directly with targeted job specifications and keywords.
             </p>
           </div>
 
@@ -94,7 +94,7 @@ export default function LandingPage() {
             <Layers className="w-6 h-6 text-brand-indigo" />
             <h3 className="text-sm font-bold text-brand-deep">Interactive Editor</h3>
             <p className="text-xs text-brand-navy/70 leading-normal">
-              Drag-and-drop to reorder achievements, click-to-edit elements, and review ATS keyword scores.
+              Fine-tune layouts instantly with drag-and-drop sections, click-to-edit fields, and real-time score auditing.
             </p>
           </div>
 
@@ -102,7 +102,7 @@ export default function LandingPage() {
             <FileText className="w-6 h-6 text-brand-indigo" />
             <h3 className="text-sm font-bold text-brand-deep">Instant Compilers</h3>
             <p className="text-xs text-brand-navy/70 leading-normal">
-              High fidelity PDF conversion using Jinja2 templates and wkhtmltopdf pipelines.
+              Generate clean, parser-ready PDF formats compiled instantly that pass screening filters.
             </p>
           </div>
         </section>

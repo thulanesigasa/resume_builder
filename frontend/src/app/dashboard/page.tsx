@@ -19,7 +19,7 @@ import {
   Settings,
   FileCheck,
   RefreshCw,
-  Sparkles,
+  Briefcase,
   Zap,
   Download,
 } from "lucide-react";
@@ -733,9 +733,9 @@ function DashboardContent() {
       {/* Top Navbar */}
       <nav className="glass-panel sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-t-0 border-x-0">
         <div className="flex items-center gap-3">
-          <Sparkles className="w-6 h-6 text-brand-indigo animate-pulse" />
+          <Briefcase className="w-5 h-5 text-brand-indigo" />
           <span className="font-extrabold text-xl tracking-tight text-brand-deep">
-            ATS SaaS Suite
+            rbptech
           </span>
         </div>
 
@@ -1171,8 +1171,8 @@ function DashboardContent() {
                     <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                   ) : (
                     <>
-                      <Sparkles className="w-4.5 h-4.5" />
-                      Compile & Taylor (AI)
+                      <Zap className="w-4.5 h-4.5" />
+                      Compile & Tailor (AI)
                     </>
                   )}
                 </button>
