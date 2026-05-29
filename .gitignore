@@ -32,4 +32,5 @@ generated_applications/
 .Trashes
 ehthumbs.db
 Thumbs.db
-
+# Private Keys & Certificates
+*.pem
