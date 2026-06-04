@@ -18,7 +18,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col justify-between min-h-screen px-6 py-12 md:py-24 relative overflow-hidden">
+    <div className="flex-1 flex flex-col justify-between min-h-screen px-4 md:px-6 py-12 md:py-24 relative overflow-hidden">
       <div className="max-w-4xl w-full mx-auto space-y-12 md:space-y-16 relative z-10">
         {/* Hero Section */}
         <section className="text-center space-y-6 pt-12">
@@ -56,7 +56,7 @@ export default function LandingPage() {
         </section>
 
         {/* Editorial Feature Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-12">
+        <section className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 pt-12">
           {/* Feature 01: Full Width */}
           <div className="md:col-span-12 glass-panel p-10 rounded-2xl relative overflow-hidden group animate-in fade-in slide-in-from-bottom-12 duration-700 delay-100 fill-mode-both cursor-default">
             <div className="absolute -top-12 -right-6 text-[150px] font-black text-brand-navy/5 select-none leading-none pointer-events-none group-hover:text-brand-indigo/5 transition-colors duration-500">

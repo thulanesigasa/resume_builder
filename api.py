@@ -1,7 +1,8 @@
 import json
 import io
 import pdfplumber
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
@@ -14,6 +15,20 @@ from src.ai_engine.ats_scorer import calculate_ats_score
 from src.document_builder.json_to_html_injector import inject_json_to_html
 from src.document_builder.pdf_compiler import compile_to_pdf, create_application_folder_name
 from src.utils.logger import logger
+
+security = HTTPBearer()
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    try:
+        supabase = get_supabase_client()
+        user_response = supabase.auth.get_user(token)
+        if not user_response or not user_response.user:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return user_response.user
+    except Exception as e:
+        logger.error(f"Auth error: {e}")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 app = FastAPI(title="AI Resume Builder API", description="FastAPI Backend serving AI Tailoring and PDF Compilers")
 
@@ -57,7 +72,7 @@ def health_check():
     return {"status": "healthy", "service": "resume-builder-api"}
 
 @app.post("/api/compile-master-cv")
-async def compile_master_cv(payload: CompileMasterCvRequest):
+async def compile_master_cv(payload: CompileMasterCvRequest, user: dict = Depends(verify_token)):
     logger.info(f"API Compile Master CV request received for user: {payload.user_id}")
     try:
         html_content = f"""
@@ -107,12 +122,16 @@ async def compile_master_cv(payload: CompileMasterCvRequest):
 
 
 @app.post("/api/scrape")
-async def scrape_job(payload: ScrapeRequest):
+async def scrape_job(payload: ScrapeRequest, user: dict = Depends(verify_token)):
     logger.info(f"API Scrape request received for URL: {payload.url}")
     try:
         desc = get_job_description(payload.url)
         if not desc or not desc.strip():
-            raise HTTPException(status_code=400, detail="Failed to retrieve job description from URL")
+            from src.config import SCRAPING_API_KEY
+            detail_msg = "Failed to retrieve job description from URL."
+            if not SCRAPING_API_KEY:
+                detail_msg += " This job board likely uses Cloudflare/anti-bot protection. Please configure a valid SCRAPING_API_KEY in your .env file to bypass these checks."
+            raise HTTPException(status_code=400, detail=detail_msg)
         
         # Also extract basic metadata if possible
         metadata = extract_job_metadata(desc)
@@ -125,12 +144,14 @@ async def scrape_job(payload: ScrapeRequest):
             "required_skills": metadata.get("required_skills", []),
             "requirements": requirements
         }
+    except HTTPException as he:
+        raise he
     except Exception as e:
         logger.error(f"Error scraping job URL: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/generate")
-async def generate_doc(payload: GenerateRequest):
+async def generate_doc(payload: GenerateRequest, user: dict = Depends(verify_token)):
     logger.info(f"API Generate request received for doc_type: {payload.doc_type}")
     try:
         data_dict = generate_document(
@@ -147,7 +168,7 @@ async def generate_doc(payload: GenerateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/ats-score")
-async def get_ats_score(payload: AtsScoreRequest):
+async def get_ats_score(payload: AtsScoreRequest, user: dict = Depends(verify_token)):
     logger.info("API ATS scoring request received")
     try:
         score_res = calculate_ats_score(payload.job_description, payload.resume_json)
@@ -157,7 +178,7 @@ async def get_ats_score(payload: AtsScoreRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/compile")
-async def compile_document(payload: CompileRequest):
+async def compile_document(payload: CompileRequest, user: dict = Depends(verify_token)):
     logger.info(f"API Compile request received for: {payload.doc_type}")
     try:
         # Create folder name
@@ -189,7 +210,7 @@ class PreviewRequest(BaseModel):
     template_name: str
 
 @app.post("/api/preview-html")
-async def preview_html(payload: PreviewRequest):
+async def preview_html(payload: PreviewRequest, user: dict = Depends(verify_token)):
     logger.info(f"API Preview HTML request received for: {payload.template_name}")
     try:
         html_content = inject_json_to_html(payload.json_data, payload.template_name)
@@ -201,7 +222,7 @@ async def preview_html(payload: PreviewRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/parse-cv")
-async def parse_cv(file: UploadFile = File(...), user_id: str = Form(...)):
+async def parse_cv(file: UploadFile = File(...), user_id: str = Form(...), user: dict = Depends(verify_token)):
     logger.info(f"API Parse CV PDF request received from user_id: {user_id}")
     try:
         pdf_bytes = await file.read()

@@ -105,7 +105,10 @@ def get_job_description(url: str) -> str:
             logger.info("Successfully fetched and cleaned job description text.")
             return plain_text
         else:
-            logger.error(f"Failed to fetch page. Status code: {response.status_code}. Response: {response.text[:200]}")
+            error_msg = f"Failed to fetch page. Status code: {response.status_code}."
+            if response.status_code in [403, 503, 429] and not SCRAPING_API_KEY:
+                error_msg += " This job board likely uses Cloudflare/anti-bot protection. Please configure a valid SCRAPING_API_KEY in your .env file to bypass these checks."
+            logger.error(error_msg + f" Response snippet: {response.text[:200]}")
             return ""
             
     except Exception as e:

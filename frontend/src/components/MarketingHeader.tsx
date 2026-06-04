@@ -41,7 +41,7 @@ export default function MarketingHeader() {
         isScrolled ? "bg-white/80 backdrop-blur-md border-b border-brand-navy/10 py-3 shadow-sm" : "bg-transparent py-5"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-6 flex justify-between items-center">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 flex justify-between items-center">
         <div></div> {/* Empty div to keep flex-between layout working properly for the nav */}
         
         {/* Desktop Navigation */}
@@ -84,7 +84,7 @@ export default function MarketingHeader() {
 
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-brand-navy/10 shadow-lg px-6 py-4 flex flex-col gap-4 animate-in slide-in-from-top-2">
+        <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-brand-navy/10 shadow-lg px-4 py-4 flex flex-col gap-4 animate-in slide-in-from-top-2">
           {navLinks.map((link) => (
             <Link 
               key={link.name}

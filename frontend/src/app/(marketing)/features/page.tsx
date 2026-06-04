@@ -1,4 +1,9 @@
-"use client";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Next-Gen AI Resume Tailoring Features | rbptech",
+  description: "Explore the advanced features of rbptech: Real-time ATS auditing, semantic alignment engine, drag-and-drop page builder, and batch autopilot.",
+};
 
 export default function FeaturesPage() {
   const features = [
@@ -30,7 +35,7 @@ export default function FeaturesPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-6 space-y-24 animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <div className="max-w-6xl mx-auto px-4 md:px-6 space-y-24 animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className="text-center space-y-6 max-w-3xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-brand-deep">
           Engineered for <span className="text-brand-indigo glow-text-brand">Precision</span>
@@ -40,7 +45,7 @@ export default function FeaturesPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8">
         {/* Feature 01: Wide Span */}
         <div className="md:col-span-12 glass-panel p-10 md:p-14 rounded-3xl relative overflow-hidden group animate-in fade-in slide-in-from-bottom-12 duration-700 delay-100 fill-mode-both cursor-default">
           <div className="absolute -top-10 -right-10 text-[180px] font-black text-brand-navy/5 select-none leading-none pointer-events-none group-hover:text-brand-indigo/5 transition-colors duration-500">

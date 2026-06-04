@@ -1,11 +1,12 @@
-"use client";
-
-import { useState } from "react";
+import { Metadata } from "next";
 import { ChevronDown } from "lucide-react";
 
-export default function FAQPage() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+export const metadata: Metadata = {
+  title: "Frequently Asked Questions | rbptech",
+  description: "Have questions about ATS scoring, data privacy, PDF formats, or pricing? Find detailed answers in our Frequently Asked Questions.",
+};
 
+export default function FAQPage() {
   const faqs = [
     {
       question: "How does the ATS scoring work?",
@@ -29,8 +30,25 @@ export default function FAQPage() {
     }
   ];
 
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((faq) => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  };
+
   return (
     <div className="max-w-3xl mx-auto px-6 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <div className="text-center space-y-6">
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-brand-deep">
           Frequently Asked <span className="text-brand-indigo glow-text-brand">Questions</span>
@@ -44,22 +62,20 @@ export default function FAQPage() {
         {faqs.map((faq, idx) => (
           <div 
             key={idx} 
-            className={`glass-panel rounded-2xl overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both ${openIndex === idx ? 'border-brand-indigo/30 shadow-md' : 'border-brand-navy/10 hover:border-brand-navy/20'}`}
+            className="glass-panel rounded-2xl overflow-hidden border border-brand-navy/10 hover:border-brand-indigo/30 hover:shadow-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both group cursor-default"
             style={{ animationDelay: `${idx * 100}ms` }}
           >
-            <button
-              onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
-              className="w-full text-left px-6 py-5 flex items-center justify-between font-bold text-brand-deep cursor-pointer"
-            >
+            <div className="w-full text-left px-6 py-5 flex items-center justify-between font-bold text-brand-deep">
               {faq.question}
-              <ChevronDown className={`w-5 h-5 text-brand-indigo transition-transform duration-300 ${openIndex === idx ? 'rotate-180' : ''}`} />
-            </button>
-            <div 
-              className={`px-6 overflow-hidden transition-all duration-300 ${openIndex === idx ? 'max-h-48 pb-5 opacity-100' : 'max-h-0 opacity-0'}`}
-            >
-              <p className="text-sm text-brand-navy/70 leading-relaxed">
-                {faq.answer}
-              </p>
+              <ChevronDown className="w-5 h-5 text-brand-indigo transition-transform duration-500 group-hover:rotate-180" />
+            </div>
+            
+            <div className="px-6 grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100">
+              <div className="overflow-hidden">
+                <p className="text-sm text-brand-navy/70 leading-relaxed pb-5">
+                  {faq.answer}
+                </p>
+              </div>
             </div>
           </div>
         ))}
@@ -67,3 +83,4 @@ export default function FAQPage() {
     </div>
   );
 }
+

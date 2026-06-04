@@ -1,4 +1,9 @@
-"use client";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | rbptech",
+  description: "Read our privacy policy to understand how we secure your personal data, raw CV details, and generated documents in Supabase.",
+};
 
 export default function PrivacyPolicyPage() {
   return (
@@ -100,12 +105,12 @@ export default function PrivacyPolicyPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-bold text-brand-deep">9. Contact Information</h2>
           <p>
-            If you have questions or comments about this notice, you may email our Data Protection Officer (DPO) at support@rbptech.com or by post to:
+            If you have questions or comments about this notice, you may email our Data Protection Officer (DPO) at kairosounds.01@gmail.com or by post to:
           </p>
           <p className="text-brand-navy/60 italic">
             rbptech Legal Department<br/>
-            [Company Address Placeholder]<br/>
-            [City, State, Zip]
+            Johannesburg, Gauteng<br/>
+            South Africa
           </p>
         </section>
       </div>

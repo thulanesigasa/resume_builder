@@ -5,8 +5,8 @@ export default function MarketingFooter() {
 
   return (
     <footer className="bg-brand-navy/5 border-t border-brand-navy/10 pt-16 pb-8 mt-auto">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+      <div className="max-w-6xl mx-auto px-4 md:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-12 mb-12">
           
           {/* Brand & Mission */}
           <div className="md:col-span-1 space-y-4">

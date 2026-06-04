@@ -19,7 +19,7 @@ export default function SessionTimeout() {
     localStorage.removeItem("edit_ats_score");
 
     await supabase.auth.signOut();
-    router.push("/login?error=Session expired due to 15 minutes of inactivity.");
+    router.push("/?message=Session expired due to 15 minutes of inactivity.");
   };
 
   const resetTimer = () => {

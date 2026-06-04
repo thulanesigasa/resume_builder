@@ -494,8 +494,13 @@ function DashboardContent() {
   };
 
   const handleLogOut = async () => {
+    localStorage.removeItem("edit_resume_json");
+    localStorage.removeItem("edit_cl_json");
+    localStorage.removeItem("edit_company");
+    localStorage.removeItem("edit_job_title");
+    localStorage.removeItem("edit_ats_score");
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push("/");
   };
 
   const handleGenerateWorkflow = async () => {

@@ -1,3 +1,5 @@
+import { supabase } from './supabase';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export interface ScrapeResponse {
@@ -20,11 +22,25 @@ export interface CompileResponse {
   download_url: string;
 }
 
+const getHeaders = async (isFormData = false): Promise<HeadersInit> => {
+  const headers: Record<string, string> = {};
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`;
+  }
+  
+  return headers;
+};
+
 export const api = {
   async scrapeJob(url: string): Promise<ScrapeResponse> {
     const res = await fetch(`${API_BASE_URL}/api/scrape`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ url }),
     });
     if (!res.ok) {
@@ -42,7 +58,7 @@ export const api = {
   ): Promise<any> {
     const res = await fetch(`${API_BASE_URL}/api/generate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({
         job_description: jobDescription,
         personal_data: personalData,
@@ -60,7 +76,7 @@ export const api = {
   async getAtsScore(jobDescription: string, resumeJson: any): Promise<AtsScoreResponse> {
     const res = await fetch(`${API_BASE_URL}/api/ats-score`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({
         job_description: jobDescription,
         resume_json: resumeJson,
@@ -83,7 +99,7 @@ export const api = {
   }): Promise<CompileResponse> {
     const res = await fetch(`${API_BASE_URL}/api/compile`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify(params),
     });
     if (!res.ok) {
@@ -96,7 +112,7 @@ export const api = {
   async previewHtml(templateName: string, jsonData: any): Promise<{ html_content: string }> {
     const res = await fetch(`${API_BASE_URL}/api/preview-html`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ template_name: templateName, json_data: jsonData }),
     });
     if (!res.ok) {
@@ -113,6 +129,7 @@ export const api = {
 
     const res = await fetch(`${API_BASE_URL}/api/parse-cv`, {
       method: 'POST',
+      headers: await getHeaders(true),
       body: formData,
     });
     if (!res.ok) {
@@ -125,7 +142,7 @@ export const api = {
   async compileMasterCv(userId: string, rawText: string): Promise<CompileResponse> {
     const res = await fetch(`${API_BASE_URL}/api/compile-master-cv`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ user_id: userId, raw_text: rawText }),
     });
     if (!res.ok) {
@@ -135,4 +152,3 @@ export const api = {
     return res.json();
   },
 };
-

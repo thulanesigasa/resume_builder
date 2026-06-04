@@ -1,4 +1,9 @@
-"use client";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service | rbptech",
+  description: "Review the terms and conditions governing the use of rbptech's AI resume tailoring compiler and pay-as-you-go services.",
+};
 
 export default function TermsOfServicePage() {
   return (
@@ -88,7 +93,7 @@ export default function TermsOfServicePage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-bold text-brand-deep">8. Dispute Resolution and Governing Law</h2>
           <p>
-            These Terms shall be governed by and defined following the laws of [Your Jurisdiction]. rbptech and yourself irrevocably consent that the courts of [Your Jurisdiction] shall have exclusive jurisdiction to resolve any dispute which may arise in connection with these terms.
+            These Terms shall be governed by and defined following the laws of South Africa. rbptech and yourself irrevocably consent that the courts of South Africa shall have exclusive jurisdiction to resolve any dispute which may arise in connection with these terms.
           </p>
         </section>
 
@@ -99,8 +104,8 @@ export default function TermsOfServicePage() {
           </p>
           <p className="text-brand-navy/60 italic">
             rbptech Legal Department<br/>
-            support@rbptech.com<br/>
-            [Company Address Placeholder]
+            kairosounds.01@gmail.com<br/>
+            Johannesburg, Gauteng, South Africa
           </p>
         </section>
       </div>

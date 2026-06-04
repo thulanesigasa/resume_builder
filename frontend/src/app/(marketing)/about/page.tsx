@@ -1,4 +1,9 @@
-"use client";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Empowering Candidates | About rbptech",
+  description: "Learn about rbptech's mission to level the job application playing field by reverse-engineering ATS algorithms and utilizing Next-Gen AI.",
+};
 
 export default function AboutPage() {
   return (
