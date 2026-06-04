@@ -184,6 +184,22 @@ async def compile_document(payload: CompileRequest):
         logger.error(f"Error compiling document: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+class PreviewRequest(BaseModel):
+    json_data: dict
+    template_name: str
+
+@app.post("/api/preview-html")
+async def preview_html(payload: PreviewRequest):
+    logger.info(f"API Preview HTML request received for: {payload.template_name}")
+    try:
+        html_content = inject_json_to_html(payload.json_data, payload.template_name)
+        if not html_content:
+            raise HTTPException(status_code=500, detail="Failed to inject JSON into template HTML")
+        return {"html_content": html_content}
+    except Exception as e:
+        logger.error(f"Error previewing document: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/parse-cv")
 async def parse_cv(file: UploadFile = File(...), user_id: str = Form(...)):
     logger.info(f"API Parse CV PDF request received from user_id: {user_id}")

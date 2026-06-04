@@ -1,17 +1,30 @@
 version: '3.8'
 
 services:
-  resume-builder:
-    build: .
-    container_name: resume_builder_app
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resume_builder_backend
     ports:
-      - "8501:8501"
+      - "8000:8000"
+    env_file:
+      - .env
     volumes:
-      # Mount the generated applications to the host machine so they persist
-      - ./generated_applications:/app/generated_applications
-      # Mount my_information so you can update your base PDFs without rebuilding the container
-      - ./my_information:/app/my_information
-    environment:
-      # Connect to the Ollama instance running on the host machine
-      - OLLAMA_HOST=http://host.docker.internal:11434
+      - ./logs:/app/logs
     restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
+        - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_KEY}
+        - NEXT_PUBLIC_API_URL=http://localhost:8000
+    container_name: resume_builder_frontend
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - backend

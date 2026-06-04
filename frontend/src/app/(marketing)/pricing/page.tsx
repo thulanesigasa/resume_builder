@@ -49,14 +49,7 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen py-16 px-4 flex flex-col justify-between">
       <div className="max-w-6xl w-full mx-auto space-y-12">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => router.push("/")}
-            className="p-2 btn-secondary hover:text-brand-indigo flex items-center gap-1.5 text-xs cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Welcome
-          </button>
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-2 text-xs tracking-wider text-brand-navy/70 bg-brand-navy/5 border border-brand-navy/10 px-3 py-1 rounded-full">
             <span className="w-1.5 h-1.5 bg-brand-indigo rounded-full glow-border-brand animate-pulse"></span>
             CREDITS & LICENSING
@@ -205,25 +198,55 @@ export default function PricingPage() {
                     <span>Original Price:</span>
                     <span>R {(numJobs * (batchType === "resume" ? 18 : 25)).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-brand-indigo text-[10px] font-semibold">
-                    <span>7.8% Batch Discount:</span>
-                    <span>- R {(numJobs * (batchType === "resume" ? 18 : 25) * 0.078).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-brand-deep font-bold border-t border-brand-navy/10 pt-1.5 text-sm">
-                    <span>Total Cost:</span>
-                    <span>R {(numJobs * (batchType === "resume" ? 18 : 25) * 0.922).toFixed(2)}</span>
-                  </div>
+                  {(() => {
+                    const getDiscountRate = (jobs: number) => {
+                      if (jobs >= 30) return 0.29;
+                      if (jobs >= 25) return 0.23;
+                      if (jobs >= 20) return 0.19;
+                      if (jobs >= 11) return 0.13;
+                      if (jobs >= 5) return 0.09;
+                      return 0;
+                    };
+                    const rate = getDiscountRate(numJobs);
+                    const basePrice = numJobs * (batchType === "resume" ? 18 : 25);
+                    const discountAmount = basePrice * rate;
+                    const finalPrice = basePrice - discountAmount;
+                    return (
+                      <>
+                        {rate > 0 && (
+                          <div className="flex justify-between text-brand-indigo text-[10px] font-semibold">
+                            <span>{(rate * 100).toFixed(0)}% Batch Discount:</span>
+                            <span>- R {discountAmount.toFixed(2)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-brand-deep font-bold border-t border-brand-navy/10 pt-1.5 text-sm">
+                          <span>Total Cost:</span>
+                          <span>R {finalPrice.toFixed(2)}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
             
             <button
-              onClick={() =>
+              onClick={() => {
+                const getDiscountRate = (jobs: number) => {
+                  if (jobs >= 30) return 0.29;
+                  if (jobs >= 25) return 0.23;
+                  if (jobs >= 20) return 0.19;
+                  if (jobs >= 11) return 0.13;
+                  if (jobs >= 5) return 0.09;
+                  return 0;
+                };
+                const rate = getDiscountRate(numJobs);
+                const finalPrice = (numJobs * (batchType === "resume" ? 18 : 25)) * (1 - rate);
                 handleSelectPlan(
                   `Batch Autopilot (${numJobs} jobs, ${batchType === "resume" ? "Resume Only" : "Combo"})`,
-                  `R ${(numJobs * (batchType === "resume" ? 18 : 25) * 0.922).toFixed(2)}`
-                )
-              }
+                  `R ${finalPrice.toFixed(2)}`
+                );
+              }}
               className="w-full py-2.5 btn-secondary text-xs cursor-pointer"
             >
               Checkout Batch
@@ -232,9 +255,7 @@ export default function PricingPage() {
         </div>
       </div>
 
-      <div className="text-center text-xs text-brand-navy/50 mt-12">
-        Secure checkout powered by Stripe. Cancel subscriptions anytime.
-      </div>
+
 
       {toast && (
         <div className="fixed bottom-5 right-5 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">

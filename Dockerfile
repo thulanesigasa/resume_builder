@@ -19,8 +19,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY . .
 
-# Expose Streamlit port
-EXPOSE 8501
+# Expose FastAPI port
+EXPOSE 8000
 
 # Command to run the application
-CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0"]
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]

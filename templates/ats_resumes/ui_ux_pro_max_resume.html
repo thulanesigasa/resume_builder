@@ -120,9 +120,10 @@
     }
     
     .skills-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px; /* Reduced from 8px */
+        -webkit-column-count: 2;
+        -moz-column-count: 2;
+        column-count: 2;
+        column-gap: 10px;
     }
     
     .skill-badge {

@@ -56,7 +56,7 @@ export default function RegisterPage() {
             A PRODUCT BY T.S INDUSTRIES
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight mb-2 text-brand-deep">
-            rbptech <span className="text-brand-indigo glow-text-brand">Resume Builder</span>
+            <span className="text-brand-indigo glow-text-brand">Resume Builder</span>
           </h1>
           <p className="text-sm text-brand-navy/70">
             Join us and start generating ATS-optimized templates today.

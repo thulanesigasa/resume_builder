@@ -1,0 +1,267 @@
+:root {
+    /* Color Palette */
+    --blue: #0056b3;
+    --blue-dark: #003d80;
+    --blue-light: #3378c2;
+    --black: #000000;
+    --white: #ffffff;
+    --gray-100: #f8f9fa;
+    --gray-200: #e9ecef;
+    --gray-800: #343a40;
+    
+    /* Spacing */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 2rem;
+    --spacing-lg: 4rem;
+    --spacing-xl: 8rem;
+    
+    /* Typography */
+    --font-main: 'Outfit', sans-serif;
+    
+    /* Transitions */
+    --transition-smooth: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-fast: all 0.3s ease;
+}
+
+/* Base Reset */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: initial;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--white);
+    color: var(--black);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+}
+
+/* Typography */
+h1, h2, h3 {
+    font-weight: 800;
+    line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+}
+
+.text-blue { color: var(--blue); }
+
+/* Buttons */
+.btn-primary, .btn-large, .btn-submit, .mil-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2.5rem;
+    background-color: var(--blue);
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 4px;
+    transition: var(--transition-smooth);
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+}
+
+.btn-large {
+    padding: 1.2rem 3rem;
+    font-size: 1rem;
+}
+
+.btn-primary:hover, .btn-large:hover, .btn-submit:hover, .mil-button:hover {
+    background-color: var(--black);
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+
+.btn-submit:disabled, .mil-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.mil-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    text-align: center;
+}
+
+/* Merch Section */
+.mil-merch-banner {
+    background: var(--blue);
+    padding: 6rem;
+    border-radius: 20px;
+    color: var(--white);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.mil-merch-banner h3 {
+    font-size: 2.5rem;
+}
+
+.mil-merch-grid {
+    margin-top: 4rem;
+}
+
+.mil-merch-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+}
+
+.mil-merch-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+}
+
+.mil-merch-img {
+    height: 300px;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mil-merch-img img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.mil-merch-content {
+    padding: 2rem;
+}
+
+/* Form Alignment Fixes */
+#yvp-form input {
+    margin-bottom: 1.5rem;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    width: 100%;
+    padding: 1rem 0;
+    font-family: inherit;
+    font-size: 1.1rem;
+}
+
+#yvp-form input:focus {
+    outline: none;
+    border-color: var(--blue);
+}
+
+/* Toast Notification */
+.toast-container {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.toast {
+    padding: 1rem 2rem;
+    background: var(--black);
+    color: var(--white);
+    border-radius: 4px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    animation: toast-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.toast.error {
+    border-left: 4px solid #ff4b2b;
+}
+
+.toast.success {
+    border-left: 4px solid #25D366;
+}
+
+@keyframes toast-in {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Social Grid */
+.mil-social-grid {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+
+/* Social Cards (Uiverse.io Style adapted for dark bg) */
+.social-card-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+}
+
+.social-card {
+    outline: none;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    transition: .2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 15px;
+}
+
+.card-tiktok .tiktok-icon { fill: white; transition: .2s ease-in-out; }
+.card-instagram .instagram-icon { fill: white; transition: .2s ease-in-out; }
+.card-facebook .facebook-icon { fill: white; transition: .2s ease-in-out; }
+
+.social-card-wrapper:hover .card-tiktok { transform: scale(1.1); }
+.social-card-wrapper:hover .card-tiktok .tiktok-icon { fill: var(--blue-light); }
+
+.social-card-wrapper:hover .card-instagram { transform: scale(1.1); }
+.social-card-wrapper:hover .card-instagram .instagram-icon { fill: #cc39a4; }
+
+.social-card-wrapper:hover .card-facebook { transform: scale(1.1); }
+.social-card-wrapper:hover .card-facebook .facebook-icon { fill: #1877F2; }
+
+.mil-mt-15 { margin-top: 15px; }
+
+/* Utility: hidden by default, revealed by JS on success */
+.hidden {
+    display: none !important;
+}
+
+/* Scroll icon: rotate the horizontal arrow SVG to point downward */
+.mil-icon-button.mil-arrow-down svg {
+    transform: rotate(90deg);
+}

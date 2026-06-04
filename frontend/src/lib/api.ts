@@ -93,6 +93,19 @@ export const api = {
     return res.json();
   },
 
+  async previewHtml(templateName: string, jsonData: any): Promise<{ html_content: string }> {
+    const res = await fetch(`${API_BASE_URL}/api/preview-html`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ template_name: templateName, json_data: jsonData }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to fetch preview' }));
+      throw new Error(err.detail || 'Failed to fetch preview');
+    }
+    return res.json();
+  },
+
   async parseCv(file: File, userId: string): Promise<{ extracted_text: string }> {
     const formData = new FormData();
     formData.append('file', file);

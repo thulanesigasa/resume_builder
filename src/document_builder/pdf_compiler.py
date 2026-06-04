@@ -22,7 +22,7 @@ def create_application_folder_name(company: str, job_title: str) -> str:
     if not safe_title:
         safe_title = "Role"
         
-    return f"[{safe_company}_{safe_title}_{date_str}]"
+    return f"{safe_company}_{safe_title}_{date_str}"
 
 def compile_to_pdf(html_content: str, folder_name: str, file_name: str, user_id: str = None) -> str:
     """

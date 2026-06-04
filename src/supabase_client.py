@@ -1,13 +1,16 @@
 from supabase import create_client, Client
-from src.config import SUPABASE_URL, SUPABASE_KEY
+from src.config import SUPABASE_URL, SUPABASE_KEY, SUPABASE_SERVICE_ROLE_KEY
 from src.utils.logger import logger
 import streamlit as st
 
 supabase_client: Client = None
 
-if SUPABASE_URL and SUPABASE_KEY:
+# Prefer service_role_key if available to bypass RLS for backend operations
+ACTIVE_SUPABASE_KEY = SUPABASE_SERVICE_ROLE_KEY if SUPABASE_SERVICE_ROLE_KEY else SUPABASE_KEY
+
+if SUPABASE_URL and ACTIVE_SUPABASE_KEY:
     try:
-        supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        supabase_client = create_client(SUPABASE_URL, ACTIVE_SUPABASE_KEY)
         logger.info("Global Supabase client successfully initialized.")
     except Exception as e:
         logger.error(f"Failed to initialize global Supabase client: {e}")
@@ -19,8 +22,8 @@ def get_supabase_client() -> Client:
     try:
         # st.session_state is only accessible in active Streamlit sessions
         if "supabase" not in st.session_state:
-            if SUPABASE_URL and SUPABASE_KEY:
-                st.session_state.supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+            if SUPABASE_URL and ACTIVE_SUPABASE_KEY:
+                st.session_state.supabase = create_client(SUPABASE_URL, ACTIVE_SUPABASE_KEY)
                 logger.info("Session-specific Supabase client initialized.")
             else:
                 return None
@@ -28,9 +31,9 @@ def get_supabase_client() -> Client:
     except Exception:
         # Standalone script/fallback mode (no active Streamlit context)
         global supabase_client
-        if not supabase_client and SUPABASE_URL and SUPABASE_KEY:
+        if not supabase_client and SUPABASE_URL and ACTIVE_SUPABASE_KEY:
             try:
-                supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+                supabase_client = create_client(SUPABASE_URL, ACTIVE_SUPABASE_KEY)
             except Exception as e:
                 logger.error(f"Failed to initialize fallback Supabase client: {e}")
         return supabase_client

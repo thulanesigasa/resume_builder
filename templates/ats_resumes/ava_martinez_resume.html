@@ -104,9 +104,9 @@
 
         <div class="section">
             <div class="section-header">Key Skills</div>
-            <ul>
+            <ul style="-webkit-column-count: 2; -moz-column-count: 2; column-count: 2; column-gap: 10px;">
                 {% for skill in skills %}
-                <li>{{ skill }}</li>
+                <li style="page-break-inside: avoid; margin-bottom: 4px;">{{ skill }}</li>
                 {% endfor %}
             </ul>
         </div>

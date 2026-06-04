@@ -22,6 +22,7 @@ import {
   Briefcase,
   Zap,
   Download,
+  Eye,
 } from "lucide-react";
 
 function DashboardContent() {
@@ -85,6 +86,72 @@ function DashboardContent() {
 
   // Archive
   const [applications, setApplications] = useState<any[]>([]);
+  const [selectedApps, setSelectedApps] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<{ids: string[]} | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<{name: string, type: string} | null>(null);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  const handlePreview = async (templateName: string, type: string) => {
+    setPreviewTemplate({ name: templateName, type });
+    setPreviewLoading(true);
+    setPreviewHtml(null);
+    try {
+      const dummyData = type === 'Resume' ? {
+        contact_info: {name: "Jane Doe", email: "jane@example.com", phone: "123-456-7890", location: "New York, NY", linkedin: "linkedin.com/in/janedoe"},
+        professional_summary: "Experienced professional with a track record of success and driving key business objectives.",
+        skills: ["Project Management", "Data Analysis", "Communication", "Leadership", "Agile", "Scrum"],
+        experience: [
+          {company: "Tech Corp", title: "Senior Developer", dates: "2020 - Present", achievements: ["Led a cross-functional team of 5", "Increased revenue by 10% through optimization"]}
+        ],
+        education: [
+          {institution: "State University", degree: "BS Computer Science", dates: "2016 - 2020"}
+        ]
+      } : {
+        contact_info: {name: "Jane Doe", email: "jane@example.com", phone: "123-456-7890", location: "New York, NY", linkedin: "linkedin.com/in/janedoe"},
+        date: "October 10, 2023",
+        recipient_name: "Hiring Manager",
+        company_name: "InnovateTech",
+        greeting: "Dear Hiring Manager,",
+        opening_paragraph: "I am writing to express my interest in the open position at InnovateTech. With my extensive background, I am confident I would be a great fit.",
+        body_paragraphs: ["During my previous role, I successfully managed several large-scale projects and delivered them on time and under budget.", "I am particularly drawn to InnovateTech's mission and innovative approach to problem solving."],
+        closing_paragraph: "Thank you for considering my application. I look forward to the possibility of discussing this exciting opportunity with you.",
+        sign_off: "Sincerely,",
+        applicant_name: "Jane Doe"
+      };
+      
+      const res = await api.previewHtml(templateName, dummyData);
+      setPreviewHtml(res.html_content);
+    } catch (e) {
+      setPreviewHtml("<div style='padding:20px; color:red; text-align:center;'>Failed to load preview. Please try again later.</div>");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleDeleteApps = async (ids: string[]) => {
+    setConfirmDelete({ ids });
+  };
+
+  const executeDelete = async () => {
+    if (!confirmDelete) return;
+    const ids = confirmDelete.ids;
+    setIsDeleting(true);
+    setConfirmDelete(null);
+    try {
+      const { error } = await supabase.from("applications").delete().in("id", ids);
+      if (error) throw error;
+      setApplications((prev) => prev.filter((a) => !ids.includes(a.id)));
+      setSelectedApps((prev) => prev.filter((id) => !ids.includes(id)));
+      triggerToast("Successfully deleted application(s)", "success");
+      setStats((prev) => ({ ...prev, appsCount: Math.max(0, prev.appsCount - ids.length) }));
+    } catch (e: any) {
+      triggerToast("Failed to delete: " + e.message, "error");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // File inputs
   const cvFileInputRef = useRef<HTMLInputElement>(null);
@@ -733,10 +800,7 @@ function DashboardContent() {
       {/* Top Navbar */}
       <nav className="glass-panel sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-t-0 border-x-0">
         <div className="flex items-center gap-3">
-          <Briefcase className="w-5 h-5 text-brand-indigo" />
-          <span className="font-extrabold text-xl tracking-tight text-brand-deep">
-            rbptech
-          </span>
+          {/* Brand mark removed as requested */}
         </div>
 
         <div className="flex items-center gap-4">
@@ -744,6 +808,13 @@ function DashboardContent() {
             <User className="w-4 h-4 text-brand-indigo" />
             <span className="font-mono text-xs max-w-[120px] truncate">{username || user.email}</span>
           </div>
+          <button
+            onClick={() => setActiveTab("archive")}
+            className="flex items-center gap-1.5 px-3 py-1.5 btn-primary text-xs"
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            My Resumes
+          </button>
           <button
             onClick={handleLogOut}
             className="flex items-center gap-1.5 px-3 py-1.5 btn-secondary text-xs"
@@ -798,9 +869,14 @@ function DashboardContent() {
             {/* Template selections */}
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-semibold text-brand-navy/70 uppercase mb-2">
-                  Resume Template
-                </label>
+                <div className="flex justify-between items-end mb-2">
+                  <label className="block text-[10px] font-semibold text-brand-navy/70 uppercase">
+                    Resume Template
+                  </label>
+                  <button onClick={() => handlePreview(selectedResume, 'Resume')} className="text-[10px] text-brand-indigo hover:underline flex items-center gap-1">
+                    <Eye className="w-3 h-3" /> Preview
+                  </button>
+                </div>
                 <select
                   value={selectedResume}
                   onChange={(e) => setSelectedResume(e.target.value)}
@@ -815,9 +891,14 @@ function DashboardContent() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-semibold text-brand-navy/70 uppercase mb-2">
-                  Cover Letter Template
-                </label>
+                <div className="flex justify-between items-end mb-2">
+                  <label className="block text-[10px] font-semibold text-brand-navy/70 uppercase">
+                    Cover Letter Template
+                  </label>
+                  <button onClick={() => handlePreview(selectedCl, 'Cover Letter')} className="text-[10px] text-brand-indigo hover:underline flex items-center gap-1">
+                    <Eye className="w-3 h-3" /> Preview
+                  </button>
+                </div>
                 <select
                   value={selectedCl}
                   onChange={(e) => setSelectedCl(e.target.value)}
@@ -1267,18 +1348,49 @@ function DashboardContent() {
             {/* TAB D: SAVED ARCHIVES */}
             {activeTab === "archive" && (
               <div className="glass-panel p-6 rounded-xl space-y-6">
-                <div className="flex justify-between items-center border-b border-brand-navy/15 pb-3">
+                <div className="flex justify-between items-center border-b border-brand-navy/15 pb-3 flex-wrap gap-2">
                   <h3 className="text-base font-bold text-brand-deep flex items-center gap-2">
                     <FolderOpen className="w-5 h-5 text-brand-indigo" />
                     Applications Archives
                   </h3>
-                  <button
-                    onClick={() => loadUserData(user.id)}
-                    className="p-2 btn-secondary hover:text-brand-indigo flex items-center gap-1.5 text-xs"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    Refresh
-                  </button>
+                  <div className="flex gap-2 items-center flex-wrap">
+                    {applications.length > 0 && (
+                      <>
+                        <button
+                          onClick={() => {
+                            if (selectedApps.length === applications.length) setSelectedApps([]);
+                            else setSelectedApps(applications.map(a => a.id));
+                          }}
+                          className="px-3 py-1.5 btn-secondary text-xs"
+                        >
+                          {selectedApps.length === applications.length ? "Deselect All" : "Select All"}
+                        </button>
+                        {selectedApps.length > 0 && (
+                          <button
+                            onClick={() => handleDeleteApps(selectedApps)}
+                            disabled={isDeleting}
+                            className="px-3 py-1.5 btn-secondary text-xs hover:text-red-500 hover:border-red-200 disabled:opacity-50 transition-colors"
+                          >
+                            Delete Selected ({selectedApps.length})
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteApps(applications.map(a => a.id))}
+                          disabled={isDeleting}
+                          className="px-3 py-1.5 btn-secondary text-xs hover:text-red-500 hover:border-red-200 disabled:opacity-50 transition-colors"
+                        >
+                          Delete All
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => loadUserData(user.id)}
+                      className="p-2 btn-secondary hover:text-brand-indigo flex items-center gap-1.5 text-xs"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Refresh
+                    </button>
+                  </div>
                 </div>
 
                 {applications.length === 0 ? (
@@ -1293,8 +1405,19 @@ function DashboardContent() {
                         className="glass-panel p-5 rounded-xl border border-brand-navy/10 hover:border-brand-indigo/30 transition-all flex flex-col justify-between"
                       >
                         <div className="space-y-2">
-                          <div className="text-[10px] text-brand-navy/60 font-mono">
-                            Compiled on {app.created_at?.slice(0, 10)}
+                          <div className="flex justify-between items-start">
+                            <div className="text-[10px] text-brand-navy/60 font-mono">
+                              Compiled on {app.created_at?.slice(0, 10)}
+                            </div>
+                            <input 
+                              type="checkbox" 
+                              checked={selectedApps.includes(app.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) setSelectedApps(prev => [...prev, app.id]);
+                                else setSelectedApps(prev => prev.filter(id => id !== app.id));
+                              }}
+                              className="w-3.5 h-3.5 text-brand-indigo rounded border-brand-navy/20 cursor-pointer"
+                            />
                           </div>
                           <div className="text-sm font-bold text-brand-deep">
                             {app.job_title} at <span className="text-brand-indigo">{app.company_name}</span>
@@ -1332,6 +1455,15 @@ function DashboardContent() {
                           ) : (
                             <span className="text-xs text-brand-navy/40 italic text-center self-center">No CL compiled</span>
                           )}
+                          
+                          <button
+                            onClick={() => handleDeleteApps([app.id])}
+                            disabled={isDeleting}
+                            className="col-span-2 py-1.5 mt-1 btn-secondary text-xs text-center flex justify-center items-center gap-1 hover:text-red-500 hover:border-red-200 disabled:opacity-50 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -1393,6 +1525,82 @@ function DashboardContent() {
                   executeDeleteCert(id);
                 }}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-xs transition-colors cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Template Preview Modal */}
+      {previewTemplate && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="glass-panel max-w-4xl w-full h-[85vh] rounded-2xl p-6 relative bg-white flex flex-col">
+            <div className="flex items-center justify-between border-b border-brand-navy/10 pb-3 mb-4">
+              <h3 className="text-base font-bold text-brand-deep flex items-center gap-2 capitalize">
+                <Eye className="w-5 h-5 text-brand-indigo" />
+                {previewTemplate.type} Preview: <span className="font-normal text-sm ml-1 text-brand-navy/80">{previewTemplate.name.replace('.html', '').replace(/_/g, ' ')}</span>
+              </h3>
+              <button onClick={() => setPreviewTemplate(null)} className="text-brand-navy/60 hover:text-brand-deep font-bold text-xl cursor-pointer">×</button>
+            </div>
+            
+            <div className="flex-1 bg-brand-navy/5 rounded-lg border border-brand-navy/10 overflow-hidden relative">
+              {previewLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10">
+                  <div className="w-8 h-8 border-4 border-brand-indigo border-t-transparent rounded-full animate-spin mb-2"></div>
+                  <p className="text-sm font-semibold text-brand-navy/60">Rendering Template...</p>
+                </div>
+              )}
+              {previewHtml && (
+                <>
+                  <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                    <div className="transform -rotate-45 text-brand-navy/20 font-black text-6xl tracking-widest whitespace-nowrap">
+                      PREVIEW ONLY
+                    </div>
+                  </div>
+                  <iframe 
+                    srcDoc={previewHtml}
+                    className="w-full h-full border-none blur-[4px] select-none pointer-events-none"
+                    title="Template Preview"
+                  />
+                </>
+              )}
+            </div>
+            
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setPreviewTemplate(null)}
+                className="px-4 py-2 btn-secondary text-xs cursor-pointer"
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="glass-panel max-w-sm w-full rounded-2xl p-6 relative bg-white flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-brand-navy/5 flex items-center justify-center mb-4">
+              <Trash2 className="w-6 h-6 text-brand-indigo" />
+            </div>
+            <h3 className="text-lg font-bold text-brand-deep mb-2">Delete {confirmDelete.ids.length > 1 ? `${confirmDelete.ids.length} items` : 'Item'}</h3>
+            <p className="text-sm text-brand-navy/70 mb-6">
+              Are you sure you want to delete {confirmDelete.ids.length > 1 ? 'these items' : 'this item'}? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 px-4 py-2 btn-secondary text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeDelete}
+                className="flex-1 px-4 py-2 bg-brand-deep text-white rounded text-sm hover:bg-brand-navy transition-colors font-semibold shadow-md shadow-brand-deep/20"
               >
                 Delete
               </button>

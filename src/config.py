@@ -11,6 +11,7 @@ TEMPERATURE = float(os.getenv("TEMPERATURE", "0.2"))
 # Supabase Database & Storage Configuration
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "resumes")
 
 # Web Scraping Configuration (ZenRows / Scrape.do or manual fallback)

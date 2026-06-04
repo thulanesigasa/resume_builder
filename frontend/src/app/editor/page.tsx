@@ -14,6 +14,7 @@ import {
   Trash,
   Settings,
   Flame,
+  Eye,
 } from "lucide-react";
 
 export default function EditorPage() {
@@ -35,6 +36,34 @@ export default function EditorPage() {
   const [compiling, setCompiling] = useState(false);
   const [downloadUrls, setDownloadUrls] = useState<{ resume?: string; cl?: string }>({});
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<{name: string, type: string} | null>(null);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  const handlePreview = async (templateName: string, type: string) => {
+    setPreviewTemplate({ name: templateName, type });
+    setPreviewLoading(true);
+    setPreviewHtml(null);
+    try {
+      // Pass actual data from editor if it exists, otherwise pass dummy
+      let previewData = type === 'Resume' ? (resumeJson || {}) : (clJson || {});
+      
+      // Cover letters also require contact_info for the header, grab it from resumeJson if missing
+      if (type === 'Cover Letter' && !previewData.contact_info) {
+        previewData = {
+          ...previewData,
+          contact_info: resumeJson?.contact_info || { name: "Applicant Name", email: "email@example.com", phone: "123-456-7890", location: "City, State" }
+        };
+      }
+      
+      const res = await api.previewHtml(templateName, previewData);
+      setPreviewHtml(res.html_content);
+    } catch (e) {
+      setPreviewHtml("<div style='padding:20px; color:red; text-align:center;'>Failed to load preview. Please try again later.</div>");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   const triggerToast = (message: string, type: "success" | "error" | "info" = "info") => {
     setToast({ message, type });
@@ -648,7 +677,12 @@ export default function EditorPage() {
             {/* Design styles configs */}
             <div className="space-y-3">
               <div>
-                <label className="block text-[10px] uppercase text-brand-navy/70 mb-1 font-semibold">Active Template</label>
+                <div className="flex justify-between items-end mb-1">
+                  <label className="block text-[10px] uppercase text-brand-navy/70 font-semibold">Active Template</label>
+                  <button onClick={() => handlePreview(activeTab === "resume" ? selectedResume : selectedCl, activeTab === "resume" ? 'Resume' : 'Cover Letter')} className="text-[10px] text-brand-indigo hover:underline flex items-center gap-1">
+                    <Eye className="w-3 h-3" /> Preview
+                  </button>
+                </div>
                 <select
                   value={activeTab === "resume" ? selectedResume : selectedCl}
                   onChange={(e) =>
@@ -742,10 +776,23 @@ export default function EditorPage() {
 
               {atsScore.missing_keywords && atsScore.missing_keywords.length > 0 ? (
                 <div className="space-y-2 pt-2 border-t border-brand-navy/10">
-                  <span className="text-[10px] font-bold text-brand-indigo uppercase tracking-wider block flex items-center gap-1">
-                    <AlertTriangle className="w-3.5 h-3.5 text-brand-indigo" />
-                    Missing Keywords
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-brand-indigo uppercase tracking-wider block flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5 text-brand-indigo" />
+                      Missing Keywords
+                    </span>
+                    <button
+                      onClick={() => {
+                        const newSkills = [...(resumeJson?.skills || []), ...atsScore.missing_keywords];
+                        persistChanges({ ...resumeJson, skills: newSkills }, null);
+                        setAtsScore({ ...atsScore, missing_keywords: [] });
+                        triggerToast("Missing keywords added to your skills!", "success");
+                      }}
+                      className="text-[10px] font-semibold text-white bg-brand-indigo hover:bg-brand-indigo/90 px-2 py-0.5 rounded transition-colors"
+                    >
+                      Add All to Skills
+                    </button>
+                  </div>
                   <div className="flex flex-wrap gap-1.5">
                     {atsScore.missing_keywords.map((kw: string, i: number) => (
                       <span key={i} className="text-[10px] px-2 py-0.5 rounded bg-brand-navy/5 border border-brand-navy/15 text-brand-deep font-semibold">
@@ -763,6 +810,54 @@ export default function EditorPage() {
           )}
         </div>
       </div>
+
+      {/* Template Preview Modal */}
+      {previewTemplate && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="glass-panel max-w-4xl w-full h-[85vh] rounded-2xl p-6 relative bg-white flex flex-col">
+            <div className="flex items-center justify-between border-b border-brand-navy/10 pb-3 mb-4">
+              <h3 className="text-base font-bold text-brand-deep flex items-center gap-2 capitalize">
+                <Eye className="w-5 h-5 text-brand-indigo" />
+                {previewTemplate.type} Preview: <span className="font-normal text-sm ml-1 text-brand-navy/80">{previewTemplate.name.replace('.html', '').replace(/_/g, ' ')}</span>
+              </h3>
+              <button onClick={() => setPreviewTemplate(null)} className="text-brand-navy/60 hover:text-brand-deep font-bold text-xl cursor-pointer">×</button>
+            </div>
+            
+            <div className="flex-1 bg-brand-navy/5 rounded-lg border border-brand-navy/10 overflow-hidden relative">
+              {previewLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10">
+                  <div className="w-8 h-8 border-4 border-brand-indigo border-t-transparent rounded-full animate-spin mb-2"></div>
+                  <p className="text-sm font-semibold text-brand-navy/60">Rendering Template...</p>
+                </div>
+              )}
+              {previewHtml && (
+                <>
+                  <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                    <div className="transform -rotate-45 text-brand-navy/20 font-black text-6xl tracking-widest whitespace-nowrap">
+                      PREVIEW ONLY
+                    </div>
+                  </div>
+                  <iframe 
+                    srcDoc={previewHtml}
+                    className="w-full h-full border-none blur-[4px] select-none pointer-events-none"
+                    title="Template Preview"
+                  />
+                </>
+              )}
+            </div>
+            
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setPreviewTemplate(null)}
+                className="px-4 py-2 btn-secondary text-xs cursor-pointer"
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast && (
         <div className="fixed bottom-5 right-5 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
           <div className={`p-4 rounded-xl border shadow-lg flex items-center gap-2 max-w-sm ${
