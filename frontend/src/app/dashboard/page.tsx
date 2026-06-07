@@ -157,6 +157,9 @@ function DashboardContent() {
     localStorage.setItem("edit_ats_score", JSON.stringify({ score: app.ats_score }));
     localStorage.setItem("edit_selected_resume_template", selectedResume);
     localStorage.setItem("edit_selected_cl_template", selectedCl);
+    localStorage.setItem("edit_app_id", app.id);
+    localStorage.setItem("edit_resume_compile_count", String(app.resume_compile_count || 0));
+    localStorage.setItem("edit_cl_compile_count", String(app.cl_compile_count || 0));
     
     router.push("/editor");
   };

@@ -40,6 +40,13 @@ export default function EditorPage() {
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
 
+  // App-specific compile tracking
+  const [appId, setAppId] = useState<string | null>(null);
+  const [resumeCount, setResumeCount] = useState(0);
+  const [clCount, setClCount] = useState(0);
+  const MAX_RESUME_COMPILES = 2;
+  const MAX_CL_COMPILES = 1;
+
   const handlePreview = async (templateName: string, type: string) => {
     setPreviewTemplate({ name: templateName, type });
     setPreviewLoading(true);
@@ -93,6 +100,9 @@ export default function EditorPage() {
       const cachedAts = localStorage.getItem("edit_ats_score");
       const cachedResTemplate = localStorage.getItem("edit_selected_resume_template");
       const cachedClTemplate = localStorage.getItem("edit_selected_cl_template");
+      const cachedAppId = localStorage.getItem("edit_app_id");
+      const cachedResCount = localStorage.getItem("edit_resume_compile_count");
+      const cachedClCount = localStorage.getItem("edit_cl_compile_count");
 
       if (cachedResume) setResumeJson(JSON.parse(cachedResume));
       if (cachedCl) setClJson(JSON.parse(cachedCl));
@@ -101,6 +111,9 @@ export default function EditorPage() {
       if (cachedAts) setAtsScore(JSON.parse(cachedAts));
       if (cachedResTemplate) setSelectedResume(cachedResTemplate);
       if (cachedClTemplate) setSelectedCl(cachedClTemplate);
+      if (cachedAppId) setAppId(cachedAppId);
+      if (cachedResCount) setResumeCount(parseInt(cachedResCount, 10));
+      if (cachedClCount) setClCount(parseInt(cachedClCount, 10));
 
       setLoading(false);
     };
@@ -122,13 +135,25 @@ export default function EditorPage() {
 
   // Compile Handler
   const handleCompilePdf = async () => {
-    if (!user) return;
+    if (!user || !appId) {
+      triggerToast("Application ID is missing. Cannot compile.", "error");
+      return;
+    }
+
+    if (activeTab === "resume" && resumeCount >= MAX_RESUME_COMPILES) {
+      triggerToast("Resume template compilation limit reached for this application.", "error");
+      return;
+    }
+    if (activeTab === "cl" && clCount >= MAX_CL_COMPILES) {
+      triggerToast("Cover letter template compilation limit reached for this application.", "error");
+      return;
+    }
+
     setCompiling(true);
     try {
-      let finalResumeUrl = null;
-      let finalClUrl = null;
+      let finalUrl = null;
 
-      if (resumeJson) {
+      if (activeTab === "resume" && resumeJson) {
         const res = await api.compileDoc({
           json_data: resumeJson,
           template_name: selectedResume,
@@ -137,10 +162,22 @@ export default function EditorPage() {
           user_id: user.id,
           doc_type: "resume",
         });
-        finalResumeUrl = res.download_url;
-      }
-
-      if (clJson) {
+        finalUrl = res.download_url;
+        
+        // Update database with new resume URL, json and count
+        const newCount = resumeCount + 1;
+        const { error } = await supabase.from("applications").update({
+          resume_url: finalUrl,
+          resume_json: resumeJson,
+          resume_compile_count: newCount
+        }).eq("id", appId);
+        
+        if (error) throw error;
+        setResumeCount(newCount);
+        localStorage.setItem("edit_resume_compile_count", String(newCount));
+        setDownloadUrls((prev) => ({ ...prev, resume: finalUrl }));
+      } 
+      else if (activeTab === "cl" && clJson) {
         const clRes = await api.compileDoc({
           json_data: clJson,
           template_name: selectedCl,
@@ -149,25 +186,23 @@ export default function EditorPage() {
           user_id: user.id,
           doc_type: "cover_letter",
         });
-        finalClUrl = clRes.download_url;
+        finalUrl = clRes.download_url;
+
+        // Update database with new CL URL, json and count
+        const newCount = clCount + 1;
+        const { error } = await supabase.from("applications").update({
+          cover_letter_url: finalUrl,
+          cl_json: clJson,
+          cl_compile_count: newCount
+        }).eq("id", appId);
+        
+        if (error) throw error;
+        setClCount(newCount);
+        localStorage.setItem("edit_cl_compile_count", String(newCount));
+        setDownloadUrls((prev) => ({ ...prev, cl: finalUrl }));
       }
 
-      setDownloadUrls({
-        resume: finalResumeUrl || undefined,
-        cl: finalClUrl || undefined,
-      });
-
-      // Save database applications log
-      await supabase.from("applications").insert({
-        user_id: user.id,
-        company_name: company,
-        job_title: jobTitle,
-        ats_score: atsScore?.score || null,
-        resume_url: finalResumeUrl,
-        cover_letter_url: finalClUrl,
-      });
-
-      triggerToast("PDF compilation complete! Signed download links are ready.", "success");
+      triggerToast("PDF compiled successfully! Signed download link is ready.", "success");
     } catch (err: any) {
       triggerToast("Compilation failed: " + err.message, "error");
     } finally {
@@ -710,7 +745,7 @@ export default function EditorPage() {
 
             <button
               onClick={handleCompilePdf}
-              disabled={compiling}
+              disabled={compiling || (activeTab === "resume" ? resumeCount >= MAX_RESUME_COMPILES : clCount >= MAX_CL_COMPILES)}
               className="w-full py-3 btn-primary text-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
             >
               {compiling ? (
@@ -718,7 +753,9 @@ export default function EditorPage() {
               ) : (
                 <>
                   <FileCheck className="w-4 h-4" />
-                  Compile PDFs (Build Live)
+                  {activeTab === "resume" 
+                    ? `Compile Resume (${MAX_RESUME_COMPILES - resumeCount}/${MAX_RESUME_COMPILES} left)` 
+                    : `Compile Cover Letter (${MAX_CL_COMPILES - clCount}/${MAX_CL_COMPILES} left)`}
                 </>
               )}
             </button>
