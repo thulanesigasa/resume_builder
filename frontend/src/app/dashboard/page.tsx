@@ -130,6 +130,28 @@ function DashboardContent() {
     }
   };
 
+  const handleOpenInEditor = (app: any) => {
+    if (!app.resume_json && !app.cl_json) {
+      triggerToast("Cannot edit: This application does not contain raw JSON data.", "error");
+      return;
+    }
+    
+    // Save to localStorage for editor access
+    if (app.resume_json) localStorage.setItem("edit_resume_json", JSON.stringify(app.resume_json));
+    else localStorage.removeItem("edit_resume_json");
+    
+    if (app.cl_json) localStorage.setItem("edit_cl_json", JSON.stringify(app.cl_json));
+    else localStorage.removeItem("edit_cl_json");
+    
+    localStorage.setItem("edit_company", app.company_name);
+    localStorage.setItem("edit_job_title", app.job_title);
+    localStorage.setItem("edit_ats_score", JSON.stringify({ score: app.ats_score }));
+    localStorage.setItem("edit_selected_resume_template", selectedResume);
+    localStorage.setItem("edit_selected_cl_template", selectedCl);
+    
+    router.push("/editor");
+  };
+
   const handleDeleteApps = async (ids: string[]) => {
     setConfirmDelete({ ids });
   };
@@ -816,7 +838,9 @@ function DashboardContent() {
             job_title: jTitle,
             ats_score: appScore,
             resume_url: resumeUrl,
-            cover_letter_url: clUrl
+            cover_letter_url: clUrl,
+            resume_json: rJson,
+            cl_json: clJson
           });
 
           setBatchLogs((prev) => [...prev, `✅ [Job ${i + 1}] Finished and logged into archive.`]);
@@ -1526,6 +1550,16 @@ function DashboardContent() {
                             </a>
                           ) : (
                             <span className="text-xs text-brand-navy/40 italic text-center self-center">No CL compiled</span>
+                          )}
+                          
+                          {(app.resume_json || app.cl_json) && (
+                            <button
+                              onClick={() => handleOpenInEditor(app)}
+                              className="col-span-2 py-1.5 btn-secondary text-xs text-center flex items-center justify-center gap-1 mt-1 border-brand-indigo/30 hover:border-brand-indigo text-brand-indigo"
+                            >
+                              <Zap className="w-3.5 h-3.5" />
+                              Open in Editor
+                            </button>
                           )}
                           
                           <button
