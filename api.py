@@ -257,6 +257,23 @@ async def parse_cv(file: UploadFile = File(...), user_id: str = Form(...), user:
         logger.error(f"Error parsing CV PDF: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+class AutoNameRequest(BaseModel):
+    extracted_text: str
+
+@app.post("/api/documents/auto-name")
+async def auto_name_document(payload: AutoNameRequest, user: dict = Depends(verify_token)):
+    logger.info(f"API Auto-name document request received from user: {user.id}")
+    try:
+        if not payload.extracted_text.strip():
+            return {"name": "Blank Document"}
+            
+        from src.ai_engine.openai_client import generate_document_name
+        ai_name = generate_document_name(payload.extracted_text)
+        return {"name": ai_name}
+    except Exception as e:
+        logger.error(f"Error auto-naming document: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)

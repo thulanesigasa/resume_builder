@@ -158,16 +158,36 @@ def extract_text_from_pdf_ocr(pdf_bytes: bytes) -> str:
                         ],
                     }
                 ],
-                max_tokens=1500,
-                temperature=0.1
+                max_tokens=2000,
             )
-            
-            page_text = response.choices[0].message.content
-            if page_text:
-                transcriptions.append(page_text.strip())
-                
+            transcriptions.append(response.choices[0].message.content)
+
         return "\n\n".join(transcriptions)
     except Exception as e:
-        logger.error(f"Failed to perform AI Vision OCR: {e}")
+        logger.error(f"OCR fallback failed: {e}")
         return ""
 
+def generate_document_name(extracted_text: str) -> str:
+    """
+    Generates a short, descriptive name (max 5 words) for an uploaded document
+    based on its parsed text.
+    """
+    api_client = get_client()
+    if not api_client:
+        return "Untitled Document"
+
+    system_prompt = "You are a document categorization AI. Read the provided text extracted from a user's uploaded document (which may be a certificate, transcript, recommendation letter, or resume). Generate a highly concise, descriptive title for this document (maximum 5 words). Output only the title, no quotes or punctuation."
+
+    try:
+        response = api_client.chat.completions.create(
+            model=OPENAI_MODEL_NAME,
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': extracted_text[:2000]} # Only need the first 2000 chars to guess the title
+            ],
+            temperature=0.3
+        )
+        return response.choices[0].message.content.strip().strip('"')
+    except Exception as e:
+        logger.error(f"Failed to generate document name: {e}")
+        return "Uploaded Document"

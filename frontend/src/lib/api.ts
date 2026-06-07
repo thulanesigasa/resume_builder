@@ -153,4 +153,17 @@ export const api = {
     }
     return res.json();
   },
+  
+  async autoNameDocument(extracted_text: string) {
+    const res = await fetch(`${API_BASE_URL}/api/documents/auto-name`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify({ extracted_text }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to auto-name document' }));
+      throw new Error(err.detail || 'Failed to auto-name document');
+    }
+    return res.json();
+  }
 };

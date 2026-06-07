@@ -58,7 +58,7 @@ function DashboardContent() {
   const [certUrls, setCertUrls] = useState<{ [id: string]: string }>({});
   const [newCertName, setNewCertName] = useState("");
   const [manualCertText, setManualCertText] = useState("");
-  const [certPdfFile, setCertPdfFile] = useState<File | null>(null);
+  const [certPdfFiles, setCertPdfFiles] = useState<File[]>([]);
   const [uploadingCert, setUploadingCert] = useState(false);
   const [previewCert, setPreviewCert] = useState<any | null>(null);
 
@@ -418,52 +418,85 @@ function DashboardContent() {
 
   const handleUploadCertificate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newCertName.trim()) return;
+    if (!user) return;
+    
+    // We either need files or manual text with a manually provided name
+    if (certPdfFiles.length === 0 && (!manualCertText.trim() || !newCertName.trim())) {
+      triggerToast("Please upload PDF documents or manually provide a name and text description.", "error");
+      return;
+    }
 
     setUploadingCert(true);
     try {
-      let finalExtractedText = manualCertText;
+      // 1. Process files if uploaded
+      let uploadedCount = 0;
+      for (const file of certPdfFiles) {
+        // Extract text from the PDF
+        const parseRes = await api.parseCv(file, user.id);
+        const extractedText = parseRes.extracted_text;
+        
+        if (!extractedText.trim()) continue;
 
-      // 1. Parse PDF in memory if uploaded
-      if (certPdfFile) {
-        const res = await api.parseCv(certPdfFile, user.id);
-        finalExtractedText = res.extracted_text;
+        // Prevent duplicates
+        const isDuplicate = certificates.some(c => c.extracted_text === extractedText);
+        if (isDuplicate) {
+          triggerToast(`Skipped duplicate document: ${file.name}`, "info");
+          continue;
+        }
+
+        // Auto-name the document using our new AI endpoint
+        const nameRes = await api.autoNameDocument(extractedText);
+        const aiName = nameRes.name || "Untitled Document";
+
+        // Insert record into database certificates table
+        const { data: certRecord, error: insertError } = await supabase
+          .from("certificates")
+          .insert({
+            user_id: user.id,
+            name: aiName,
+            extracted_text: extractedText,
+          })
+          .select("id")
+          .single();
+
+        if (insertError) throw insertError;
+
+        // Upload file to Supabase Storage using certificate ID
+        if (certRecord) {
+          await supabase.storage
+            .from("resumes")
+            .upload(`${user.id}/certificates/${certRecord.id}.pdf`, file, { upsert: true });
+        }
+        uploadedCount++;
       }
 
-      if (!finalExtractedText.trim()) {
-        triggerToast("Please add text details or upload a valid credential PDF.", "error");
-        return;
-      }
-
-      // 2. Insert record into database certificates table
-      const { data: certRecord, error: insertError } = await supabase
-        .from("certificates")
-        .insert({
-          user_id: user.id,
-          name: newCertName,
-          extracted_text: finalExtractedText,
-        })
-        .select("id")
-        .single();
-
-      if (insertError) throw insertError;
-
-      // 3. Upload file to Supabase Storage using certificate ID
-      if (certPdfFile && certRecord) {
-        await supabase.storage
-          .from("resumes")
-          .upload(`${user.id}/certificates/${certRecord.id}.pdf`, certPdfFile, { upsert: true });
+      // 2. Process manual text entry if provided
+      if (manualCertText.trim() && newCertName.trim()) {
+        const isDuplicate = certificates.some(c => c.extracted_text === manualCertText);
+        if (isDuplicate) {
+          triggerToast(`Skipped duplicate manual document: ${newCertName}`, "info");
+        } else {
+          const { error: manualError } = await supabase
+            .from("certificates")
+            .insert({
+              user_id: user.id,
+              name: newCertName,
+              extracted_text: manualCertText,
+            });
+          if (manualError) throw manualError;
+          uploadedCount++;
+        }
       }
 
       setNewCertName("");
       setManualCertText("");
-      setCertPdfFile(null);
+      setCertPdfFiles([]);
       if (certFileInputRef.current) certFileInputRef.current.value = "";
       
       await loadUserData(user.id);
-      triggerToast("Credential uploaded and saved successfully!", "success");
+      triggerToast("Document(s) uploaded and saved successfully!", "success");
     } catch (err: any) {
-      triggerToast("Failed to save credential: " + err.message, "error");
+      triggerToast("Failed to process document(s): " + err.message, "error");
     } finally {
       setUploadingCert(false);
     }
@@ -572,7 +605,7 @@ function DashboardContent() {
           title = scrapeRes.job_title;
           requirements = {
             resume: true,
-            cover_letter: includeCoverLetter || scrapeRes.requirements.cover_letter
+            cover_letter: includeCoverLetter
           };
           jobDescriptionText = scrapeRes.job_description;
         } else {
@@ -1123,25 +1156,36 @@ function DashboardContent() {
                       )}
 
                       <form onSubmit={handleUploadCertificate} className="space-y-3 pt-2">
+                        <div className="flex flex-col gap-2 p-3 border border-dashed border-brand-navy/20 rounded-xl bg-brand-navy/[0.01]">
+                          <label className="text-xs font-semibold text-brand-navy/70 uppercase">Bulk Upload Documents</label>
+                          <input
+                            type="file"
+                            accept=".pdf"
+                            multiple
+                            ref={certFileInputRef}
+                            onChange={(e) => setCertPdfFiles(Array.from(e.target.files || []))}
+                            className="text-xs text-brand-navy/70 w-full"
+                          />
+                          <p className="text-[10px] text-brand-navy/60">
+                            Select multiple PDFs (transcripts, certificates, past resumes). The AI will extract text and automatically name them!
+                          </p>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-xs font-semibold text-brand-navy/40">
+                          <hr className="flex-1 border-brand-navy/10" />
+                          <span>OR MANUAL ENTRY</span>
+                          <hr className="flex-1 border-brand-navy/10" />
+                        </div>
+
                         <input
                           type="text"
-                          required
-                          placeholder="e.g. AWS Solutions Architect"
+                          placeholder="Manual Name (e.g. AWS Solutions Architect)"
                           className="w-full px-3 py-2 glass-input text-xs"
                           value={newCertName}
                           onChange={(e) => setNewCertName(e.target.value)}
                         />
-                        <div className="flex gap-2">
-                          <input
-                            type="file"
-                            accept=".pdf"
-                            ref={certFileInputRef}
-                            onChange={(e) => setCertPdfFile(e.target.files?.[0] || null)}
-                            className="text-xs text-brand-navy/70 w-full"
-                          />
-                        </div>
                         <textarea
-                          placeholder="Or paste credential text description here..."
+                          placeholder="Paste manual credential text description here..."
                           className="w-full h-20 px-3 py-2 glass-input text-xs"
                           value={manualCertText}
                           onChange={(e) => setManualCertText(e.target.value)}
@@ -1149,10 +1193,10 @@ function DashboardContent() {
                         <button
                           type="submit"
                           disabled={uploadingCert}
-                          className="w-full py-2 btn-primary text-xs flex items-center justify-center gap-1.5"
+                          className="w-full py-2 btn-primary text-xs flex items-center justify-center gap-2 mt-2"
                         >
-                          <Plus className="w-4 h-4" />
-                          {uploadingCert ? "Processing..." : "Add New Credential"}
+                          <Upload className="w-3.5 h-3.5" />
+                          {uploadingCert ? "Processing Documents (AI)..." : "Save Document(s)"}
                         </button>
                       </form>
                     </div>
@@ -1217,6 +1261,17 @@ function DashboardContent() {
                             className="w-full px-4 py-2.5 glass-input text-sm"
                             value={jobUrl}
                             onChange={(e) => setJobUrl(e.target.value)}
+                            onBlur={async () => {
+                              if (jobUrl) {
+                                try {
+                                  const scrapeRes = await api.scrapeJob(jobUrl);
+                                  if (scrapeRes.requirements?.cover_letter && !includeCoverLetter) {
+                                    setIncludeCoverLetter(true);
+                                    triggerToast("AI detected a Cover Letter is recommended. We've checked the box for you!", "info");
+                                  }
+                                } catch (e) { /* ignore */ }
+                              }
+                            }}
                           />
                         </div>
                       </div>
