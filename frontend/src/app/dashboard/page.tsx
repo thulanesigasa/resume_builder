@@ -908,7 +908,9 @@ function DashboardContent() {
 
         setBatchProgress(((i + 1) / scrapedJobs.length) * 100);
       }
-
+      if (user?.id) {
+        await loadUserData(user.id);
+      }
       setBatchLogs((prev) => [...prev, "Autopilot run complete!"]);
     } catch (err: any) {
       setBatchLogs((prev) => [...prev, `Critical Autopilot Error: ${err.message}`]);
