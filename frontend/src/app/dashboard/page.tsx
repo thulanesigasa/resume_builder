@@ -79,8 +79,17 @@ function DashboardContent() {
   const [genSteps, setGenSteps] = useState<string[]>([]);
 
   // Batch autopilot
+  interface ScrapedJob {
+    url: string;
+    company_name: string;
+    job_title: string;
+    job_description: string;
+    requirements: { resume: boolean; cover_letter: boolean };
+  }
   const [batchFile, setBatchFile] = useState<File | null>(null);
   const [batchProcessing, setBatchProcessing] = useState(false);
+  const [isAnalyzingBatch, setIsAnalyzingBatch] = useState(false);
+  const [batchScrapedJobs, setBatchScrapedJobs] = useState<ScrapedJob[] | null>(null);
   const [batchLogs, setBatchLogs] = useState<string[]>([]);
   const [batchProgress, setBatchProgress] = useState(0);
 
@@ -730,45 +739,94 @@ function DashboardContent() {
     }
   };
 
-  const handleBatchAutoPilot = async () => {
+  const handleAnalyzeBatch = async () => {
     if (!batchFile || !profileRaw.trim()) {
       triggerToast("Ensure you have a valid urls file uploaded and Master CV details loaded.", "error");
       return;
     }
 
     try {
+      setIsAnalyzingBatch(true);
+      setBatchLogs(["Starting Batch Analysis..."]);
+      
       const text = await batchFile.text();
       const urls = text.split("\n").map((u) => u.trim()).filter((u) => u.length > 0);
       
       if (urls.length === 0) {
         triggerToast("No links found in file.", "error");
+        setIsAnalyzingBatch(false);
         return;
       }
 
-      // Calculate batch price: R25 combo per url with 7.8% discount
-      const baseCost = urls.length * 25;
-      const finalCost = baseCost * 0.922;
-
-      // Open payment gateway
-      setPendingPayment({
-        amount: `R ${finalCost.toFixed(2)}`,
-        description: `Batch Autopilot: ${urls.length} Tailored Applications (7.8% Discount Applied)`,
-        onConfirm: () => {
-          runAutopilotLoop(urls);
+      setBatchLogs((prev) => [...prev, `Found ${urls.length} URLs to analyze.`]);
+      
+      const scrapedJobs: ScrapedJob[] = [];
+      
+      for (let i = 0; i < urls.length; i++) {
+        const url = urls[i];
+        setBatchLogs((prev) => [...prev, `[${i + 1}/${urls.length}] Analyzing ${url.slice(0, 40)}...`]);
+        try {
+          const sRes = await api.scrapeJob(url);
+          scrapedJobs.push({
+            url: url,
+            company_name: sRes.company_name,
+            job_title: sRes.job_title,
+            job_description: sRes.job_description,
+            requirements: sRes.requirements
+          });
+          setBatchLogs((prev) => [...prev, `✅ Analyzed: ${sRes.job_title} at ${sRes.company_name}`]);
+        } catch (e: any) {
+          setBatchLogs((prev) => [...prev, `❌ Failed to analyze: ${url.slice(0, 40)}... (${e.message})`]);
         }
-      });
+      }
+      
+      if (scrapedJobs.length === 0) {
+        triggerToast("Failed to analyze any of the URLs.", "error");
+        setBatchScrapedJobs(null);
+      } else {
+        setBatchScrapedJobs(scrapedJobs);
+        setBatchLogs((prev) => [...prev, `Analysis complete. Found ${scrapedJobs.length} valid jobs.`]);
+      }
     } catch (err: any) {
-      triggerToast("Autopilot setup failed: " + err.message, "error");
+      triggerToast("Batch analysis failed: " + err.message, "error");
+    } finally {
+      setIsAnalyzingBatch(false);
     }
   };
 
-  const runAutopilotLoop = async (urls: string[]) => {
+  const handleBatchAutoPilot = async () => {
+    if (!batchScrapedJobs) {
+      triggerToast("Please analyze the batch first.", "error");
+      return;
+    }
+
+    let resumeCount = 0;
+    let comboCount = 0;
+
+    batchScrapedJobs.forEach(job => {
+        if (job.requirements.resume && job.requirements.cover_letter) comboCount++;
+        else resumeCount++; 
+    });
+
+    const baseCost = (resumeCount * 15) + (comboCount * 25);
+    const finalCost = baseCost * 0.922; // 7.8% discount
+
+    setPendingPayment({
+      amount: `R ${finalCost.toFixed(2)}`,
+      description: `Batch: ${resumeCount} Resumes, ${comboCount} Combos (7.8% Discount applied)`,
+      onConfirm: () => {
+        runAutopilotLoop(batchScrapedJobs);
+      }
+    });
+  };
+
+  const runAutopilotLoop = async (scrapedJobs: ScrapedJob[]) => {
     setBatchProcessing(true);
     setBatchLogs([]);
     setBatchProgress(0);
 
     try {
-      setBatchLogs((prev) => [...prev, `Found ${urls.length} target job listings to process.`]);
+      setBatchLogs((prev) => [...prev, `Generating ${scrapedJobs.length} target job applications.`]);
 
       let personalDataCombined = profileRaw;
       if (firstName || lastName) {
@@ -781,15 +839,13 @@ function DashboardContent() {
         });
       }
 
-      for (let i = 0; i < urls.length; i++) {
-        const url = urls[i];
-        setBatchLogs((prev) => [...prev, `[Job ${i + 1}/${urls.length}] Scraping URL: ${url.slice(0, 50)}...`]);
+      for (let i = 0; i < scrapedJobs.length; i++) {
+        const job = scrapedJobs[i];
         
         try {
-          const sRes = await api.scrapeJob(url);
-          const cName = sRes.company_name;
-          const jTitle = sRes.job_title;
-          setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Processing ${jTitle} at ${cName}`]);
+          const cName = job.company_name;
+          const jTitle = job.job_title;
+          setBatchLogs((prev) => [...prev, `[Job ${i + 1}/${scrapedJobs.length}] Processing ${jTitle} at ${cName}`]);
 
           let resumeUrl = null;
           let clUrl = null;
@@ -797,9 +853,9 @@ function DashboardContent() {
           let rJson = null;
           let clJson = null;
 
-          if (sRes.requirements.resume) {
+          if (job.requirements.resume) {
             setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Generating CV...`]);
-            rJson = await api.generateDoc(sRes.job_description, personalDataCombined, "resume", customInstructions);
+            rJson = await api.generateDoc(job.job_description, personalDataCombined, "resume", customInstructions);
             
             setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Compiling CV PDF...`]);
             const cRes = await api.compileDoc({
@@ -813,13 +869,13 @@ function DashboardContent() {
             resumeUrl = cRes.download_url;
 
             // Score
-            const scRes = await api.getAtsScore(sRes.job_description, rJson);
+            const scRes = await api.getAtsScore(job.job_description, rJson);
             appScore = scRes.score;
           }
 
-          if (sRes.requirements.cover_letter) {
+          if (job.requirements.cover_letter) {
             setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Generating Letter...`]);
-            clJson = await api.generateDoc(sRes.job_description, personalDataCombined, "cover_letter", customInstructions);
+            clJson = await api.generateDoc(job.job_description, personalDataCombined, "cover_letter", customInstructions);
             
             setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Compiling Letter PDF...`]);
             const clcRes = await api.compileDoc({
@@ -850,15 +906,15 @@ function DashboardContent() {
           setBatchLogs((prev) => [...prev, `❌ [Job ${i + 1}] Failed: ${e.message}`]);
         }
 
-        setBatchProgress(Math.round(((i + 1) / urls.length) * 100));
+        setBatchProgress(((i + 1) / scrapedJobs.length) * 100);
       }
 
-      await loadUserData(user.id);
-      setBatchLogs((prev) => [...prev, `Autopilot run complete!`]);
+      setBatchLogs((prev) => [...prev, "Autopilot run complete!"]);
     } catch (err: any) {
-      triggerToast("Autopilot run failed: " + err.message, "error");
+      setBatchLogs((prev) => [...prev, `Critical Autopilot Error: ${err.message}`]);
     } finally {
       setBatchProcessing(false);
+      setBatchScrapedJobs(null); // Reset after processing
     }
   };
 
@@ -1400,20 +1456,83 @@ function DashboardContent() {
                     />
                   </div>
 
-                  <button
-                    onClick={handleBatchAutoPilot}
-                    disabled={batchProcessing}
-                    className="w-full py-3 btn-primary text-sm flex items-center justify-center gap-2"
-                  >
-                    {batchProcessing ? (
-                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4" />
-                        Trigger Batch Run
-                      </>
-                    )}
-                  </button>
+                  {!batchScrapedJobs ? (
+                    <button
+                      onClick={handleAnalyzeBatch}
+                      disabled={isAnalyzingBatch || batchProcessing}
+                      className="w-full py-3 btn-primary text-sm flex items-center justify-center gap-2"
+                    >
+                      {isAnalyzingBatch ? (
+                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4" />
+                          Analyze Jobs & Quote
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="space-y-2 max-h-60 overflow-y-auto pr-1 border border-brand-navy/10 p-2 rounded-lg bg-brand-navy/[0.01]">
+                        {batchScrapedJobs.map((job, idx) => (
+                          <div key={idx} className="p-3 border border-brand-navy/10 rounded-lg bg-white shadow-sm flex items-start justify-between gap-3">
+                            <div className="truncate">
+                              <h5 className="text-sm font-bold text-brand-deep truncate">{job.job_title}</h5>
+                              <p className="text-xs text-brand-indigo truncate">{job.company_name}</p>
+                            </div>
+                            <label className="flex items-center gap-2 cursor-pointer text-[11px] font-semibold text-brand-navy/80 shrink-0 mt-1">
+                              <input 
+                                type="checkbox" 
+                                checked={job.requirements.cover_letter}
+                                onChange={() => {
+                                  const updated = [...batchScrapedJobs];
+                                  updated[idx] = { 
+                                    ...updated[idx], 
+                                    requirements: { ...updated[idx].requirements, cover_letter: !updated[idx].requirements.cover_letter } 
+                                  };
+                                  setBatchScrapedJobs(updated);
+                                }}
+                                className="rounded accent-brand-indigo w-3.5 h-3.5"
+                              />
+                              Cover Letter (+R10)
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-brand-indigo/30 bg-brand-indigo/5 mt-4 flex items-center justify-between">
+                        <div>
+                          <h4 className="text-sm font-bold text-brand-deep">Quote Summary</h4>
+                          <div className="text-xs text-brand-navy/70 space-y-0.5 mt-1">
+                            <p>Resumes (R15): {batchScrapedJobs.filter(j => !j.requirements.cover_letter).length}</p>
+                            <p>Combos (R25): {batchScrapedJobs.filter(j => j.requirements.cover_letter).length}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-brand-navy/50 line-through">
+                            R {((batchScrapedJobs.filter(j => !j.requirements.cover_letter).length * 15) + (batchScrapedJobs.filter(j => j.requirements.cover_letter).length * 25)).toFixed(2)}
+                          </p>
+                          <p className="text-lg font-black text-brand-indigo">
+                            R {(((batchScrapedJobs.filter(j => !j.requirements.cover_letter).length * 15) + (batchScrapedJobs.filter(j => j.requirements.cover_letter).length * 25)) * 0.922).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleBatchAutoPilot}
+                        disabled={batchProcessing}
+                        className="w-full py-3 btn-primary text-sm flex items-center justify-center gap-2"
+                      >
+                        {batchProcessing ? (
+                          <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        ) : (
+                          <>
+                            <Zap className="w-4 h-4" />
+                            Pay & Generate
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
 
                   {batchProcessing && (
                     <div className="space-y-3">
