@@ -120,10 +120,7 @@
     }
     
     .skills-container {
-        -webkit-column-count: 2;
-        -moz-column-count: 2;
-        column-count: 2;
-        column-gap: 10px;
+        /* Replaced column-count with table logic */
     }
     
     .skill-badge {
@@ -165,9 +162,20 @@
     <div class="section">
         <div class="section-header">Technical Skills</div>
         <div class="skills-container">
-            {% for skill in skills %}
-            <div class="skill-badge">{{ skill }}</div>
-            {% endfor %}
+            {% set skill_list = (skills or technical_skills)[:10] %}
+            {% set half = (skill_list|length / 2)|round(0, 'ceil')|int %}
+            <div style="display: table; width: 100%;">
+                <div style="display: table-cell; width: 50%; vertical-align: top; padding-right: 5px;">
+                    {% for skill in skill_list[:half] %}
+                    <div class="skill-badge" style="margin-bottom: 5px;">{{ skill }}</div>
+                    {% endfor %}
+                </div>
+                <div style="display: table-cell; width: 50%; vertical-align: top; padding-left: 5px;">
+                    {% for skill in skill_list[half:] %}
+                    <div class="skill-badge" style="margin-bottom: 5px;">{{ skill }}</div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
 

@@ -15,7 +15,7 @@ const cspHeader = `
 
 const nextConfig: NextConfig = {
   /* config options here */
-  allowedDevOrigins: ['100.65.194.153'],
+  allowedDevOrigins: ['100.65.194.153', '10.251.84.215'],
   async headers() {
     return [
       {

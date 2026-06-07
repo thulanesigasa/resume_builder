@@ -64,8 +64,8 @@ CRITICAL INSTRUCTIONS:
     ],
     "languages": ["Language (Proficiency)"]
 }
-Ensure that you highlight experiences from the user's data that best match the job description. Do NOT invent fake past jobs.
-HOWEVER, for the "skills" section: You MUST actively generate and include all relevant skills, tools, and missing keywords required by the Job Description to ensure an ATS score of +80%. Bridge the gap by intelligently mapping their existing experience to these missing keywords. VERY IMPORTANT: Thoroughly review all certifications/certificates provided and extract ALL technical skills, concepts, and technologies, adding them to the "skills" list to ensure maximum keyword coverage.
+Ensure that you highlight experiences from the user's data that best match the job description. Do NOT invent fake past jobs, skills, or certifications.
+VERY IMPORTANT: You MUST strictly limit the "skills", "certifications", and all other sections to what is explicitly present in or directly inferable from the User's Raw Personal Documents. DO NOT hallucinate, generate, or add missing keywords, tools, or skills from the Job Description if the user does not actually have them in their raw documents. Your job is to extract and rephrase their actual skills to match the job description's terminology where truthful, but NEVER fabricate qualifications they do not possess.
 """
 
 GENERAL_RESUME_SYSTEM_PROMPT = """You are an expert Executive Career Coach and ATS Specialist.

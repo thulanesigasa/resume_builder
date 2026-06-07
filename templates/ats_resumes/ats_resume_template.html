@@ -113,11 +113,24 @@
                 <!-- SKILLS -->
                 <div class="section">
                     <h2>Technical Skills</h2>
-                    <ul style="-webkit-column-count: 2; -moz-column-count: 2; column-count: 2; column-gap: 10px; font-size: 9pt; padding-left: 20px; margin: 5px 0 0 0;">
-                        {% for skill in (skills or technical_skills) %}
-                        <li style="page-break-inside: avoid; margin-bottom: 2px;">{{ skill }}</li>
-                        {% endfor %}
-                    </ul>
+                    {% set skill_list = (skills or technical_skills)[:10] %}
+                    {% set half = (skill_list|length / 2)|round(0, 'ceil')|int %}
+                    <div style="display: table; width: 100%;">
+                        <div style="display: table-cell; width: 50%; vertical-align: top; padding-right: 10px;">
+                            <ul style="font-size: 9pt; padding-left: 20px; margin: 5px 0 0 0;">
+                                {% for skill in skill_list[:half] %}
+                                <li style="page-break-inside: avoid; margin-bottom: 2px;">{{ skill }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div style="display: table-cell; width: 50%; vertical-align: top;">
+                            <ul style="font-size: 9pt; padding-left: 20px; margin: 5px 0 0 0;">
+                                {% for skill in skill_list[half:] %}
+                                <li style="page-break-inside: avoid; margin-bottom: 2px;">{{ skill }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- LANGUAGES -->

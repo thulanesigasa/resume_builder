@@ -74,17 +74,29 @@ export default function MarketingHeader() {
         </nav>
 
         {/* Mobile Menu Toggle */}
-        <button 
-          className="md:hidden p-2 text-brand-navy/70 hover:text-brand-deep"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <label htmlFor="mobile-menu-toggle" className="hamburger md:hidden p-2 text-brand-navy/70 hover:text-brand-deep">
+          <input 
+            id="mobile-menu-toggle"
+            type="checkbox"
+            checked={mobileMenuOpen}
+            onChange={(e) => setMobileMenuOpen(e.target.checked)}
+          />
+          <svg viewBox="0 0 32 32">
+            <path className="line line-top-bottom" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"></path>
+            <path className="line" d="M7 16 27 16"></path>
+          </svg>
+        </label>
       </div>
 
       {/* Mobile Navigation */}
-      {mobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-brand-navy/10 shadow-lg px-4 py-4 flex flex-col gap-4 animate-in slide-in-from-top-2">
+      <div 
+        className={`md:hidden absolute top-full left-0 right-0 bg-white shadow-lg overflow-hidden transition-all duration-300 ease-in-out ${
+          mobileMenuOpen 
+            ? "max-h-[500px] border-b border-brand-navy/10 opacity-100" 
+            : "max-h-0 border-b-0 border-transparent opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="px-4 py-4 flex flex-col gap-4">
           {navLinks.map((link) => (
             <Link 
               key={link.name}
@@ -100,17 +112,41 @@ export default function MarketingHeader() {
             </Link>
           ))}
           <div className="h-px w-full bg-brand-navy/10 my-2"></div>
-          <button
-            onClick={() => {
-              setMobileMenuOpen(false);
-              router.push(user ? "/dashboard" : "/login");
-            }}
-            className="w-full py-3 btn-primary text-sm"
-          >
-            {user ? "Go to Dashboard" : "Sign In"}
-          </button>
+          
+          {!user ? (
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  router.push("/login");
+                }}
+                className="w-full py-3 btn-secondary text-sm"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  router.push("/register");
+                }}
+                className="w-full py-3 btn-primary text-sm"
+              >
+                Sign Up
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                router.push("/dashboard");
+              }}
+              className="w-full py-3 btn-primary text-sm"
+            >
+              Go to Dashboard
+            </button>
+          )}
         </div>
-      )}
+      </div>
     </header>
   );
 }

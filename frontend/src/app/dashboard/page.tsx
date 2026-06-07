@@ -957,7 +957,7 @@ function DashboardContent() {
 
             {/* TAB A: PROFILE & MASTER DOCUMENTS */}
             {activeTab === "profile" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="glass-panel p-6 rounded-xl space-y-6">
                   <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
                     <User className="w-5 h-5 text-brand-indigo" />
@@ -1163,7 +1163,7 @@ function DashboardContent() {
 
             {/* TAB B: TAILOR (SINGLE JOB) */}
             {activeTab === "generate" && (
-              <div className="glass-panel p-6 rounded-xl space-y-6">
+              <div className="glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center justify-between border-b border-brand-navy/15 pb-3">
                   <h3 className="text-base font-bold text-brand-deep flex items-center gap-2">
                     <Zap className="w-5 h-5 text-brand-indigo" />
@@ -1285,7 +1285,7 @@ function DashboardContent() {
 
             {/* TAB C: BATCH AUTOPILOT */}
             {activeTab === "batch" && (
-              <div className="glass-panel p-6 rounded-xl space-y-6">
+              <div className="glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
                   <Globe className="w-5 h-5 text-brand-indigo" />
                   Batch Auto-Pilot Mode
@@ -1352,7 +1352,7 @@ function DashboardContent() {
 
             {/* TAB D: SAVED ARCHIVES */}
             {activeTab === "archive" && (
-              <div className="glass-panel p-6 rounded-xl space-y-6">
+              <div className="glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex justify-between items-center border-b border-brand-navy/15 pb-3 flex-wrap gap-2">
                   <h3 className="text-base font-bold text-brand-deep flex items-center gap-2">
                     <FolderOpen className="w-5 h-5 text-brand-indigo" />
