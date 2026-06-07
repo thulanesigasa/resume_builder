@@ -794,10 +794,12 @@ function DashboardContent() {
           let resumeUrl = null;
           let clUrl = null;
           let appScore = null;
+          let rJson = null;
+          let clJson = null;
 
           if (sRes.requirements.resume) {
             setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Generating CV...`]);
-            const rJson = await api.generateDoc(sRes.job_description, personalDataCombined, "resume", customInstructions);
+            rJson = await api.generateDoc(sRes.job_description, personalDataCombined, "resume", customInstructions);
             
             setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Compiling CV PDF...`]);
             const cRes = await api.compileDoc({
@@ -817,7 +819,7 @@ function DashboardContent() {
 
           if (sRes.requirements.cover_letter) {
             setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Generating Letter...`]);
-            const clJson = await api.generateDoc(sRes.job_description, personalDataCombined, "cover_letter", customInstructions);
+            clJson = await api.generateDoc(sRes.job_description, personalDataCombined, "cover_letter", customInstructions);
             
             setBatchLogs((prev) => [...prev, `[Job ${i + 1}] Compiling Letter PDF...`]);
             const clcRes = await api.compileDoc({
