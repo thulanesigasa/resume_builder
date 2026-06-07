@@ -243,14 +243,7 @@ async def parse_cv(file: UploadFile = File(...), user_id: str = Form(...), user:
         if not extracted_text.strip():
             raise HTTPException(status_code=400, detail="Could not extract text from the PDF. Ensure it is not empty or corrupted.")
             
-        # We can also save it directly to profiles table via supabase python client
-        supabase = get_supabase_client()
-        if supabase:
-            try:
-                supabase.table("profiles").upsert({"id": user_id, "raw_info": extracted_text.strip()}).execute()
-                logger.info(f"Successfully upserted parsed CV for user: {user_id}")
-            except Exception as se:
-                logger.error(f"Failed to upsert to supabase: {se}")
+        # Note: Do not automatically save to profiles here. The frontend decides what to do with the extracted text.
                 
         return {"extracted_text": extracted_text.strip()}
     except Exception as e:

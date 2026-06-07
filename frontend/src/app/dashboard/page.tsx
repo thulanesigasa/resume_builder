@@ -430,17 +430,23 @@ function DashboardContent() {
     try {
       // 1. Process files if uploaded
       let uploadedCount = 0;
+      let skippedCount = 0;
       for (const file of certPdfFiles) {
         // Extract text from the PDF
         const parseRes = await api.parseCv(file, user.id);
         const extractedText = parseRes.extracted_text;
         
-        if (!extractedText.trim()) continue;
+        if (!extractedText.trim()) {
+          triggerToast(`Skipped ${file.name}: Could not extract any text.`, "error");
+          skippedCount++;
+          continue;
+        }
 
         // Prevent duplicates
         const isDuplicate = certificates.some(c => c.extracted_text === extractedText);
         if (isDuplicate) {
           triggerToast(`Skipped duplicate document: ${file.name}`, "info");
+          skippedCount++;
           continue;
         }
 
@@ -475,6 +481,7 @@ function DashboardContent() {
         const isDuplicate = certificates.some(c => c.extracted_text === manualCertText);
         if (isDuplicate) {
           triggerToast(`Skipped duplicate manual document: ${newCertName}`, "info");
+          skippedCount++;
         } else {
           const { error: manualError } = await supabase
             .from("certificates")
@@ -494,7 +501,12 @@ function DashboardContent() {
       if (certFileInputRef.current) certFileInputRef.current.value = "";
       
       await loadUserData(user.id);
-      triggerToast("Document(s) uploaded and saved successfully!", "success");
+      
+      if (uploadedCount > 0) {
+        triggerToast(`${uploadedCount} Document(s) uploaded and saved successfully!`, "success");
+      } else if (skippedCount > 0) {
+        triggerToast("No new documents saved. All documents were duplicates or empty.", "error");
+      }
     } catch (err: any) {
       triggerToast("Failed to process document(s): " + err.message, "error");
     } finally {
