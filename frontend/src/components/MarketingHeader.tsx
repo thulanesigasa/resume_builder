@@ -65,12 +65,18 @@ export default function MarketingHeader() {
           
           <div className="h-4 w-px bg-brand-navy/20"></div>
 
-          <button
-            onClick={() => router.push(user ? "/dashboard" : "/login")}
-            className="px-5 py-2 btn-secondary text-xs"
-          >
-            {user ? "Go to Dashboard" : "Sign In"}
-          </button>
+          {user ? (
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="px-5 py-2 btn-secondary text-xs"
+            >
+              Go to Dashboard
+            </button>
+          ) : (
+            <span className="text-xs font-semibold text-brand-navy/60 px-5 py-2 border border-brand-navy/10 rounded-full">
+              Login & Sign Up Paused
+            </span>
+          )}
         </nav>
 
         {/* Mobile Menu Toggle */}
@@ -115,24 +121,9 @@ export default function MarketingHeader() {
           
           {!user ? (
             <div className="flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  router.push("/login");
-                }}
-                className="w-full py-3 btn-secondary text-sm"
-              >
-                Log In
-              </button>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  router.push("/register");
-                }}
-                className="w-full py-3 btn-primary text-sm"
-              >
-                Sign Up
-              </button>
+              <span className="w-full py-3 text-center text-sm font-semibold text-brand-navy/60 border border-brand-navy/10 rounded-lg">
+                Login & Sign Up Paused
+              </span>
             </div>
           ) : (
             <button

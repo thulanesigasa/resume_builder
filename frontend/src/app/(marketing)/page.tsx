@@ -39,13 +39,22 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-            <button
-              onClick={() => router.push(user ? "/dashboard" : "/login")}
-              className="px-8 py-3.5 btn-primary text-sm flex items-center justify-center gap-2"
-            >
-              Configure Workspace
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            {user ? (
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="px-8 py-3.5 btn-primary text-sm flex items-center justify-center gap-2"
+              >
+                Configure Workspace
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                disabled
+                className="px-8 py-3.5 bg-brand-navy/5 text-brand-navy/60 border border-brand-navy/10 rounded-xl text-sm flex items-center justify-center gap-2 cursor-not-allowed"
+              >
+                Registration Paused
+              </button>
+            )}
             <button
               onClick={() => router.push("/pricing")}
               className="px-8 py-3.5 btn-secondary text-sm"
