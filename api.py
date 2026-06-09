@@ -1,11 +1,17 @@
 import json
 import io
+import time
 import pdfplumber
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body, Depends
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
+
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from src.scraper.job_link_reader import get_job_description
 from src.scraper.requirement_analyzer import analyze_requirements
@@ -31,6 +37,21 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 app = FastAPI(title="AI Resume Builder API", description="FastAPI Backend serving AI Tailoring and PDF Compilers")
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+class LoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+        logger.info(f"Incoming Request: {request.method} {request.url.path}")
+        response = await call_next(request)
+        process_time = (time.time() - start_time) * 1000
+        logger.info(f"Response: {response.status_code} | Time: {process_time:.2f}ms | Path: {request.url.path}")
+        return response
+
+app.add_middleware(LoggingMiddleware)
 
 # Configure CORS for decoupled frontend communication
 app.add_middleware(
@@ -68,11 +89,13 @@ class CompileMasterCvRequest(BaseModel):
     raw_text: str
 
 @app.get("/api/health")
-def health_check():
+@limiter.limit("60/minute")
+def health_check(request: Request):
     return {"status": "healthy", "service": "resume-builder-api"}
 
 @app.post("/api/compile-master-cv")
-async def compile_master_cv(payload: CompileMasterCvRequest, user: dict = Depends(verify_token)):
+@limiter.limit("10/minute")
+async def compile_master_cv(payload: CompileMasterCvRequest, request: Request, user: dict = Depends(verify_token)):
     logger.info(f"API Compile Master CV request received for user: {payload.user_id}")
     try:
         html_content = f"""
@@ -122,7 +145,8 @@ async def compile_master_cv(payload: CompileMasterCvRequest, user: dict = Depend
 
 
 @app.post("/api/scrape")
-async def scrape_job(payload: ScrapeRequest, user: dict = Depends(verify_token)):
+@limiter.limit("30/minute")
+async def scrape_job(payload: ScrapeRequest, request: Request, user: dict = Depends(verify_token)):
     logger.info(f"API Scrape request received for URL: {payload.url}")
     try:
         desc = get_job_description(payload.url)
@@ -151,7 +175,8 @@ async def scrape_job(payload: ScrapeRequest, user: dict = Depends(verify_token))
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/generate")
-async def generate_doc(payload: GenerateRequest, user: dict = Depends(verify_token)):
+@limiter.limit("10/minute")
+async def generate_doc(payload: GenerateRequest, request: Request, user: dict = Depends(verify_token)):
     logger.info(f"API Generate request received for doc_type: {payload.doc_type}")
     try:
         data_dict = generate_document(
@@ -168,7 +193,8 @@ async def generate_doc(payload: GenerateRequest, user: dict = Depends(verify_tok
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/ats-score")
-async def get_ats_score(payload: AtsScoreRequest, user: dict = Depends(verify_token)):
+@limiter.limit("20/minute")
+async def get_ats_score(payload: AtsScoreRequest, request: Request, user: dict = Depends(verify_token)):
     logger.info("API ATS scoring request received")
     try:
         score_res = calculate_ats_score(payload.job_description, payload.resume_json)
@@ -178,7 +204,8 @@ async def get_ats_score(payload: AtsScoreRequest, user: dict = Depends(verify_to
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/compile")
-async def compile_document(payload: CompileRequest, user: dict = Depends(verify_token)):
+@limiter.limit("20/minute")
+async def compile_document(payload: CompileRequest, request: Request, user: dict = Depends(verify_token)):
     logger.info(f"API Compile request received for: {payload.doc_type}")
     try:
         # Create folder name
@@ -210,7 +237,8 @@ class PreviewRequest(BaseModel):
     template_name: str
 
 @app.post("/api/preview-html")
-async def preview_html(payload: PreviewRequest, user: dict = Depends(verify_token)):
+@limiter.limit("30/minute")
+async def preview_html(payload: PreviewRequest, request: Request, user: dict = Depends(verify_token)):
     logger.info(f"API Preview HTML request received for: {payload.template_name}")
     try:
         html_content = inject_json_to_html(payload.json_data, payload.template_name)
@@ -222,7 +250,8 @@ async def preview_html(payload: PreviewRequest, user: dict = Depends(verify_toke
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/parse-cv")
-async def parse_cv(file: UploadFile = File(...), user_id: str = Form(...), user: dict = Depends(verify_token)):
+@limiter.limit("20/minute")
+async def parse_cv(request: Request, file: UploadFile = File(...), user_id: str = Form(...), user: dict = Depends(verify_token)):
     logger.info(f"API Parse CV PDF request received from user_id: {user_id}")
     try:
         pdf_bytes = await file.read()
@@ -254,7 +283,8 @@ class AutoNameRequest(BaseModel):
     extracted_text: str
 
 @app.post("/api/documents/auto-name")
-async def auto_name_document(payload: AutoNameRequest, user: dict = Depends(verify_token)):
+@limiter.limit("20/minute")
+async def auto_name_document(payload: AutoNameRequest, request: Request, user: dict = Depends(verify_token)):
     logger.info(f"API Auto-name document request received from user: {user.id}")
     try:
         if not payload.extracted_text.strip():

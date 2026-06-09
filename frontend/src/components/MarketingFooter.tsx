@@ -57,6 +57,8 @@ export default function MarketingFooter() {
             <ul className="space-y-2">
               <li><Link href="/privacy" className="text-xs text-brand-navy/60 hover:text-brand-indigo transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" className="text-xs text-brand-navy/60 hover:text-brand-indigo transition-colors">Terms of Service</Link></li>
+              <li><Link href="/shipping" className="text-xs text-brand-navy/60 hover:text-brand-indigo transition-colors">Shipping & Delivery</Link></li>
+              <li><Link href="/refund" className="text-xs text-brand-navy/60 hover:text-brand-indigo transition-colors">Refund Policy</Link></li>
             </ul>
           </div>
 
