@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     siteName: 'rbptech',
     images: [
       {
-        url: '/logo.png', // We will need to add this image
+        url: '/favicon.png', // We will need to add this image
         width: 1200,
         height: 630,
         alt: 'rbptech Resume Builder Preview',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'rbptech | Next-Gen AI Resume Compiler',
     description: 'Scan target job requirements, tailor CV experience bullet points on the fly, and compile print-ready PDFs instantly.',
-    images: ['/logo.png'],
+    images: ['/favicon.png'],
   },
 };
 
@@ -55,7 +55,7 @@ export default function RootLayout({
     "name": "rbptech",
     "url": process.env.NEXT_PUBLIC_APP_URL || 'https://rbptech.co.za',
     "logo": "https://rbptech.co.za/favicon.ico",
-    "image": "https://rbptech.co.za/logo.png",
+    "image": "https://rbptech.co.za/favicon.png",
     "description": "Next-Gen AI Resume Compiler"
   };
 
