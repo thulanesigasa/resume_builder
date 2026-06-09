@@ -151,7 +151,7 @@ export default function EditorPage() {
 
     setCompiling(true);
     try {
-      let finalUrl = null;
+      let finalUrl: string | null = null;
 
       if (activeTab === "resume" && resumeJson) {
         const res = await api.compileDoc({
