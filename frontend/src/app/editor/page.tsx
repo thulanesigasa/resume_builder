@@ -175,7 +175,7 @@ export default function EditorPage() {
         if (error) throw error;
         setResumeCount(newCount);
         localStorage.setItem("edit_resume_compile_count", String(newCount));
-        setDownloadUrls((prev) => ({ ...prev, resume: finalUrl }));
+        setDownloadUrls((prev) => ({ ...prev, resume: finalUrl || undefined }));
       } 
       else if (activeTab === "cl" && clJson) {
         const clRes = await api.compileDoc({
@@ -199,7 +199,7 @@ export default function EditorPage() {
         if (error) throw error;
         setClCount(newCount);
         localStorage.setItem("edit_cl_compile_count", String(newCount));
-        setDownloadUrls((prev) => ({ ...prev, cl: finalUrl }));
+        setDownloadUrls((prev) => ({ ...prev, cl: finalUrl || undefined }));
       }
 
       triggerToast("PDF compiled successfully! Signed download link is ready.", "success");
