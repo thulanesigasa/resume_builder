@@ -74,6 +74,7 @@ function DashboardContent() {
   const [manualCertText, setManualCertText] = useState("");
   const [certPdfFiles, setCertPdfFiles] = useState<File[]>([]);
   const [uploadingCert, setUploadingCert] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
   const [previewCert, setPreviewCert] = useState<any | null>(null);
 
   // Stats
@@ -552,11 +553,17 @@ function DashboardContent() {
     }
 
     setUploadingCert(true);
+    setUploadProgress("Starting upload...");
     try {
       // 1. Process files if uploaded
       let uploadedCount = 0;
       let skippedCount = 0;
+      
+      let index = 0;
       for (const file of certPdfFiles) {
+        index++;
+        setUploadProgress(`Processing ${index} of ${certPdfFiles.length}: ${file.name}...`);
+        
         // Extract text from the PDF
         const parseRes = await api.parseCv(file, user.id);
         const extractedText = parseRes.extracted_text;
@@ -603,6 +610,7 @@ function DashboardContent() {
 
       // 2. Process manual text entry if provided
       if (manualCertText.trim() && newCertName.trim()) {
+        setUploadProgress("Saving manual entry...");
         const isDuplicate = certificates.some(c => c.extracted_text === manualCertText);
         if (isDuplicate) {
           triggerToast(`Skipped duplicate manual document: ${newCertName}`, "info");
@@ -625,6 +633,7 @@ function DashboardContent() {
       setCertPdfFiles([]);
       if (certFileInputRef.current) certFileInputRef.current.value = "";
       
+      setUploadProgress("Refreshing your documents...");
       await loadUserData(user.id);
       
       if (uploadedCount > 0) {
@@ -636,6 +645,7 @@ function DashboardContent() {
       triggerToast("Failed to process document(s): " + err.message, "error");
     } finally {
       setUploadingCert(false);
+      setUploadProgress("");
     }
   };
 
@@ -1479,10 +1489,10 @@ function DashboardContent() {
                         <button
                           type="submit"
                           disabled={uploadingCert}
-                          className="w-full py-2 btn-primary text-xs flex items-center justify-center gap-2 mt-2"
+                          className="w-full py-2 btn-primary text-xs flex items-center justify-center gap-2 mt-2 relative overflow-hidden"
                         >
                           <Upload className="w-3.5 h-3.5" />
-                          {uploadingCert ? "Processing Documents (AI)..." : "Save Document(s)"}
+                          {uploadingCert ? uploadProgress || "Processing Documents (AI)..." : "Save Document(s)"}
                         </button>
                       </form>
                     </div>
