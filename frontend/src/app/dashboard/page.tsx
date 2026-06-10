@@ -324,11 +324,21 @@ function DashboardContent() {
 
       // 2. Fetch Master CV File Download URL if exists in storage
       try {
-        const { data: cvSignRes } = await supabase.storage
+        const { data: listRes, error: listError } = await supabase.storage
           .from("resumes")
-          .createSignedUrl(`${userId}/master_cv/Master_CV.pdf`, 7200);
-        if (cvSignRes?.signedUrl) {
-          setMasterCvUrl(cvSignRes.signedUrl);
+          .list(`${userId}/master_cv`);
+          
+        const hasMasterCv = listRes?.some(file => file.name === "Master_CV.pdf");
+        
+        if (hasMasterCv) {
+          const { data: cvSignRes } = await supabase.storage
+            .from("resumes")
+            .createSignedUrl(`${userId}/master_cv/Master_CV.pdf`, 7200);
+          if (cvSignRes?.signedUrl) {
+            setMasterCvUrl(cvSignRes.signedUrl);
+          } else {
+            setMasterCvUrl(null);
+          }
         } else {
           setMasterCvUrl(null);
         }
