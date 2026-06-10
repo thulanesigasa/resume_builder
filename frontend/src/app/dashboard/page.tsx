@@ -87,7 +87,8 @@ function DashboardContent() {
   const [jobText, setJobText] = useState("");
   const [isGeneral, setIsGeneral] = useState(false);
   const [includeCoverLetter, setIncludeCoverLetter] = useState(false);
-  const [pendingPayment, setPendingPayment] = useState<{ amount: string; description: string; onConfirm: () => void } | null>(null);
+  const [payfastData, setPayfastData] = useState<{ url: string; fields: Record<string, string> } | null>(null);
+  const [isRedirectingToPayfast, setIsRedirectingToPayfast] = useState(false);
   const [selectedResume, setSelectedResume] = useState("ui_ux_pro_max_resume.html");
   const [selectedCl, setSelectedCl] = useState("caleb_foster_cover_letter.html");
   const [customInstructions, setCustomInstructions] = useState("");
@@ -232,45 +233,28 @@ function DashboardContent() {
         await loadUserData(user.id);
 
         // Check if redirect query parameters contain checkout info
-        const checkoutType = searchParams.get("checkout");
-        if (checkoutType) {
-          if (checkoutType === "resume") {
-            setPendingPayment({
-              amount: "R 18.00",
-              description: "Tailored Resume Only Plan",
-              onConfirm: () => {
-                triggerToast("Payment successful! Access granted.", "success");
-                router.replace("/dashboard");
-              }
-            });
-          } else if (checkoutType === "combo") {
-            setPendingPayment({
-              amount: "R 25.00",
-              description: "Tailored Resume & Cover Letter Combo",
-              onConfirm: () => {
-                triggerToast("Payment successful! Access granted.", "success");
-                router.replace("/dashboard");
-              }
-            });
-          } else if (checkoutType === "batch") {
-            const jobs = parseInt(searchParams.get("jobs") || "5") || 5;
-            const bType = searchParams.get("batchType") === "resume" ? "resume" : "combo";
-            const price = jobs * (bType === "resume" ? 18 : 25) * 0.922;
-            setPendingPayment({
-              amount: `R ${price.toFixed(2)}`,
-              description: `Batch Autopilot: ${jobs} Tailored Applications (${bType === "resume" ? "Resume Only" : "Combo"})`,
-              onConfirm: () => {
-                triggerToast("Payment successful! Access granted.", "success");
-                router.replace("/dashboard");
-              }
-            });
-          }
+        const checkoutSuccess = searchParams.get("checkout_success");
+        const checkoutCancel = searchParams.get("checkout_cancel");
+        
+        if (checkoutSuccess) {
+          triggerToast("Payment successful! Credits have been added to your account. You can now generate documents.", "success");
+          router.replace("/dashboard");
+        } else if (checkoutCancel) {
+          triggerToast("Payment was cancelled or unsuccessful. Please verify your payment details.", "error");
+          router.replace("/dashboard");
         }
       }
       setLoading(false);
     };
     checkUser();
   }, [router, searchParams]);
+
+  useEffect(() => {
+    if (payfastData) {
+      const form = document.getElementById("payfast-dashboard-form") as HTMLFormElement;
+      if (form) form.submit();
+    }
+  }, [payfastData]);
 
   const loadUserData = async (userId: string) => {
     try {
@@ -704,14 +688,15 @@ function DashboardContent() {
     const price = isCombo ? 25 : 18;
     const desc = isCombo ? "Tailored Resume & Cover Letter Combo" : "Tailored Resume Only";
 
-    // Show Payment Gateway immediately (it is impossible to tailor/compile without paying first)
-    setPendingPayment({
-      amount: `R ${price.toFixed(2)}`,
-      description: desc,
-      onConfirm: () => {
-        executeGenerateWorkflow();
-      }
-    });
+    // Redirect to Payfast immediately
+    setIsRedirectingToPayfast(true);
+    try {
+      const data = await api.createPayfastCheckout(price, desc);
+      setPayfastData({ url: data.payfast_url, fields: data.form_fields });
+    } catch (e: any) {
+      setIsRedirectingToPayfast(false);
+      triggerToast("Error connecting to Payfast: " + e.message, "error");
+    }
   };
 
   const executeGenerateWorkflow = async () => {
@@ -917,16 +902,17 @@ function DashboardContent() {
         else resumeCount++; 
     });
 
-    const baseCost = (resumeCount * 15) + (comboCount * 25);
-    const finalCost = baseCost * 0.922; // 7.8% discount
+    const totalCost = (resumeCount * 15) + (comboCount * 25);
+    const discounted = totalCost * 0.922;
 
-    setPendingPayment({
-      amount: `R ${finalCost.toFixed(2)}`,
-      description: `Batch: ${resumeCount} Resumes, ${comboCount} Combos (7.8% Discount applied)`,
-      onConfirm: () => {
-        runAutopilotLoop(batchScrapedJobs);
-      }
-    });
+    setIsRedirectingToPayfast(true);
+    try {
+      const data = await api.createPayfastCheckout(discounted, `Batch Job Application: ${resumeCount} Resumes, ${comboCount} Combos`);
+      setPayfastData({ url: data.payfast_url, fields: data.form_fields });
+    } catch (e: any) {
+      setIsRedirectingToPayfast(false);
+      triggerToast("Error connecting to Payfast: " + e.message, "error");
+    }
   };
 
   const runAutopilotLoop = async (scrapedJobs: ScrapedJob[]) => {
@@ -1046,6 +1032,15 @@ function DashboardContent() {
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
+      {/* Hidden Payfast Form */}
+      {payfastData && (
+        <form id="payfast-dashboard-form" action={payfastData.url} method="POST" className="hidden">
+          {Object.entries(payfastData.fields).map(([key, value]) => (
+            <input key={key} type="hidden" name={key} value={value} />
+          ))}
+        </form>
+      )}
+
       {/* Top Navbar */}
       <nav className="glass-panel sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-t-0 border-x-0">
         <div className="flex items-center gap-3">
@@ -1721,10 +1716,10 @@ function DashboardContent() {
                       </div>
                       <button
                         onClick={handleBatchAutoPilot}
-                        disabled={batchProcessing}
+                        disabled={batchProcessing || isRedirectingToPayfast}
                         className="w-full py-3 btn-primary text-sm flex items-center justify-center gap-2"
                       >
-                        {batchProcessing ? (
+                        {batchProcessing || isRedirectingToPayfast ? (
                           <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                         ) : (
                           <>
@@ -2054,131 +2049,13 @@ function DashboardContent() {
         </div>
       )}
 
-      {/* Stripe Checkout payment gateway modal */}
-      {pendingPayment && (
-        <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-panel max-w-md w-full rounded-2xl p-6 relative space-y-6 bg-white border border-brand-navy/15 shadow-xl animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-brand-navy/10 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-brand-indigo rounded-full animate-pulse"></span>
-                <h3 className="text-base font-bold text-brand-deep">Stripe Secure Checkout</h3>
-              </div>
-              <span className="text-[10px] text-brand-navy/60 font-mono">Test Mode</span>
-            </div>
-
-            <div className="space-y-1.5 p-4 bg-brand-navy/5 rounded-xl border border-brand-navy/10">
-              <div className="text-[10px] text-brand-navy/60 uppercase font-semibold">Product Description</div>
-              <div className="text-xs font-bold text-brand-deep">{pendingPayment.description}</div>
-              <div className="flex justify-between items-baseline pt-2 border-t border-brand-navy/10 mt-2">
-                <span className="text-xs font-semibold text-brand-navy/70">Amount Due:</span>
-                <span className="text-xl font-extrabold text-brand-indigo">{pendingPayment.amount}</span>
-              </div>
-            </div>
-
-            {/* Mock Credit Card Fields */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                // Simulate payment processing
-                const payBtn = document.getElementById("stripe-pay-btn");
-                if (payBtn) {
-                  payBtn.innerText = "Processing secure transaction...";
-                  payBtn.setAttribute("disabled", "true");
-                }
-                setTimeout(() => {
-                  triggerToast("Payment successful! Transacting via Stripe gateway.", "success");
-                  const callback = pendingPayment.onConfirm;
-                  setPendingPayment(null);
-                  callback();
-                }, 2000);
-              }}
-              className="space-y-4"
-            >
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-brand-navy/70 mb-1">Cardholder Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Jane Smith"
-                  className="w-full px-3 py-2 glass-input text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-brand-navy/70 mb-1">Card Number</label>
-                <input
-                  type="text"
-                  required
-                  pattern="\d{16}"
-                  maxLength={16}
-                  placeholder="4242 •••• •••• ••••"
-                  className="w-full px-3 py-2 glass-input text-xs font-mono"
-                  onChange={(e) => {
-                    // Only allow numbers
-                    e.target.value = e.target.value.replace(/\D/g, "");
-                  }}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] uppercase font-bold text-brand-navy/70 mb-1">Expiration (MM/YY)</label>
-                  <input
-                    type="text"
-                    required
-                    pattern="\d{2}/\d{2}"
-                    maxLength={5}
-                    placeholder="MM/YY"
-                    className="w-full px-3 py-2 glass-input text-xs font-mono"
-                    onChange={(e) => {
-                      let val = e.target.value.replace(/\D/g, "");
-                      if (val.length > 2) {
-                        val = val.substring(0, 2) + "/" + val.substring(2, 4);
-                      }
-                      e.target.value = val;
-                    }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] uppercase font-bold text-brand-navy/70 mb-1">CVV Code</label>
-                  <input
-                    type="password"
-                    required
-                    pattern="\d{3}"
-                    maxLength={3}
-                    placeholder="•••"
-                    className="w-full px-3 py-2 glass-input text-xs font-mono"
-                    onChange={(e) => {
-                      e.target.value = e.target.value.replace(/\D/g, "");
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPendingPayment(null);
-                    if (searchParams.get("checkout")) {
-                      router.replace("/dashboard");
-                    }
-                  }}
-                  className="flex-1 py-3 btn-secondary text-xs cursor-pointer"
-                >
-                  Cancel Transaction
-                </button>
-                <button
-                  type="submit"
-                  id="stripe-pay-btn"
-                  className="flex-1 py-3 btn-primary text-xs cursor-pointer"
-                >
-                  Authorize Payment
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* Hidden PayFast Form */}
+      {payfastData && (
+        <form id="payfast-dashboard-form" action={payfastData.url} method="POST" className="hidden">
+          {Object.entries(payfastData.fields).map(([key, value]) => (
+            <input key={key} type="hidden" name={key} value={value} />
+          ))}
+        </form>
       )}
 
       {/* RE-AUTHENTICATION MODAL FOR EMAIL CHANGE */}

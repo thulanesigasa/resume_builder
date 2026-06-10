@@ -46,7 +46,7 @@ export default function PricingTiers() {
       return;
     }
 
-    triggerToast(`Initializing secure checkout for ${planName}...`, "info");
+    triggerToast(`Initializing secure Payfast checkout for ${planName}...`, "info");
     
     try {
       // Extract numeric value from string (e.g. "R18" -> 18, "R 125.50" -> 125.5)
@@ -54,7 +54,7 @@ export default function PricingTiers() {
       
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await fetch("http://localhost:8000/api/payfast/create-checkout", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/payfast/create-checkout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -76,7 +76,7 @@ export default function PricingTiers() {
       
     } catch (error) {
       console.error(error);
-      triggerToast("Error connecting to payment gateway.", "error");
+      triggerToast("Error connecting to Payfast gateway.", "error");
     }
   };
 

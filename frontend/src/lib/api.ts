@@ -163,5 +163,18 @@ export const api = {
       throw new Error(err.detail || 'Failed to auto-name document');
     }
     return res.json();
+  },
+
+  async createPayfastCheckout(amount: number, planName: string) {
+    const res = await fetch(`${API_BASE_URL}/api/payfast/create-checkout`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify({ amount, plan_name: planName }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to initialize Payfast checkout' }));
+      throw new Error(err.detail || 'Failed to initialize Payfast checkout');
+    }
+    return res.json();
   }
 };
