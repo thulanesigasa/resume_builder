@@ -10,7 +10,7 @@ const cspHeader = `
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    connect-src 'self' http://localhost:8000 https://api.stripe.com wss://*.supabase.co https://*.supabase.co https://*.supabase.in;
+    connect-src 'self' http://localhost:8000 https://*.onrender.com https://api.stripe.com wss://*.supabase.co https://*.supabase.co https://*.supabase.in;
 `;
 
 const nextConfig: NextConfig = {
