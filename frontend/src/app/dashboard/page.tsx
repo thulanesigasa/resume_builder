@@ -683,23 +683,29 @@ function DashboardContent() {
       }
     }
 
-    // Determine ZAR price based on the cover letter inclusion checkbox
+    // Check credits
     const isCombo = includeCoverLetter;
     const price = isCombo ? 25 : 18;
     const desc = isCombo ? "Tailored Resume & Cover Letter Combo" : "Tailored Resume Only";
     const costInCredits = isCombo ? 2 : 1;
 
+    console.log("[Generate] userCredits:", userCredits, "cost:", costInCredits);
+
     if (userCredits >= costInCredits) {
+      console.log("[Generate] Sufficient credits, running directly");
       executeGenerateWorkflow();
       return;
     }
 
-    // Redirect to Payfast immediately
+    // Not enough credits – redirect to Payfast
+    console.log("[Generate] Insufficient credits, redirecting to Payfast...");
     setIsRedirectingToPayfast(true);
     try {
       const data = await api.createPayfastCheckout(price, desc);
+      console.log("[Generate] Got Payfast data, submitting form...", data);
       setPayfastData({ url: data.payfast_url, fields: data.form_fields });
     } catch (e: any) {
+      console.error("[Generate] Payfast error:", e);
       setIsRedirectingToPayfast(false);
       triggerToast("Error connecting to Payfast: " + e.message, "error");
     }
@@ -1608,11 +1614,14 @@ function DashboardContent() {
 
                 <button
                   onClick={handleGenerateWorkflow}
-                  disabled={generating}
-                  className="w-full py-3.5 btn-primary text-sm flex items-center justify-center gap-2"
+                  disabled={generating || isRedirectingToPayfast}
+                  className="w-full py-3.5 btn-primary text-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {generating ? (
-                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  {generating || isRedirectingToPayfast ? (
+                    <>
+                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      <span>{isRedirectingToPayfast ? "Connecting to Payfast..." : "Generating..."}</span>
+                    </>
                   ) : (
                     <>
                       <Zap className="w-4.5 h-4.5" />
