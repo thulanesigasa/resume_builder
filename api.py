@@ -449,9 +449,11 @@ async def payfast_itn(request: Request):
                 profile_res = supabase.table("profiles").select("credits").eq("id", user_id).execute()
                 current_credits = profile_res.data[0].get("credits", 0) if profile_res.data else 0
                 
-                supabase.table("profiles").update({
-                    "credits": current_credits + credits_to_add
-                }).eq("id", user_id).execute()
+                supabase.table("profiles").upsert({
+                    "id": user_id,
+                    "credits": current_credits + credits_to_add,
+                    "updated_at": "now()"
+                }).execute()
                 
                 logger.info(f"Successfully processed ITN for order {m_payment_id}, added {credits_to_add} credits.")
         
