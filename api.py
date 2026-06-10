@@ -59,8 +59,8 @@ app.add_middleware(LoggingMiddleware)
 # Configure CORS for decoupled frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify the actual frontend domains
-    allow_credentials=True,
+    allow_origins=["*"],  # Safe to use * since allow_credentials is False
+    allow_credentials=False, # We use Authorization headers, not cookies
     allow_methods=["*"],
     allow_headers=["*"],
 )
