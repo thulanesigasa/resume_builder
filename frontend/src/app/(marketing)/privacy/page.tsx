@@ -245,8 +245,8 @@ export default function PrivacyPolicyPage() {
 
         <section className="space-y-4">
           <h2 className="text-2xl font-bold text-brand-deep">26. Contact Information</h2>
-          <p>
-            If you have questions or comments about this notice, you may email our Data Protection Officer (DPO) at kairosounds.01@gmail.com or by post to:
+          <p className="text-brand-navy/80 leading-relaxed mb-4">
+            If you have questions or comments about this notice, you may email our Data Protection Officer (DPO) at support@rbptech.co.za or by post to:
           </p>
           <p className="text-brand-navy/60 italic border-l-4 border-brand-indigo pl-4 mt-2 py-2">
             <strong>rbptech Legal Department</strong><br/>
