@@ -364,15 +364,19 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
         name_last = profile.get("last_name", "") or user.user_metadata.get("last_name", "") if hasattr(user, 'user_metadata') and user.user_metadata else profile.get("last_name", "")
         email_address = user.email if hasattr(user, 'email') else "unknown@example.com"
 
+        import uuid
+        m_payment_id = str(uuid.uuid4())
+
         # Create an order in DB
         order_insert = supabase.table("payfast_orders").insert({
             "user_id": user.id,
+            "m_payment_id": m_payment_id,
             "amount_gross": payload.amount,
             "item_name": payload.plan_name,
             "status": "PENDING"
         }).execute()
         
-        m_payment_id = order_insert.data[0]["id"]
+
 
         base_url = os.getenv("NEXT_PUBLIC_APP_URL", "https://rbptech.co.za")
         
