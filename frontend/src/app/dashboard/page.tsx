@@ -736,7 +736,12 @@ function DashboardContent() {
         router.push("/editor");
       }, 1000);
     } catch (err: any) {
-      triggerToast("AI tailer pipeline failed: " + err.message, "error");
+      if (err.message === "INSUFFICIENT_CREDITS") {
+        triggerToast("Insufficient credits! Redirecting to pricing page...", "error");
+        setTimeout(() => router.push("/pricing"), 1500);
+      } else {
+        triggerToast("AI tailer pipeline failed: " + err.message, "error");
+      }
     } finally {
       setGenerating(false);
     }
@@ -906,7 +911,13 @@ function DashboardContent() {
 
           setBatchLogs((prev) => [...prev, `✅ [Job ${i + 1}] Finished and logged into archive.`]);
         } catch (e: any) {
-          setBatchLogs((prev) => [...prev, `❌ [Job ${i + 1}] Failed: ${e.message}`]);
+          if (e.message === "INSUFFICIENT_CREDITS") {
+            setBatchLogs((prev) => [...prev, `❌ [Job ${i + 1}] Failed: Insufficient credits to generate document.`]);
+            triggerToast("Insufficient credits! Halting autopilot run.", "error");
+            break; // Stop processing the rest of the batch
+          } else {
+            setBatchLogs((prev) => [...prev, `❌ [Job ${i + 1}] Failed: ${e.message}`]);
+          }
         }
 
         setBatchProgress(((i + 1) / scrapedJobs.length) * 100);

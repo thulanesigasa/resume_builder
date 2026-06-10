@@ -181,6 +181,26 @@ async def scrape_job(payload: ScrapeRequest, request: Request, user: dict = Depe
 @limiter.limit("10/minute")
 async def generate_doc(payload: GenerateRequest, request: Request, user: dict = Depends(verify_token)):
     logger.info(f"API Generate request received for doc_type: {payload.doc_type}")
+    
+    supabase = get_supabase_client()
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Database not configured")
+
+    # 1. Check if user has enough credits
+    try:
+        profile_res = supabase.table("profiles").select("credits").eq("id", user.id).execute()
+        current_credits = profile_res.data[0].get("credits", 0) if profile_res.data else 0
+        
+        if current_credits <= 0:
+            raise HTTPException(status_code=402, detail="INSUFFICIENT_CREDITS")
+            
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Error checking user credits: {e}")
+        raise HTTPException(status_code=500, detail="Failed to verify account balance")
+
+    # 2. Run the heavy AI generation
     try:
         data_dict = generate_document(
             payload.job_description,
@@ -190,6 +210,14 @@ async def generate_doc(payload: GenerateRequest, request: Request, user: dict = 
         )
         if not data_dict:
             raise HTTPException(status_code=500, detail="AI generation failed or failed to parse JSON response")
+            
+        # 3. Deduct credit after successful generation
+        supabase.table("profiles").update({
+            "credits": current_credits - 1
+        }).eq("id", user.id).execute()
+        
+        logger.info(f"Successfully deducted 1 credit from user {user.id}. Remaining: {current_credits - 1}")
+        
         return data_dict
     except Exception as e:
         logger.error(f"Error in document generation API: {e}")
