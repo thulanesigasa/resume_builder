@@ -687,6 +687,12 @@ function DashboardContent() {
     const isCombo = includeCoverLetter;
     const price = isCombo ? 25 : 18;
     const desc = isCombo ? "Tailored Resume & Cover Letter Combo" : "Tailored Resume Only";
+    const costInCredits = isCombo ? 2 : 1;
+
+    if (userCredits >= costInCredits) {
+      executeGenerateWorkflow();
+      return;
+    }
 
     // Redirect to Payfast immediately
     setIsRedirectingToPayfast(true);
@@ -904,6 +910,12 @@ function DashboardContent() {
 
     const totalCost = (resumeCount * 15) + (comboCount * 25);
     const discounted = totalCost * 0.922;
+    const costInCredits = resumeCount + (comboCount * 2);
+
+    if (userCredits >= costInCredits) {
+      runAutopilotLoop(batchScrapedJobs);
+      return;
+    }
 
     setIsRedirectingToPayfast(true);
     try {
