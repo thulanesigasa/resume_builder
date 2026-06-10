@@ -37,7 +37,7 @@ export default function ContactForm() {
             <div className="absolute -left-4 top-0 bottom-0 w-1 bg-brand-indigo/20 group-hover:bg-brand-indigo transition-colors rounded-full"></div>
             <div className="text-xs font-bold text-brand-navy/40 uppercase tracking-widest mb-1">Dashboard</div>
             <div className="text-lg font-bold text-brand-deep uppercase tracking-wider">Live Chat</div>
-            <div className="text-sm text-brand-navy/80 mt-1">Available Mon-Fri, 9am - 5pm EST</div>
+            <div className="text-sm text-brand-navy/80 mt-1">Available Mon-Fri, 9am - 5pm SAST</div>
           </div>
         </div>
       </div>
