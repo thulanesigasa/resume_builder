@@ -5,12 +5,37 @@ import { useState } from "react";
 export default function ContactForm() {
   const [formStatus, setFormStatus] = useState<"idle" | "submitting" | "success">("idle");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus("submitting");
-    setTimeout(() => {
+    setErrorMessage("");
+    
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send message");
+      }
+      
       setFormStatus("success");
-    }, 1500);
+      setName("");
+      setEmail("");
+      setMessage("");
+    } catch (err: any) {
+      setErrorMessage(err.message);
+      setFormStatus("idle");
+    }
   };
 
   return (
@@ -67,6 +92,8 @@ export default function ContactForm() {
                 <input 
                   type="text" 
                   required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-3 bg-white border border-brand-navy/15 rounded-lg text-sm text-brand-deep focus:outline-none focus:border-brand-indigo/50 focus:ring-1 focus:ring-brand-indigo/50 transition-all shadow-sm"
                   placeholder="John Doe"
                 />
@@ -76,6 +103,8 @@ export default function ContactForm() {
                 <input 
                   type="email" 
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 bg-white border border-brand-navy/15 rounded-lg text-sm text-brand-deep focus:outline-none focus:border-brand-indigo/50 focus:ring-1 focus:ring-brand-indigo/50 transition-all shadow-sm"
                   placeholder="john@example.com"
                 />
@@ -85,11 +114,20 @@ export default function ContactForm() {
                 <textarea 
                   required
                   rows={4}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
                   className="w-full px-4 py-3 bg-white border border-brand-navy/15 rounded-lg text-sm text-brand-deep focus:outline-none focus:border-brand-indigo/50 focus:ring-1 focus:ring-brand-indigo/50 transition-all resize-none shadow-sm"
                   placeholder="How can we help you?"
                 ></textarea>
               </div>
-              <button 
+              
+              {errorMessage && (
+                <div className="text-red-500 text-xs font-bold text-center mt-2">
+                  {errorMessage}
+                </div>
+              )}
+              
+              <button  
                 type="submit" 
                 disabled={formStatus === "submitting"}
                 className="w-full py-4 btn-primary text-sm mt-2 disabled:opacity-50 tracking-wider uppercase font-bold"
