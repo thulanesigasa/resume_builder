@@ -38,8 +38,18 @@ export default function UpdatePassword() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      setLoading(false);
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError("Password must contain at least one uppercase letter.");
+      setLoading(false);
+      return;
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      setError("Password must contain at least one special symbol.");
       setLoading(false);
       return;
     }

@@ -23,6 +23,22 @@ export default function RegisterPage() {
     setError(null);
     setSuccess(false);
 
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      setLoading(false);
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError("Password must contain at least one uppercase letter.");
+      setLoading(false);
+      return;
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      setError("Password must contain at least one special symbol.");
+      setLoading(false);
+      return;
+    }
+
     try {
       let formattedPhone = phone.trim().replace(/\s+/g, '');
       if (formattedPhone.startsWith("0")) {
