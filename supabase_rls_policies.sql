@@ -6,6 +6,10 @@
 
 -- 1. SCHEMA UPDATES (Run these if the tables/columns don't exist yet)
 ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS credits integer DEFAULT 0;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS target_job_title text;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS experience_level text;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS location text;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS linkedin_url text;
 
 CREATE TABLE IF NOT EXISTS public.payfast_orders (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,

@@ -46,6 +46,10 @@ function DashboardContent() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [targetJobTitle, setTargetJobTitle] = useState("");
+  const [experienceLevel, setExperienceLevel] = useState("Entry Level");
+  const [location, setLocation] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
   const [emailInput, setEmailInput] = useState("");
   const [changingEmail, setChangingEmail] = useState(false);
   const [profileRaw, setProfileRaw] = useState("");
@@ -258,7 +262,7 @@ function DashboardContent() {
       // 1. Fetch Profile
       const { data: profile } = await supabase
         .from("profiles")
-        .select("raw_info, username, first_name, last_name, phone, credits")
+        .select("raw_info, username, first_name, last_name, phone, credits, target_job_title, experience_level, location, linkedin_url")
         .eq("id", userId)
         .single();
 
@@ -270,6 +274,10 @@ function DashboardContent() {
         setLastName(profile.last_name || "");
         setPhone(profile.phone || "");
         setUserCredits(profile.credits || 0);
+        setTargetJobTitle(profile.target_job_title || "");
+        if (profile.experience_level) setExperienceLevel(profile.experience_level);
+        setLocation(profile.location || "");
+        setLinkedinUrl(profile.linkedin_url || "");
       }
       
       const { data: { user: currentUser } } = await supabase.auth.getUser();
@@ -386,6 +394,10 @@ function DashboardContent() {
         first_name: firstName,
         last_name: lastName,
         phone: formattedPhone,
+        target_job_title: targetJobTitle,
+        experience_level: experienceLevel,
+        location: location,
+        linkedin_url: linkedinUrl,
         updated_at: new Date().toISOString(),
       });
       if (error) throw error;
@@ -1183,6 +1195,57 @@ function DashboardContent() {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                       />
+                    </div>
+                    
+                    <div className="pt-2 border-t border-brand-navy/15">
+                      <h4 className="text-xs font-bold text-brand-navy/70 uppercase mb-3">Professional Details</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <label className="block text-xs text-brand-navy/70 mb-1">Target Job Title</label>
+                          <input
+                            type="text"
+                            className="w-full px-3 py-2 glass-input text-sm"
+                            value={targetJobTitle}
+                            onChange={(e) => setTargetJobTitle(e.target.value)}
+                            placeholder="e.g. Software Engineer"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-brand-navy/70 mb-1">Experience Level</label>
+                          <select
+                            value={experienceLevel}
+                            onChange={(e) => setExperienceLevel(e.target.value)}
+                            className="w-full px-3 py-2 glass-input text-sm appearance-none"
+                          >
+                            <option value="Entry Level">Entry Level (0-2 yrs)</option>
+                            <option value="Mid Level">Mid Level (3-5 yrs)</option>
+                            <option value="Senior">Senior (5-10 yrs)</option>
+                            <option value="Executive">Executive (10+ yrs)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs text-brand-navy/70 mb-1">Location</label>
+                          <input
+                            type="text"
+                            className="w-full px-3 py-2 glass-input text-sm"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            placeholder="City, Country"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-brand-navy/70 mb-1">LinkedIn URL</label>
+                          <input
+                            type="url"
+                            className="w-full px-3 py-2 glass-input text-sm"
+                            value={linkedinUrl}
+                            onChange={(e) => setLinkedinUrl(e.target.value)}
+                            placeholder="https://linkedin.com/in/..."
+                          />
+                        </div>
+                      </div>
                     </div>
                     
                     <div className="pt-2 border-t border-brand-navy/15">

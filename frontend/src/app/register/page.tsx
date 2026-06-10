@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { UserPlus, Mail, Key, Phone, User, Briefcase } from "lucide-react";
+import { UserPlus, Mail, Key, Phone, User, Briefcase, MapPin, Linkedin, ChevronDown } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,6 +13,10 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [targetJobTitle, setTargetJobTitle] = useState("");
+  const [experienceLevel, setExperienceLevel] = useState("Entry Level");
+  const [location, setLocation] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -57,6 +61,10 @@ export default function RegisterPage() {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
             phone: formattedPhone,
+            target_job_title: targetJobTitle.trim(),
+            experience_level: experienceLevel,
+            location: location.trim(),
+            linkedin_url: linkedinUrl.trim(),
           },
         },
       });
@@ -173,24 +181,119 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
-                      <Mail className="h-4 w-4" />
+                </div>
+
+                <div className="pt-4 border-t border-brand-navy/10 mt-2 mb-2">
+                  <h3 className="text-sm font-bold text-brand-deep mb-4 flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-brand-indigo" />
+                    Professional Details
+                  </h3>
+                  
+                  <div className="space-y-5">
+                    <div>
+                      <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                        Target Job Title
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
+                          <Briefcase className="h-4 w-4" />
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          value={targetJobTitle}
+                          onChange={(e) => setTargetJobTitle(e.target.value)}
+                          className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
+                          placeholder="e.g. Software Engineer"
+                        />
+                      </div>
                     </div>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
-                      placeholder="name@company.com"
-                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                          Experience Level
+                        </label>
+                        <div className="relative">
+                          <select
+                            required
+                            value={experienceLevel}
+                            onChange={(e) => setExperienceLevel(e.target.value)}
+                            className="w-full pl-3 pr-8 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep appearance-none"
+                          >
+                            <option value="Entry Level">Entry Level (0-2 yrs)</option>
+                            <option value="Mid Level">Mid Level (3-5 yrs)</option>
+                            <option value="Senior">Senior (5-10 yrs)</option>
+                            <option value="Executive">Executive (10+ yrs)</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-brand-navy/40">
+                            <ChevronDown className="h-4 w-4" />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                          Location
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
+                            <MapPin className="h-4 w-4" />
+                          </div>
+                          <input
+                            type="text"
+                            required
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
+                            placeholder="City, Country"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                        LinkedIn URL <span className="text-brand-navy/40 font-normal lowercase">(optional)</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
+                          <Linkedin className="h-4 w-4" />
+                        </div>
+                        <input
+                          type="url"
+                          value={linkedinUrl}
+                          onChange={(e) => setLinkedinUrl(e.target.value)}
+                          className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
+                          placeholder="https://linkedin.com/in/..."
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+                <div className="pt-4 border-t border-brand-navy/10 mt-2 mb-2">
+                  <h3 className="text-sm font-bold text-brand-deep mb-4 flex items-center gap-2">
+                    <Key className="w-4 h-4 text-brand-indigo" />
+                    Account Security
+                  </h3>
+                  <div>
+                    <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
+                        <Mail className="h-4 w-4" />
+                      </div>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
+                        placeholder="name@company.com"
+                      />
+                    </div>
+                  </div>
 
                 <div>
                   <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
@@ -207,7 +310,7 @@ export default function RegisterPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
-                      placeholder="Min. 8 characters"
+                      placeholder="Min. 8 chars, 1 uppercase, 1 symbol"
                     />
                   </div>
                 </div>
