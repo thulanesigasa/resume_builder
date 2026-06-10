@@ -64,6 +64,7 @@ function DashboardContent() {
 
   // Stats
   const [stats, setStats] = useState({ appsCount: 0, certsCount: 0, avgAts: 0 });
+  const [userCredits, setUserCredits] = useState<number>(0);
 
   // Job Scraper & Gen state
   const [inputMethod, setInputMethod] = useState<"scrape" | "paste">("scrape");
@@ -255,7 +256,7 @@ function DashboardContent() {
       // 1. Fetch Profile
       const { data: profile } = await supabase
         .from("profiles")
-        .select("raw_info, username, first_name, last_name, phone")
+        .select("raw_info, username, first_name, last_name, phone, credits")
         .eq("id", userId)
         .single();
 
@@ -266,6 +267,7 @@ function DashboardContent() {
         setFirstName(profile.first_name || "");
         setLastName(profile.last_name || "");
         setPhone(profile.phone || "");
+        setUserCredits(profile.credits || 0);
       }
 
       // Fallback/Sync: If raw_info is empty, check if Master_CV.txt exists in storage
@@ -955,6 +957,10 @@ function DashboardContent() {
           <div className="flex items-center gap-2 text-sm text-brand-navy">
             <User className="w-4 h-4 text-brand-indigo" />
             <span className="font-mono text-xs max-w-[120px] truncate">{username || user.email}</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-indigo/10 border border-brand-indigo/20 text-brand-indigo font-bold text-xs shadow-inner">
+            <Zap className="w-3.5 h-3.5" />
+            {userCredits} <span className="font-medium opacity-80">Credits</span>
           </div>
           <button
             onClick={() => setActiveTab("archive")}

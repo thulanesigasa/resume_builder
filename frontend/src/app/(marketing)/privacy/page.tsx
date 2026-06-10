@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
             <li><strong>Identity Data:</strong> Includes first name, last name, username, and title.</li>
             <li><strong>Contact Data:</strong> Includes email address, physical address, and telephone numbers.</li>
             <li><strong>Professional Data:</strong> Includes your raw resume data, employment history, educational background, professional certificates, technical skills, target job descriptions, parsed PDFs, and generated cover letters.</li>
-            <li><strong>Financial Data:</strong> Includes payment card details. All payment data is collected and processed securely by Stripe. We do not store your full credit card numbers or banking details on our servers.</li>
+            <li><strong>Financial Data:</strong> Includes payment card details. All payment data is collected and processed securely by PayFast. We do not store your full credit card numbers or banking details on our servers.</li>
             <li><strong>Technical Data:</strong> Includes internet protocol (IP) address, your login data, browser type and version, time zone setting and location, browser plug-in types and versions, operating system and platform, and other technology on the devices you use to access this website.</li>
             <li><strong>Usage Data:</strong> Includes information about how you use our website and services, such as ATS scoring metrics, compilation history, interaction logs, frequency of use, and feature preferences.</li>
             <li><strong>Marketing and Communications Data:</strong> Includes your preferences in receiving marketing from us and your communication preferences.</li>
@@ -204,7 +204,7 @@ export default function PrivacyPolicyPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-bold text-brand-deep">20. Third-Party Payment Processing Data</h2>
           <p>
-            When you purchase a subscription or credits, your payment is processed directly by our third-party payment processor, Stripe. We do not collect, process, or store your full credit card numbers, expiration dates, or CVV codes. Stripe’s use of your personal information is governed by their independent privacy policy. We only receive secure payment tokens and basic billing data (such as your zip code and the last four digits of your card) to fulfill your orders and manage subscriptions.
+            When you purchase a subscription or credits, your payment is processed directly by our third-party payment processor, PayFast. We do not collect, process, or store your full credit card numbers, expiration dates, or CVV codes. PayFast’s use of your personal information is governed by their independent privacy policy. We only receive secure payment tokens and basic billing data (such as your zip code and the last four digits of your card) to fulfill your orders and manage subscriptions.
           </p>
         </section>
 
