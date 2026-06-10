@@ -368,7 +368,7 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
         email_address = user.email if hasattr(user, 'email') else "unknown@example.com"
 
         import uuid
-        m_payment_id = str(uuid.uuid4())
+        m_payment_id = uuid.uuid4().hex  # 32-char alphanumeric, no hyphens (PayFast requirement)
 
         # Create an order in DB
         order_insert = supabase.table("payfast_orders").insert({
