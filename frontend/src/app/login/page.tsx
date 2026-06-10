@@ -96,9 +96,17 @@ function LoginContent() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-bold text-brand-navy/70 uppercase">
+                  Password
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs font-semibold text-brand-indigo hover:text-brand-deep transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
                   <Key className="h-4 w-4" />

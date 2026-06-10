@@ -46,6 +46,8 @@ function DashboardContent() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [emailInput, setEmailInput] = useState("");
+  const [changingEmail, setChangingEmail] = useState(false);
   const [profileRaw, setProfileRaw] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [parsingCv, setParsingCv] = useState(false);
@@ -269,6 +271,11 @@ function DashboardContent() {
         setPhone(profile.phone || "");
         setUserCredits(profile.credits || 0);
       }
+      
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser?.email && !emailInput) {
+        setEmailInput(currentUser.email);
+      }
 
       // Fallback/Sync: If raw_info is empty, check if Master_CV.txt exists in storage
       if (!activeRawInfo.trim()) {
@@ -361,8 +368,8 @@ function DashboardContent() {
 
   const handleUpdateProfile = async () => {
     if (!user) return;
-    setSavingProfile(true);
     try {
+      setSavingProfile(true);
       const { error } = await supabase.from("profiles").upsert({
         id: user.id,
         username,
@@ -372,11 +379,25 @@ function DashboardContent() {
         updated_at: new Date().toISOString(),
       });
       if (error) throw error;
-      triggerToast("Personal profile info saved successfully!", "success");
+      triggerToast("Profile details updated successfully!", "success");
     } catch (err: any) {
-      triggerToast("Failed to update profile: " + err.message, "error");
+      triggerToast("Error updating profile: " + err.message, "error");
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  const handleChangeEmail = async () => {
+    if (!user || !emailInput || emailInput === user.email) return;
+    try {
+      setChangingEmail(true);
+      const { error } = await supabase.auth.updateUser({ email: emailInput });
+      if (error) throw error;
+      triggerToast("Email change initiated! Check BOTH your old and new email inboxes for verification links.", "success");
+    } catch (err: any) {
+      triggerToast("Error changing email: " + err.message, "error");
+    } finally {
+      setChangingEmail(false);
     }
   };
 
@@ -1151,6 +1172,26 @@ function DashboardContent() {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                       />
+                    </div>
+                    
+                    <div className="pt-2 border-t border-brand-navy/15">
+                      <label className="block text-xs text-brand-navy/70 mb-1">Account Email Address</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="email"
+                          className="flex-1 px-3 py-2 glass-input text-sm"
+                          value={emailInput}
+                          onChange={(e) => setEmailInput(e.target.value)}
+                        />
+                        <button
+                          onClick={handleChangeEmail}
+                          disabled={changingEmail || emailInput === user?.email}
+                          className="px-4 py-2 btn-primary text-xs disabled:opacity-50 whitespace-nowrap"
+                        >
+                          {changingEmail ? "Sending..." : "Change Email"}
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-brand-navy/50 mt-1">Changing your email requires verifying links sent to both your old and new inboxes.</p>
                     </div>
                     <button
                       onClick={handleUpdateProfile}
