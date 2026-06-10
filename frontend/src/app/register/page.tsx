@@ -61,14 +61,24 @@ export default function RegisterPage() {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
             phone: formattedPhone,
-            target_job_title: targetJobTitle.trim(),
-            experience_level: experienceLevel,
-            linkedin_url: linkedinUrl.trim(),
           },
         },
       });
 
       if (authError) throw authError;
+
+      // Manually update the profile with the extra fields after auth trigger completes
+      if (data?.user) {
+        const { error: profileError } = await supabase.from('profiles').update({
+          target_job_title: targetJobTitle.trim(),
+          experience_level: experienceLevel,
+          linkedin_url: linkedinUrl.trim(),
+        }).eq('id', data.user.id);
+        
+        if (profileError) {
+          console.warn("Could not save professional details:", profileError);
+        }
+      }
 
       setSuccess(true);
     } catch (err: any) {
