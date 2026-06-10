@@ -96,6 +96,10 @@ class CompileMasterCvRequest(BaseModel):
 def health_check(request: Request):
     return {"status": "healthy", "service": "resume-builder-api"}
 
+@app.api_route("/", methods=["GET", "HEAD"])
+def root_check():
+    return {"status": "active", "message": "AI Resume Builder API is online"}
+
 @app.post("/api/compile-master-cv")
 @limiter.limit("10/minute")
 async def compile_master_cv(payload: CompileMasterCvRequest, request: Request, user: dict = Depends(verify_token)):
