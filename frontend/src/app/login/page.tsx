@@ -75,19 +75,73 @@ function LoginContent() {
             </div>
           )}
 
-          <div className="bg-brand-navy/5 border border-brand-navy/10 rounded-xl p-8 text-center space-y-4">
-            <div className="w-12 h-12 bg-brand-indigo/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <LogIn className="w-6 h-6 text-brand-indigo" />
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div>
+              <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
+                  <Mail className="h-4 w-4" />
+                </div>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
+                  placeholder="name@company.com"
+                />
+              </div>
             </div>
-            <h3 className="text-lg font-bold text-brand-deep">Login & Sign Up Paused</h3>
-            <p className="text-sm text-brand-navy/70 leading-relaxed">
-              We are currently finalizing our PayFast merchant verification and have temporarily paused new logins and registrations. Please check back soon!
-            </p>
-            <Link
-              href="/"
-              className="inline-block mt-4 text-sm font-semibold text-brand-indigo hover:text-brand-deep transition-colors"
+
+            <div>
+              <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
+                  <Key className="h-4 w-4" />
+                </div>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full py-3 btn-primary text-sm font-semibold flex items-center justify-center gap-2 ${
+                loading ? "opacity-70 cursor-not-allowed" : "cursor-pointer"
+              }`}
             >
-              Return to Home
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Authenticating...
+                </>
+              ) : (
+                <>
+                  Enter Workspace
+                  <Briefcase className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-8 text-center text-sm text-brand-navy/60">
+            Don't have an account?{" "}
+            <Link
+              href="/register"
+              className="text-brand-indigo font-semibold hover:underline"
+            >
+              Sign up here
             </Link>
           </div>
         </div>

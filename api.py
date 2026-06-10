@@ -1,6 +1,9 @@
 import json
 import io
 import time
+import os
+import hashlib
+import urllib.parse
 import pdfplumber
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Body, Depends, Request
@@ -295,6 +298,138 @@ async def auto_name_document(payload: AutoNameRequest, request: Request, user: d
         return {"name": ai_name}
     except Exception as e:
         logger.error(f"Error auto-naming document: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =========================================================
+# PAYFAST INTEGRATION
+# =========================================================
+
+PAYFAST_MERCHANT_ID = os.getenv("PAYFAST_MERCHANT_ID", "10000100")
+PAYFAST_MERCHANT_KEY = os.getenv("PAYFAST_MERCHANT_KEY", "46f0cd694581a")
+PAYFAST_PASSPHRASE = os.getenv("PAYFAST_PASSPHRASE", "")
+PAYFAST_TEST_MODE = os.getenv("PAYFAST_TEST_MODE", "true").lower() == "true"
+
+def generate_payfast_signature(data: dict, passphrase: str = None):
+    sorted_data = dict(sorted(data.items()))
+    pf_string = urllib.parse.urlencode(sorted_data)
+    if passphrase:
+        pf_string += f"&passphrase={urllib.parse.quote_plus(passphrase)}"
+    return hashlib.md5(pf_string.encode('utf-8')).hexdigest()
+
+class CheckoutRequest(BaseModel):
+    plan_name: str
+    amount: float
+
+@app.post("/api/payfast/create-checkout")
+@limiter.limit("10/minute")
+async def create_payfast_checkout(payload: CheckoutRequest, request: Request, user: dict = Depends(verify_token)):
+    logger.info(f"API PayFast checkout request received for user: {user.id}")
+    try:
+        supabase = get_supabase_client()
+        if not supabase:
+            raise HTTPException(status_code=500, detail="Database not configured")
+
+        profile_res = supabase.table("profiles").select("*").eq("id", user.id).execute()
+        profile = profile_res.data[0] if profile_res.data else {}
+
+        name_first = profile.get("first_name", "") or user.user_metadata.get("first_name", "User") if hasattr(user, 'user_metadata') and user.user_metadata else profile.get("first_name", "User")
+        name_last = profile.get("last_name", "") or user.user_metadata.get("last_name", "") if hasattr(user, 'user_metadata') and user.user_metadata else profile.get("last_name", "")
+        email_address = user.email if hasattr(user, 'email') else "unknown@example.com"
+
+        # Create an order in DB
+        order_insert = supabase.table("payfast_orders").insert({
+            "user_id": user.id,
+            "amount_gross": payload.amount,
+            "item_name": payload.plan_name,
+            "status": "PENDING"
+        }).execute()
+        
+        m_payment_id = order_insert.data[0]["id"]
+
+        base_url = os.getenv("NEXT_PUBLIC_APP_URL", "https://rbptech.co.za")
+        
+        pf_data = {
+            "merchant_id": PAYFAST_MERCHANT_ID,
+            "merchant_key": PAYFAST_MERCHANT_KEY,
+            "return_url": f"{base_url}/dashboard?checkout_success=true",
+            "cancel_url": f"{base_url}/dashboard?checkout_cancel=true",
+            "notify_url": "https://rbptech-backend.onrender.com/api/payfast/itn",
+            "name_first": name_first,
+            "name_last": name_last,
+            "email_address": email_address,
+            "m_payment_id": str(m_payment_id),
+            "amount": f"{payload.amount:.2f}",
+            "item_name": payload.plan_name,
+        }
+
+        signature = generate_payfast_signature(pf_data, PAYFAST_PASSPHRASE)
+        pf_data["signature"] = signature
+
+        payfast_url = "https://sandbox.payfast.co.za/eng/process" if PAYFAST_TEST_MODE else "https://www.payfast.co.za/eng/process"
+
+        return {
+            "payfast_url": payfast_url,
+            "form_fields": pf_data
+        }
+
+    except Exception as e:
+        logger.error(f"Error creating PayFast checkout: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/payfast/itn")
+async def payfast_itn(request: Request):
+    try:
+        form_data = await request.form()
+        pf_dict = dict(form_data)
+        
+        logger.info(f"Received ITN from PayFast: {pf_dict}")
+        
+        received_signature = pf_dict.pop("signature", None)
+        calculated_signature = generate_payfast_signature(pf_dict, PAYFAST_PASSPHRASE)
+        
+        if received_signature != calculated_signature:
+            logger.error("Invalid ITN signature")
+            raise HTTPException(status_code=400, detail="Invalid signature")
+            
+        m_payment_id = pf_dict.get("m_payment_id")
+        payment_status = pf_dict.get("payment_status")
+        pf_payment_id = pf_dict.get("pf_payment_id")
+        
+        supabase = get_supabase_client()
+        if not supabase:
+            raise HTTPException(status_code=500, detail="Database not configured")
+
+        if payment_status == "COMPLETE":
+            order_res = supabase.table("payfast_orders").update({
+                "status": "COMPLETE",
+                "pf_payment_id": pf_payment_id
+            }).eq("id", m_payment_id).eq("status", "PENDING").execute()
+            
+            if order_res.data:
+                order = order_res.data[0]
+                user_id = order["user_id"]
+                
+                # Assign credits based on plan
+                credits_to_add = 1
+                if "combo" in order["item_name"].lower():
+                    credits_to_add = 2
+                elif "batch" in order["item_name"].lower():
+                    # calculate roughly from amount
+                    amt = float(order["amount_gross"])
+                    credits_to_add = int(amt / 15) # Approx logic for batches
+                
+                profile_res = supabase.table("profiles").select("credits").eq("id", user_id).execute()
+                current_credits = profile_res.data[0].get("credits", 0) if profile_res.data else 0
+                
+                supabase.table("profiles").update({
+                    "credits": current_credits + credits_to_add
+                }).eq("id", user_id).execute()
+                
+                logger.info(f"Successfully processed ITN for order {m_payment_id}, added {credits_to_add} credits.")
+        
+        return "OK"
+    except Exception as e:
+        logger.error(f"Error processing PayFast ITN: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

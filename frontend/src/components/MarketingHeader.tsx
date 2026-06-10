@@ -73,9 +73,20 @@ export default function MarketingHeader() {
               Go to Dashboard
             </button>
           ) : (
-            <span className="text-xs font-semibold text-brand-navy/60 px-5 py-2 border border-brand-navy/10 rounded-full">
-              Login & Sign Up Paused
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => router.push("/login")}
+                className="px-5 py-2 text-xs font-semibold text-brand-navy/80 hover:text-brand-deep transition-colors"
+              >
+                Log in
+              </button>
+              <button
+                onClick={() => router.push("/register")}
+                className="px-5 py-2 btn-primary text-xs"
+              >
+                Sign up
+              </button>
+            </div>
           )}
         </nav>
 
@@ -119,13 +130,7 @@ export default function MarketingHeader() {
           ))}
           <div className="h-px w-full bg-brand-navy/10 my-2"></div>
           
-          {!user ? (
-            <div className="flex flex-col gap-3">
-              <span className="w-full py-3 text-center text-sm font-semibold text-brand-navy/60 border border-brand-navy/10 rounded-lg">
-                Login & Sign Up Paused
-              </span>
-            </div>
-          ) : (
+          {user ? (
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
@@ -135,6 +140,27 @@ export default function MarketingHeader() {
             >
               Go to Dashboard
             </button>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  router.push("/login");
+                }}
+                className="w-full py-3 border border-brand-navy/10 rounded-full text-xs font-bold text-brand-navy hover:bg-brand-navy/5"
+              >
+                Log in
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  router.push("/register");
+                }}
+                className="w-full py-3 btn-primary text-xs"
+              >
+                Sign up
+              </button>
+            </div>
           )}
         </div>
       </div>

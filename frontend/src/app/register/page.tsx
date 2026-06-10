@@ -76,21 +76,149 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <div className="bg-brand-navy/5 border border-brand-navy/10 rounded-xl p-8 text-center space-y-4">
-            <div className="w-12 h-12 bg-brand-indigo/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <UserPlus className="w-6 h-6 text-brand-indigo" />
+          {success ? (
+            <div className="bg-brand-indigo/10 border border-brand-indigo/20 rounded-xl p-8 text-center space-y-4">
+              <div className="w-12 h-12 bg-brand-indigo rounded-full flex items-center justify-center mx-auto mb-4 text-white">
+                <Mail className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-brand-deep">Verify Your Email</h3>
+              <p className="text-sm text-brand-navy/70 leading-relaxed">
+                We've sent a verification link to <span className="font-semibold text-brand-navy">{email}</span>. Please check your inbox and click the link to activate your workspace.
+              </p>
+              <button
+                onClick={() => router.push("/login")}
+                className="mt-4 px-6 py-2 btn-secondary text-sm"
+              >
+                Go to Login
+              </button>
             </div>
-            <h3 className="text-lg font-bold text-brand-deep">Login & Sign Up Paused</h3>
-            <p className="text-sm text-brand-navy/70 leading-relaxed">
-              We are currently finalizing our PayFast merchant verification and have temporarily paused new logins and registrations. Please check back soon!
-            </p>
-            <Link
-              href="/"
-              className="inline-block mt-4 text-sm font-semibold text-brand-indigo hover:text-brand-deep transition-colors"
-            >
-              Return to Home
-            </Link>
-          </div>
+          ) : (
+            <>
+              <form onSubmit={handleRegister} className="space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                      First Name
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
+                        <User className="h-4 w-4" />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
+                        placeholder="John"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="w-full px-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
+                      placeholder="Doe"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
+                      <Phone className="h-4 w-4" />
+                    </div>
+                    <input
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
+                      placeholder="+27 82 000 0000"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
+                      <Mail className="h-4 w-4" />
+                    </div>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
+                      placeholder="name@company.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
+                      <Key className="h-4 w-4" />
+                    </div>
+                    <input
+                      type="password"
+                      required
+                      minLength={8}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
+                      placeholder="Min. 8 characters"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full py-3 btn-primary text-sm font-semibold flex items-center justify-center gap-2 ${
+                    loading ? "opacity-70 cursor-not-allowed" : "cursor-pointer"
+                  }`}
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Creating account...
+                    </>
+                  ) : (
+                    <>
+                      Create Workspace
+                      <Briefcase className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-8 text-center text-sm text-brand-navy/60">
+                Already have an account?{" "}
+                <Link
+                  href="/login"
+                  className="text-brand-indigo font-semibold hover:underline"
+                >
+                  Log in here
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

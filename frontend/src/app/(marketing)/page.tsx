@@ -49,10 +49,11 @@ export default function LandingPage() {
               </button>
             ) : (
               <button
-                disabled
-                className="px-8 py-3.5 bg-brand-navy/5 text-brand-navy/60 border border-brand-navy/10 rounded-xl text-sm flex items-center justify-center gap-2 cursor-not-allowed"
+                onClick={() => router.push("/register")}
+                className="px-8 py-3.5 btn-primary text-sm flex items-center justify-center gap-2 group cursor-pointer"
               >
-                Registration Paused
+                Configure Your Resume
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
             )}
             <button

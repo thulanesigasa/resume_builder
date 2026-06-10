@@ -1,13 +1,28 @@
 -- ====================================================================
--- SUPABASE ROW LEVEL SECURITY (RLS) POLICIES
+-- SUPABASE SCHEMA DEFINITIONS & ROW LEVEL SECURITY (RLS) POLICIES
 -- Run this script in the Supabase SQL Editor to secure your database tables
 -- and storage buckets for production deployment.
 -- ====================================================================
+
+-- 1. SCHEMA UPDATES (Run these if the tables/columns don't exist yet)
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS credits integer DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS public.payfast_orders (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+    pf_payment_id text,
+    m_payment_id text UNIQUE NOT NULL,
+    amount_gross numeric NOT NULL,
+    item_name text NOT NULL,
+    status text DEFAULT 'PENDING',
+    created_at timestamp with time zone DEFAULT now()
+);
 
 -- Enable RLS on Database Tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.certificates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payfast_orders ENABLE ROW LEVEL SECURITY;
 
 -- ==========================================
 -- 1. POLICIES FOR THE "profiles" TABLE
@@ -80,6 +95,18 @@ CREATE POLICY "Users can delete their own applications"
 ON public.applications 
 FOR DELETE 
 USING (auth.uid() = user_id);
+
+-- ==========================================
+-- 4. POLICIES FOR THE "payfast_orders" TABLE
+-- ==========================================
+-- Users can only view their own orders
+CREATE POLICY "Users can view their own orders" 
+ON public.payfast_orders 
+FOR SELECT 
+USING (auth.uid() = user_id);
+
+-- Note: Inserts and Updates to payfast_orders are done via the backend Service Role Key, 
+-- so we do not grant users insert/update permissions.
 
 -- ====================================================================
 -- 4. POLICIES FOR SUPABASE STORAGE (resumes bucket)

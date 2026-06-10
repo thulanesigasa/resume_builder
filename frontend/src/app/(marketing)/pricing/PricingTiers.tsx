@@ -28,22 +28,56 @@ export default function PricingTiers() {
     }, 4000);
   };
 
-  const handleSelectPlan = (planName: string, amount: string) => {
-    let type = "resume";
-    if (planName.toLowerCase().includes("combo")) {
-      type = "combo";
-    } else if (planName.toLowerCase().includes("batch")) {
-      type = `batch&jobs=${numJobs}&batchType=${batchType}`;
+  const [payfastData, setPayfastData] = useState<{ url: string; fields: Record<string, string> } | null>(null);
+
+  useEffect(() => {
+    if (payfastData) {
+      const form = document.getElementById("payfast-form") as HTMLFormElement;
+      if (form) form.submit();
     }
+  }, [payfastData]);
+
+  const handleSelectPlan = async (planName: string, amountStr: string) => {
+    if (!user) {
+      triggerToast("Please login first to continue to checkout.", "error");
+      setTimeout(() => {
+        router.push(`/login?redirect=/pricing`);
+      }, 1500);
+      return;
+    }
+
+    triggerToast(`Initializing secure checkout for ${planName}...`, "info");
     
-    triggerToast(`Redirecting to Stripe checkout for ${planName} (${amount})...`, "info");
-    setTimeout(() => {
-      if (user) {
-        router.push(`/dashboard?checkout=${type}`);
-      } else {
-        router.push(`/login?redirect=/dashboard?checkout=${encodeURIComponent(type)}`);
+    try {
+      // Extract numeric value from string (e.g. "R18" -> 18, "R 125.50" -> 125.5)
+      const amount = parseFloat(amountStr.replace(/[^0-9.]/g, ""));
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch("http://localhost:8000/api/payfast/create-checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({
+          plan_name: planName,
+          amount: amount
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to initialize checkout");
       }
-    }, 1500);
+      
+      const data = await response.json();
+      setPayfastData({ url: data.payfast_url, fields: data.form_fields });
+      triggerToast("Redirecting to PayFast...", "success");
+      
+    } catch (error) {
+      console.error(error);
+      triggerToast("Error connecting to payment gateway.", "error");
+    }
   };
 
   return (
@@ -55,6 +89,24 @@ export default function PricingTiers() {
             CREDITS & LICENSING
           </div>
         </div>
+
+        {/* Hidden PayFast Form */}
+        {payfastData && (
+          <form id="payfast-form" action={payfastData.url} method="POST" className="hidden">
+            {Object.entries(payfastData.fields).map(([key, value]) => (
+              <input key={key} type="hidden" name={key} value={value} />
+            ))}
+          </form>
+        )}
+
+        {/* Hidden PayFast Form */}
+        {payfastData && (
+          <form id="payfast-form" action={payfastData.url} method="POST" className="hidden">
+            {Object.entries(payfastData.fields).map(([key, value]) => (
+              <input key={key} type="hidden" name={key} value={value} />
+            ))}
+          </form>
+        )}
 
         <div className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-brand-deep">
