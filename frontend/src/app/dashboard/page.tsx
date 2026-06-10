@@ -23,6 +23,7 @@ import {
   Zap,
   Download,
   Eye,
+  ChevronDown
 } from "lucide-react";
 
 function DashboardContent() {
@@ -48,6 +49,13 @@ function DashboardContent() {
   const [phone, setPhone] = useState("");
   const [targetJobTitle, setTargetJobTitle] = useState("");
   const [experienceLevel, setExperienceLevel] = useState("Entry Level");
+  const [showExperienceDropdown, setShowExperienceDropdown] = useState(false);
+  const experienceOptions = [
+    { label: "Entry Level (0-2 yrs)", value: "Entry Level" },
+    { label: "Mid Level (3-5 yrs)", value: "Mid Level" },
+    { label: "Senior (5-10 yrs)", value: "Senior" },
+    { label: "Executive (10+ yrs)", value: "Executive" }
+  ];
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [emailInput, setEmailInput] = useState("");
   const [changingEmail, setChangingEmail] = useState(false);
@@ -1207,18 +1215,40 @@ function DashboardContent() {
                             placeholder="e.g. Software Engineer"
                           />
                         </div>
-                        <div>
+                        <div className="relative">
                           <label className="block text-xs text-brand-navy/70 mb-1">Experience Level</label>
-                          <select
-                            value={experienceLevel}
-                            onChange={(e) => setExperienceLevel(e.target.value)}
-                            className="w-full px-3 py-2 glass-input text-sm appearance-none"
+                          <button
+                            type="button"
+                            onClick={() => setShowExperienceDropdown(!showExperienceDropdown)}
+                            className="w-full px-3 py-2 glass-input text-sm flex justify-between items-center text-left"
                           >
-                            <option value="Entry Level">Entry Level (0-2 yrs)</option>
-                            <option value="Mid Level">Mid Level (3-5 yrs)</option>
-                            <option value="Senior">Senior (5-10 yrs)</option>
-                            <option value="Executive">Executive (10+ yrs)</option>
-                          </select>
+                            <span>{experienceOptions.find(o => o.value === experienceLevel)?.label || "Select Level"}</span>
+                            <ChevronDown className={`h-4 w-4 text-brand-navy/40 transition-transform ${showExperienceDropdown ? 'rotate-180' : ''}`} />
+                          </button>
+
+                          {showExperienceDropdown && (
+                            <>
+                              <div 
+                                className="fixed inset-0 z-10"
+                                onClick={() => setShowExperienceDropdown(false)}
+                              ></div>
+                              <div className="absolute z-20 w-full mt-1 bg-white border border-brand-navy/10 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                {experienceOptions.map((opt) => (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => {
+                                      setExperienceLevel(opt.value);
+                                      setShowExperienceDropdown(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-brand-navy/5 transition-colors ${experienceLevel === opt.value ? 'bg-brand-indigo/5 text-brand-indigo font-medium' : 'text-brand-deep'}`}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                       <div className="mt-4">

@@ -15,6 +15,13 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [targetJobTitle, setTargetJobTitle] = useState("");
   const [experienceLevel, setExperienceLevel] = useState("Entry Level");
+  const [showExperienceDropdown, setShowExperienceDropdown] = useState(false);
+  const experienceOptions = [
+    { label: "Entry Level (0-2 yrs)", value: "Entry Level" },
+    { label: "Mid Level (3-5 yrs)", value: "Mid Level" },
+    { label: "Senior (5-10 yrs)", value: "Senior" },
+    { label: "Executive (10+ yrs)", value: "Executive" }
+  ];
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -221,20 +228,38 @@ export default function RegisterPage() {
                         Experience Level
                       </label>
                       <div className="relative">
-                        <select
-                          required
-                          value={experienceLevel}
-                          onChange={(e) => setExperienceLevel(e.target.value)}
-                          className="w-full pl-3 pr-8 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep appearance-none"
+                        <button
+                          type="button"
+                          onClick={() => setShowExperienceDropdown(!showExperienceDropdown)}
+                          className="w-full pl-3 pr-8 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep flex justify-between items-center"
                         >
-                          <option value="Entry Level">Entry Level (0-2 yrs)</option>
-                          <option value="Mid Level">Mid Level (3-5 yrs)</option>
-                          <option value="Senior">Senior (5-10 yrs)</option>
-                          <option value="Executive">Executive (10+ yrs)</option>
-                        </select>
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-brand-navy/40">
-                          <ChevronDown className="h-4 w-4" />
-                        </div>
+                          <span>{experienceOptions.find(o => o.value === experienceLevel)?.label || "Select Level"}</span>
+                          <ChevronDown className={`h-4 w-4 text-brand-navy/40 transition-transform ${showExperienceDropdown ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {showExperienceDropdown && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-10"
+                              onClick={() => setShowExperienceDropdown(false)}
+                            ></div>
+                            <div className="absolute z-20 w-full mt-1 bg-white border border-brand-navy/10 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+                              {experienceOptions.map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setExperienceLevel(opt.value);
+                                    setShowExperienceDropdown(false);
+                                  }}
+                                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-brand-navy/5 transition-colors ${experienceLevel === opt.value ? 'bg-brand-indigo/5 text-brand-indigo font-medium' : 'text-brand-deep'}`}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
 
