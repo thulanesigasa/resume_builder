@@ -23,7 +23,8 @@ import {
   Zap,
   Download,
   Eye,
-  ChevronDown
+  ChevronDown,
+  Key
 } from "lucide-react";
 
 function DashboardContent() {
@@ -115,6 +116,12 @@ function DashboardContent() {
   const [previewTemplate, setPreviewTemplate] = useState<{name: string, type: string} | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+
+  // Re-authentication Modal
+  const [showReauthModal, setShowReauthModal] = useState(false);
+  const [reauthPassword, setReauthPassword] = useState("");
+  const [reauthError, setReauthError] = useState<string | null>(null);
+  const [isReauthenticating, setIsReauthenticating] = useState(false);
 
   const handlePreview = async (templateName: string, type: string) => {
     setPreviewTemplate({ name: templateName, type });
@@ -415,16 +422,39 @@ function DashboardContent() {
     }
   };
 
-  const handleChangeEmail = async () => {
+  const promptChangeEmail = () => {
+    if (!user || !emailInput || emailInput === user.email) return;
+    setShowReauthModal(true);
+    setReauthPassword("");
+    setReauthError(null);
+  };
+
+  const confirmChangeEmail = async () => {
     if (!user || !emailInput || emailInput === user.email) return;
     try {
+      setIsReauthenticating(true);
+      setReauthError(null);
+
+      // Verify current password first
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: reauthPassword,
+      });
+
+      if (signInError) {
+        throw new Error("Incorrect password. Please try again.");
+      }
+
       setChangingEmail(true);
       const { error } = await supabase.auth.updateUser({ email: emailInput });
       if (error) throw error;
+      
+      setShowReauthModal(false);
       triggerToast("Email change initiated! Check BOTH your old and new email inboxes for verification links.", "success");
     } catch (err: any) {
-      triggerToast("Error changing email: " + err.message, "error");
+      setReauthError(err.message);
     } finally {
+      setIsReauthenticating(false);
       setChangingEmail(false);
     }
   };
@@ -1273,7 +1303,7 @@ function DashboardContent() {
                           onChange={(e) => setEmailInput(e.target.value)}
                         />
                         <button
-                          onClick={handleChangeEmail}
+                          onClick={promptChangeEmail}
                           disabled={changingEmail || emailInput === user?.email}
                           className="px-4 py-2 btn-primary text-xs disabled:opacity-50 sm:whitespace-nowrap"
                         >
@@ -2130,6 +2160,72 @@ function DashboardContent() {
           </div>
         </div>
       )}
+
+      {/* RE-AUTHENTICATION MODAL FOR EMAIL CHANGE */}
+      {showReauthModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-brand-deep/80 backdrop-blur-sm transition-opacity" 
+            onClick={() => !isReauthenticating && setShowReauthModal(false)}
+          ></div>
+          <div className="relative bg-white border border-brand-navy/10 rounded-2xl p-8 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold text-brand-deep mb-2 flex items-center gap-2">
+              <Key className="w-5 h-5 text-brand-indigo" />
+              Verify Your Identity
+            </h3>
+            <p className="text-sm text-brand-navy/70 mb-6">
+              For security, please enter your password to authorize this email change to <span className="font-semibold text-brand-deep">{emailInput}</span>.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2 flex justify-between">
+                  <span>Current Password</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
+                    <Key className="h-4 w-4" />
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    value={reauthPassword}
+                    onChange={(e) => setReauthPassword(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep"
+                    placeholder="Enter your password"
+                  />
+                </div>
+              </div>
+
+              {reauthError && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs">
+                  {reauthError}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowReauthModal(false)}
+                  disabled={isReauthenticating}
+                  className="flex-1 py-2.5 btn-secondary text-sm disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmChangeEmail}
+                  disabled={isReauthenticating || !reauthPassword}
+                  className="flex-1 py-2.5 btn-primary text-sm disabled:opacity-50"
+                >
+                  {isReauthenticating ? "Verifying..." : "Confirm"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
