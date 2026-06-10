@@ -24,6 +24,15 @@ export default function RegisterPage() {
     setSuccess(false);
 
     try {
+      let formattedPhone = phone.trim().replace(/\s+/g, '');
+      if (formattedPhone.startsWith("0")) {
+        formattedPhone = "+27" + formattedPhone.substring(1);
+      } else if (formattedPhone.startsWith("27") && formattedPhone.length === 11) {
+        formattedPhone = "+" + formattedPhone;
+      } else if (!formattedPhone.startsWith("+")) {
+        formattedPhone = "+27" + formattedPhone;
+      }
+
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -31,7 +40,7 @@ export default function RegisterPage() {
           data: {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
-            phone: phone.trim(),
+            phone: formattedPhone,
           },
         },
       });

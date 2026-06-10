@@ -370,16 +370,27 @@ function DashboardContent() {
     if (!user) return;
     try {
       setSavingProfile(true);
+
+      let formattedPhone = phone.trim().replace(/\s+/g, '');
+      if (formattedPhone.startsWith("0")) {
+        formattedPhone = "+27" + formattedPhone.substring(1);
+      } else if (formattedPhone.startsWith("27") && formattedPhone.length === 11) {
+        formattedPhone = "+" + formattedPhone;
+      } else if (!formattedPhone.startsWith("+") && formattedPhone.length > 0) {
+        formattedPhone = "+27" + formattedPhone;
+      }
+
       const { error } = await supabase.from("profiles").upsert({
         id: user.id,
         username,
         first_name: firstName,
         last_name: lastName,
-        phone,
+        phone: formattedPhone,
         updated_at: new Date().toISOString(),
       });
       if (error) throw error;
       triggerToast("Profile details updated successfully!", "success");
+      setPhone(formattedPhone); // Update UI to show formatted phone
     } catch (err: any) {
       triggerToast("Error updating profile: " + err.message, "error");
     } finally {
