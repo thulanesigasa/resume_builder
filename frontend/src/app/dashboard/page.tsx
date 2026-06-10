@@ -1265,7 +1265,7 @@ function DashboardContent() {
                     
                     <div className="pt-2 border-t border-brand-navy/15">
                       <label className="block text-xs text-brand-navy/70 mb-1">Account Email Address</label>
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <input
                           type="email"
                           className="flex-1 px-3 py-2 glass-input text-sm"
@@ -1275,7 +1275,7 @@ function DashboardContent() {
                         <button
                           onClick={handleChangeEmail}
                           disabled={changingEmail || emailInput === user?.email}
-                          className="px-4 py-2 btn-primary text-xs disabled:opacity-50 whitespace-nowrap"
+                          className="px-4 py-2 btn-primary text-xs disabled:opacity-50 sm:whitespace-nowrap"
                         >
                           {changingEmail ? "Sending..." : "Change Email"}
                         </button>
