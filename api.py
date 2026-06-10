@@ -339,9 +339,12 @@ PAYFAST_TEST_MODE = os.getenv("PAYFAST_TEST_MODE", "true").lower() == "true"
 
 def generate_payfast_signature(data: dict, passphrase: str = None):
     # PayFast requires fields in the EXACT ORDER they appear — do NOT sort
-    pf_string = urllib.parse.urlencode(data)
+    # Also skip any empty-string values
+    filtered = {k: v for k, v in data.items() if v != ""}
+    pf_string = urllib.parse.urlencode(filtered)
     if passphrase:
         pf_string += f"&passphrase={urllib.parse.quote_plus(passphrase)}"
+    logger.info(f"[PayFast] Signature string: {pf_string}")
     return hashlib.md5(pf_string.encode('utf-8')).hexdigest()
 
 class CheckoutRequest(BaseModel):
@@ -380,6 +383,9 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
 
         base_url = os.getenv("NEXT_PUBLIC_APP_URL", "https://rbptech.co.za")
         
+        # Sanitise item_name: PayFast only allows alphanumeric + spaces + hyphens
+        safe_item_name = payload.plan_name.replace("&", "and").replace("  ", " ").strip()
+
         # Build pf_data in the exact order PayFast expects
         pf_data = {
             "merchant_id": PAYFAST_MERCHANT_ID,
@@ -387,12 +393,12 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
             "return_url": f"{base_url}/dashboard?checkout_success=true",
             "cancel_url": f"{base_url}/dashboard?checkout_cancel=true",
             "notify_url": "https://rbptech-backend.onrender.com/api/payfast/itn",
-            "name_first": name_first or "Customer",
-            "name_last": name_last or "",
-            "email_address": email_address,
+            "name_first": (name_first or "Customer").strip(),
+            "name_last": (name_last or "").strip(),
+            "email_address": email_address.strip(),
             "m_payment_id": str(m_payment_id),
             "amount": f"{payload.amount:.2f}",
-            "item_name": payload.plan_name,
+            "item_name": safe_item_name,
         }
 
         # Sign BEFORE adding signature key
