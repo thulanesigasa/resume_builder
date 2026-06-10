@@ -332,10 +332,10 @@ async def auto_name_document(payload: AutoNameRequest, request: Request, user: d
 # PAYFAST INTEGRATION
 # =========================================================
 
-PAYFAST_MERCHANT_ID = os.getenv("PAYFAST_MERCHANT_ID", "10000100")
-PAYFAST_MERCHANT_KEY = os.getenv("PAYFAST_MERCHANT_KEY", "46f0cd694581a")
-PAYFAST_PASSPHRASE = os.getenv("PAYFAST_PASSPHRASE", "")
-PAYFAST_TEST_MODE = os.getenv("PAYFAST_TEST_MODE", "true").lower() == "true"
+PAYFAST_MERCHANT_ID = os.getenv("PAYFAST_MERCHANT_ID", "10000100").strip()
+PAYFAST_MERCHANT_KEY = os.getenv("PAYFAST_MERCHANT_KEY", "46f0cd694581a").strip()
+PAYFAST_PASSPHRASE = os.getenv("PAYFAST_PASSPHRASE", "").strip()
+PAYFAST_TEST_MODE = os.getenv("PAYFAST_TEST_MODE", "true").strip().lower() == "true"
 
 def generate_payfast_signature(data: dict, passphrase: str = None):
     # PayFast requires fields in the EXACT ORDER they appear — do NOT sort
