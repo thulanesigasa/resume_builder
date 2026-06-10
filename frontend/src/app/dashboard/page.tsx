@@ -48,7 +48,6 @@ function DashboardContent() {
   const [phone, setPhone] = useState("");
   const [targetJobTitle, setTargetJobTitle] = useState("");
   const [experienceLevel, setExperienceLevel] = useState("Entry Level");
-  const [location, setLocation] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [emailInput, setEmailInput] = useState("");
   const [changingEmail, setChangingEmail] = useState(false);
@@ -276,7 +275,6 @@ function DashboardContent() {
         setUserCredits(profile.credits || 0);
         setTargetJobTitle(profile.target_job_title || "");
         if (profile.experience_level) setExperienceLevel(profile.experience_level);
-        setLocation(profile.location || "");
         setLinkedinUrl(profile.linkedin_url || "");
       }
       
@@ -396,7 +394,6 @@ function DashboardContent() {
         phone: formattedPhone,
         target_job_title: targetJobTitle,
         experience_level: experienceLevel,
-        location: location,
         linkedin_url: linkedinUrl,
         updated_at: new Date().toISOString(),
       });
@@ -1224,27 +1221,15 @@ function DashboardContent() {
                           </select>
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs text-brand-navy/70 mb-1">Location</label>
-                          <input
-                            type="text"
-                            className="w-full px-3 py-2 glass-input text-sm"
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            placeholder="City, Country"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-brand-navy/70 mb-1">LinkedIn URL</label>
-                          <input
-                            type="url"
-                            className="w-full px-3 py-2 glass-input text-sm"
-                            value={linkedinUrl}
-                            onChange={(e) => setLinkedinUrl(e.target.value)}
-                            placeholder="https://linkedin.com/in/..."
-                          />
-                        </div>
+                      <div className="mt-4">
+                        <label className="block text-xs text-brand-navy/70 mb-1">LinkedIn URL</label>
+                        <input
+                          type="url"
+                          className="w-full px-3 py-2 glass-input text-sm"
+                          value={linkedinUrl}
+                          onChange={(e) => setLinkedinUrl(e.target.value)}
+                          placeholder="https://linkedin.com/in/..."
+                        />
                       </div>
                     </div>
                     

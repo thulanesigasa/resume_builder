@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { UserPlus, Mail, Key, Phone, User, Briefcase, MapPin, Globe, ChevronDown } from "lucide-react";
+import { UserPlus, Mail, Key, Phone, User, Briefcase, MapPin, Globe, ChevronDown, Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -15,8 +15,8 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [targetJobTitle, setTargetJobTitle] = useState("");
   const [experienceLevel, setExperienceLevel] = useState("Entry Level");
-  const [location, setLocation] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -63,7 +63,6 @@ export default function RegisterPage() {
             phone: formattedPhone,
             target_job_title: targetJobTitle.trim(),
             experience_level: experienceLevel,
-            location: location.trim(),
             linkedin_url: linkedinUrl.trim(),
           },
         },
@@ -207,44 +206,24 @@ export default function RegisterPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
-                          Experience Level
-                        </label>
-                        <div className="relative">
-                          <select
-                            required
-                            value={experienceLevel}
-                            onChange={(e) => setExperienceLevel(e.target.value)}
-                            className="w-full pl-3 pr-8 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep appearance-none"
-                          >
-                            <option value="Entry Level">Entry Level (0-2 yrs)</option>
-                            <option value="Mid Level">Mid Level (3-5 yrs)</option>
-                            <option value="Senior">Senior (5-10 yrs)</option>
-                            <option value="Executive">Executive (10+ yrs)</option>
-                          </select>
-                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-brand-navy/40">
-                            <ChevronDown className="h-4 w-4" />
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
-                          Location
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
-                            <MapPin className="h-4 w-4" />
-                          </div>
-                          <input
-                            type="text"
-                            required
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
-                            placeholder="City, Country"
-                          />
+                    <div>
+                      <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
+                        Experience Level
+                      </label>
+                      <div className="relative">
+                        <select
+                          required
+                          value={experienceLevel}
+                          onChange={(e) => setExperienceLevel(e.target.value)}
+                          className="w-full pl-3 pr-8 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep appearance-none"
+                        >
+                          <option value="Entry Level">Entry Level (0-2 yrs)</option>
+                          <option value="Mid Level">Mid Level (3-5 yrs)</option>
+                          <option value="Senior">Senior (5-10 yrs)</option>
+                          <option value="Executive">Executive (10+ yrs)</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-brand-navy/40">
+                          <ChevronDown className="h-4 w-4" />
                         </div>
                       </div>
                     </div>
@@ -294,23 +273,45 @@ export default function RegisterPage() {
                   </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">
-                    Password
+                  <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2 flex justify-between">
+                    <span>Password</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
                       <Key className="h-4 w-4" />
                     </div>
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       required
                       minLength={8}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
+                      className="w-full pl-10 pr-10 py-2.5 text-sm bg-white border border-brand-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 focus:border-brand-indigo transition-shadow text-brand-deep placeholder-brand-navy/30"
                       placeholder="Min. 8 chars, 1 uppercase, 1 symbol"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-brand-navy/40 hover:text-brand-indigo transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
+                  
+                  {password && (
+                    <div className="mt-2 flex gap-1 items-center">
+                      <div className={`h-1.5 flex-1 rounded-full ${password.length >= 8 ? 'bg-green-500' : 'bg-brand-navy/10'}`}></div>
+                      <div className={`h-1.5 flex-1 rounded-full ${/[A-Z]/.test(password) ? 'bg-green-500' : 'bg-brand-navy/10'}`}></div>
+                      <div className={`h-1.5 flex-1 rounded-full ${/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 'bg-green-500' : 'bg-brand-navy/10'}`}></div>
+                    </div>
+                  )}
+                  {password && (
+                    <div className="mt-1 flex justify-between text-[10px] text-brand-navy/60">
+                      <span className={password.length >= 8 ? 'text-green-600 font-medium' : ''}>8+ Chars</span>
+                      <span className={/[A-Z]/.test(password) ? 'text-green-600 font-medium' : ''}>Uppercase</span>
+                      <span className={/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 'text-green-600 font-medium' : ''}>Symbol</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
