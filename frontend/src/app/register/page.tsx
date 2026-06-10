@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { UserPlus, Mail, Key, Phone, User, Briefcase, MapPin, Linkedin, ChevronDown } from "lucide-react";
+import { UserPlus, Mail, Key, Phone, User, Briefcase, MapPin, Globe, ChevronDown } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -181,8 +181,6 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                </div>
-
                 <div className="pt-4 border-t border-brand-navy/10 mt-2 mb-2">
                   <h3 className="text-sm font-bold text-brand-deep mb-4 flex items-center gap-2">
                     <Briefcase className="w-4 h-4 text-brand-indigo" />
@@ -257,7 +255,7 @@ export default function RegisterPage() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-navy/40">
-                          <Linkedin className="h-4 w-4" />
+                          <Globe className="h-4 w-4" />
                         </div>
                         <input
                           type="url"
@@ -314,6 +312,7 @@ export default function RegisterPage() {
                     />
                   </div>
                 </div>
+              </div>
 
                 <button
                   type="submit"
