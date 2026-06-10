@@ -386,17 +386,13 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
         # Sanitise item_name: PayFast only allows alphanumeric + spaces + hyphens
         safe_item_name = payload.plan_name.replace("&", "and").replace("  ", " ").strip()
 
-        # Build pf_data in the exact order PayFast expects
+        # Build pf_data in the exact order PayFast expects (minimum required fields)
         pf_data = {
             "merchant_id": PAYFAST_MERCHANT_ID,
             "merchant_key": PAYFAST_MERCHANT_KEY,
             "return_url": f"{base_url}/dashboard?checkout_success=true",
             "cancel_url": f"{base_url}/dashboard?checkout_cancel=true",
-            "notify_url": "https://rbptech-backend.onrender.com/api/payfast/itn",
-            "name_first": (name_first or "Customer").strip(),
-            "name_last": (name_last or "").strip(),
-            "email_address": email_address.strip(),
-            "m_payment_id": str(m_payment_id),
+            "m_payment_id": m_payment_id,
             "amount": f"{payload.amount:.2f}",
             "item_name": safe_item_name,
         }
