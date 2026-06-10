@@ -341,11 +341,11 @@ PAYFAST_MERCHANT_KEY = os.getenv("PAYFAST_MERCHANT_KEY", "46f0cd694581a").strip(
 PAYFAST_PASSPHRASE = os.getenv("PAYFAST_PASSPHRASE", "").strip()
 PAYFAST_TEST_MODE = os.getenv("PAYFAST_TEST_MODE", "true").strip().lower() == "true"
 
-if PAYFAST_TEST_MODE and not PAYFAST_MERCHANT_ID.startswith("100"):
-    logger.info("PAYFAST_TEST_MODE is true but live credentials detected. Overriding with default Sandbox credentials (10000100).")
+if PAYFAST_TEST_MODE and (not PAYFAST_MERCHANT_ID.startswith("100") or PAYFAST_MERCHANT_ID == "10000100"):
+    logger.info("PAYFAST_TEST_MODE is true. Using default Sandbox credentials (10000100) and passphrase.")
     PAYFAST_MERCHANT_ID = "10000100"
     PAYFAST_MERCHANT_KEY = "46f0cd694581a"
-    PAYFAST_PASSPHRASE = ""
+    PAYFAST_PASSPHRASE = "jt7NOE43FZPn"
 
 def generate_payfast_signature(data: dict, passphrase: str = None):
     # PayFast requires fields in the EXACT ORDER they appear — do NOT sort
