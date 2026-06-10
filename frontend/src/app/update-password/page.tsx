@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "@/lib/supabase";
 import { Lock, CheckCircle2, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import MarketingHeader from "@/components/MarketingHeader";
@@ -14,7 +14,7 @@ export default function UpdatePassword() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClientComponentClient();
+
 
   useEffect(() => {
     // Check if the user has an active session from clicking the email link

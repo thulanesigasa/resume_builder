@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "@/lib/supabase";
 import { Mail, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import MarketingHeader from "@/components/MarketingHeader";
@@ -11,7 +11,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const supabase = createClientComponentClient();
+
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
