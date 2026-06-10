@@ -15,7 +15,7 @@ export async function POST(request: Request) {
         'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'Contact Form <onboarding@resend.dev>', // Should be updated to something like support@rbptech.co.za once domain is verified
+        from: 'Contact Form <support@rbptech.co.za>',
         to: ['support@rbptech.co.za'],
         reply_to: email,
         subject: `New Contact Message from ${name}`,
