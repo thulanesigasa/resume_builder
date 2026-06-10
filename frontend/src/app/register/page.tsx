@@ -77,6 +77,11 @@ export default function RegisterPage() {
 
       if (authError) throw authError;
 
+      // Check if user already exists (Supabase security feature returns user but no identities if email taken)
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        throw new Error("This email is already registered. Please log in instead.");
+      }
+
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || "Registration failed. Please try again.");
