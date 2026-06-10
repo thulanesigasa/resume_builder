@@ -338,8 +338,8 @@ PAYFAST_PASSPHRASE = os.getenv("PAYFAST_PASSPHRASE", "")
 PAYFAST_TEST_MODE = os.getenv("PAYFAST_TEST_MODE", "true").lower() == "true"
 
 def generate_payfast_signature(data: dict, passphrase: str = None):
-    sorted_data = dict(sorted(data.items()))
-    pf_string = urllib.parse.urlencode(sorted_data)
+    # PayFast requires fields in the EXACT ORDER they appear — do NOT sort
+    pf_string = urllib.parse.urlencode(data)
     if passphrase:
         pf_string += f"&passphrase={urllib.parse.quote_plus(passphrase)}"
     return hashlib.md5(pf_string.encode('utf-8')).hexdigest()
@@ -380,24 +380,27 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
 
         base_url = os.getenv("NEXT_PUBLIC_APP_URL", "https://rbptech.co.za")
         
+        # Build pf_data in the exact order PayFast expects
         pf_data = {
             "merchant_id": PAYFAST_MERCHANT_ID,
             "merchant_key": PAYFAST_MERCHANT_KEY,
             "return_url": f"{base_url}/dashboard?checkout_success=true",
             "cancel_url": f"{base_url}/dashboard?checkout_cancel=true",
             "notify_url": "https://rbptech-backend.onrender.com/api/payfast/itn",
-            "name_first": name_first,
-            "name_last": name_last,
+            "name_first": name_first or "Customer",
+            "name_last": name_last or "",
             "email_address": email_address,
             "m_payment_id": str(m_payment_id),
             "amount": f"{payload.amount:.2f}",
             "item_name": payload.plan_name,
         }
 
-        signature = generate_payfast_signature(pf_data, PAYFAST_PASSPHRASE)
+        # Sign BEFORE adding signature key
+        signature = generate_payfast_signature(pf_data, PAYFAST_PASSPHRASE if PAYFAST_PASSPHRASE else None)
         pf_data["signature"] = signature
 
         payfast_url = "https://sandbox.payfast.co.za/eng/process" if PAYFAST_TEST_MODE else "https://www.payfast.co.za/eng/process"
+        logger.info(f"PayFast mode: {'SANDBOX' if PAYFAST_TEST_MODE else 'LIVE'}, URL: {payfast_url}")
 
         return {
             "payfast_url": payfast_url,
