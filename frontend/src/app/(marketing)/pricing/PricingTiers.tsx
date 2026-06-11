@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 import { Check, ArrowLeft, Zap } from "lucide-react";
 
 export default function PricingTiers() {
@@ -52,25 +53,8 @@ export default function PricingTiers() {
       // Extract numeric value from string (e.g. "R18" -> 18, "R 125.50" -> 125.5)
       const amount = parseFloat(amountStr.replace(/[^0-9.]/g, ""));
       
-      const { data: { session } } = await supabase.auth.getSession();
+      const data = await api.createPayfastCheckout(amount, planName);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/payfast/create-checkout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session?.access_token}`
-        },
-        body: JSON.stringify({
-          plan_name: planName,
-          amount: amount
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to initialize checkout");
-      }
-      
-      const data = await response.json();
       setPayfastData({ url: data.payfast_url, fields: data.form_fields });
       triggerToast("Redirecting to PayFast...", "success");
       

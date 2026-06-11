@@ -31,6 +31,10 @@ const getHeaders = async (isFormData = false): Promise<HeadersInit> => {
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.access_token) {
     headers['Authorization'] = `Bearer ${session.access_token}`;
+  } else if (typeof window !== 'undefined') {
+    // Force redirect if session is null (expired or missing)
+    window.location.href = '/login?expired=true';
+    throw new Error('Session expired. Redirecting to login...');
   }
   
   return headers;
