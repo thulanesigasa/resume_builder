@@ -826,6 +826,26 @@ function DashboardContent() {
         currentAts = await api.getAtsScore(jobDescriptionText, generatedResumeJson);
       }
 
+      // Save to database
+      setGenSteps((prev) => [...prev, "Saving application to database..."]);
+      const dbApp = {
+        user_id: user.id,
+        job_title: title,
+        company_name: company,
+        resume_url: null,
+        cover_letter_url: null,
+        ats_score: currentAts,
+        resume_json: generatedResumeJson,
+        cl_json: generatedClJson,
+      };
+      const { data: newApp, error: appError } = await supabase.from("applications").insert(dbApp).select().single();
+      if (appError) throw appError;
+
+      // Deduct credits
+      const costInCredits = requirements.resume && requirements.cover_letter ? 2 : 1;
+      await supabase.from("profiles").update({ credits: userCredits - costInCredits }).eq("id", user.id);
+      setUserCredits(userCredits - costInCredits);
+
       setGenSteps((prev) => [...prev, "Success! Directing to Editor workspace..."]);
 
       // Save to localStorage for editor access
@@ -836,6 +856,9 @@ function DashboardContent() {
       localStorage.setItem("edit_ats_score", JSON.stringify(currentAts));
       localStorage.setItem("edit_selected_resume_template", selectedResume);
       localStorage.setItem("edit_selected_cl_template", selectedCl);
+      localStorage.setItem("edit_app_id", newApp.id);
+      localStorage.setItem("edit_resume_compile_count", "0");
+      localStorage.setItem("edit_cl_compile_count", "0");
 
       setTimeout(() => {
         router.push("/editor");
