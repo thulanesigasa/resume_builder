@@ -246,6 +246,19 @@ function DashboardContent() {
       setLoading(false);
     };
     checkUser();
+
+    // Listen for BFCache restore (when the user hits the browser's Back button from PayFast)
+    // This resets the stuck "Connecting to Payfast..." button.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setIsRedirectingToPayfast(false);
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+    
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+    };
   }, [router, searchParams]);
 
 
