@@ -4,11 +4,11 @@ const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline';
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' blob: data: https://*.payfast.co.za https://payfast.co.za;
+    img-src 'self' blob: data: https://www.payfast.co.za https://sandbox.payfast.co.za https://*.payfast.co.za;
     font-src 'self' data: https://fonts.gstatic.com;
     object-src 'none';
     base-uri 'self';
-    form-action 'self' https://*.payfast.co.za https://payfast.co.za;
+    form-action 'self' https://www.payfast.co.za https://sandbox.payfast.co.za https://*.payfast.co.za;
     frame-ancestors 'none';
     connect-src 'self' http://localhost:8000 https://*.onrender.com wss://*.supabase.co https://*.supabase.co https://*.supabase.in;
 `;
