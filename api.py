@@ -388,8 +388,6 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
             "item_name": payload.plan_name,
             "status": "PENDING"
         }).execute()
-        
-
 
         base_url = os.getenv("NEXT_PUBLIC_APP_URL", "https://rbptech.co.za")
         
@@ -418,10 +416,56 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
         payfast_url = "https://sandbox.payfast.co.za/eng/process" if PAYFAST_TEST_MODE else "https://www.payfast.co.za/eng/process"
         logger.info(f"PayFast mode: {'SANDBOX' if PAYFAST_TEST_MODE else 'LIVE'}, URL: {payfast_url}")
 
-        return {
-            "payfast_url": payfast_url,
-            "form_fields": pf_data
-        }
+        # Build hidden input fields for the auto-submitting form
+        hidden_inputs = "\n".join(
+            f'<input type="hidden" name="{k}" value="{v}" />'
+            for k, v in pf_data.items()
+        )
+
+        # Return a self-submitting HTML page served from the backend domain.
+        # This completely bypasses the Next.js CSP because the form submission
+        # originates from rbptech-backend.onrender.com, not the Next.js app.
+        from fastapi.responses import HTMLResponse
+        html_page = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Redirecting to PayFast...</title>
+  <style>
+    body {{
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #0f172a;
+      color: #e2e8f0;
+    }}
+    .spinner {{
+      width: 48px; height: 48px;
+      border: 4px solid #334155;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 20px;
+    }}
+    @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
+    p {{ font-size: 15px; color: #94a3b8; }}
+  </style>
+</head>
+<body>
+  <div class="spinner"></div>
+  <p>Redirecting you securely to PayFast...</p>
+  <form id="pf" action="{payfast_url}" method="POST">
+    {hidden_inputs}
+  </form>
+  <script>document.getElementById('pf').submit();</script>
+</body>
+</html>"""
+
+        return HTMLResponse(content=html_page, status_code=200)
 
     except Exception as e:
         logger.error(f"Error creating PayFast checkout: {e}")

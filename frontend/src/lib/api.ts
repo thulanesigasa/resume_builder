@@ -170,15 +170,38 @@ export const api = {
   },
 
   async createPayfastCheckout(amount: number, planName: string) {
+    // Get the auth token first
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login?expired=true';
+      }
+      throw new Error('Session expired. Redirecting to login...');
+    }
+
+    // POST to backend — which now returns a self-submitting HTML page served
+    // from the Render domain. We navigate the current window to it so the
+    // form submission originates from Render's domain, completely bypassing
+    // the Next.js Content-Security-Policy.
     const res = await fetch(`${API_BASE_URL}/api/payfast/create-checkout`, {
       method: 'POST',
-      headers: await getHeaders(),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
       body: JSON.stringify({ amount, plan_name: planName }),
     });
+
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: 'Failed to initialize Payfast checkout' }));
       throw new Error(err.detail || 'Failed to initialize Payfast checkout');
     }
-    return res.json();
+
+    // Backend returns an HTML page — write it into the current document so
+    // the auto-submit form runs in the same browsing context (no popup blocker).
+    const html = await res.text();
+    document.open();
+    document.write(html);
+    document.close();
   }
 };

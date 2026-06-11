@@ -29,14 +29,6 @@ export default function PricingTiers() {
     }, 4000);
   };
 
-  const [payfastData, setPayfastData] = useState<{ url: string; fields: Record<string, string> } | null>(null);
-
-  useEffect(() => {
-    if (payfastData) {
-      const form = document.getElementById("payfast-form") as HTMLFormElement;
-      if (form) form.submit();
-    }
-  }, [payfastData]);
 
   const handleSelectPlan = async (planName: string, amountStr: string) => {
     if (!user) {
@@ -50,13 +42,11 @@ export default function PricingTiers() {
     triggerToast(`Initializing secure Payfast checkout for ${planName}...`, "info");
     
     try {
-      // Extract numeric value from string (e.g. "R18" -> 18, "R 125.50" -> 125.5)
       const amount = parseFloat(amountStr.replace(/[^0-9.]/g, ""));
       
-      const data = await api.createPayfastCheckout(amount, planName);
-      
-      setPayfastData({ url: data.payfast_url, fields: data.form_fields });
-      triggerToast("Redirecting to PayFast...", "success");
+      await api.createPayfastCheckout(amount, planName);
+      // The API writes a self-submitting HTML page into the document,
+      // redirecting to PayFast from the Render domain (bypasses Next.js CSP).
       
     } catch (error) {
       console.error(error);
@@ -74,23 +64,6 @@ export default function PricingTiers() {
           </div>
         </div>
 
-        {/* Hidden PayFast Form */}
-        {payfastData && (
-          <form id="payfast-form" action={payfastData.url} method="POST" className="hidden">
-            {Object.entries(payfastData.fields).map(([key, value]) => (
-              <input key={key} type="hidden" name={key} value={value} />
-            ))}
-          </form>
-        )}
-
-        {/* Hidden PayFast Form */}
-        {payfastData && (
-          <form id="payfast-form" action={payfastData.url} method="POST" className="hidden">
-            {Object.entries(payfastData.fields).map(([key, value]) => (
-              <input key={key} type="hidden" name={key} value={value} />
-            ))}
-          </form>
-        )}
 
         <div className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-brand-deep">

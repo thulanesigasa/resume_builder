@@ -87,7 +87,6 @@ function DashboardContent() {
   const [jobText, setJobText] = useState("");
   const [isGeneral, setIsGeneral] = useState(false);
   const [includeCoverLetter, setIncludeCoverLetter] = useState(false);
-  const [payfastData, setPayfastData] = useState<{ url: string; fields: Record<string, string> } | null>(null);
   const [isRedirectingToPayfast, setIsRedirectingToPayfast] = useState(false);
   const [selectedResume, setSelectedResume] = useState("ui_ux_pro_max_resume.html");
   const [selectedCl, setSelectedCl] = useState("caleb_foster_cover_letter.html");
@@ -249,12 +248,6 @@ function DashboardContent() {
     checkUser();
   }, [router, searchParams]);
 
-  useEffect(() => {
-    if (payfastData) {
-      const form = document.getElementById("payfast-dashboard-form") as HTMLFormElement;
-      if (form) form.submit();
-    }
-  }, [payfastData]);
 
   const loadUserData = async (userId: string) => {
     try {
@@ -701,9 +694,10 @@ function DashboardContent() {
     console.log("[Generate] Insufficient credits, redirecting to Payfast...");
     setIsRedirectingToPayfast(true);
     try {
-      const data = await api.createPayfastCheckout(price, desc);
-      console.log("[Generate] Got Payfast data, submitting form...", data);
-      setPayfastData({ url: data.payfast_url, fields: data.form_fields });
+      console.log("[Generate] Insufficient credits, redirecting to Payfast...");
+      await api.createPayfastCheckout(price, desc);
+      // createPayfastCheckout writes the backend HTML page directly into the
+      // document, which auto-submits the PayFast form from Render's domain.
     } catch (e: any) {
       console.error("[Generate] Payfast error:", e);
       setIsRedirectingToPayfast(false);
@@ -925,8 +919,7 @@ function DashboardContent() {
 
     setIsRedirectingToPayfast(true);
     try {
-      const data = await api.createPayfastCheckout(discounted, `Batch Job Application: ${resumeCount} Resumes, ${comboCount} Combos`);
-      setPayfastData({ url: data.payfast_url, fields: data.form_fields });
+      await api.createPayfastCheckout(discounted, `Batch Job Application: ${resumeCount} Resumes, ${comboCount} Combos`);
     } catch (e: any) {
       setIsRedirectingToPayfast(false);
       triggerToast("Error connecting to Payfast: " + e.message, "error");
@@ -1050,14 +1043,7 @@ function DashboardContent() {
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
-      {/* Hidden Payfast Form */}
-      {payfastData && (
-        <form id="payfast-dashboard-form" action={payfastData.url} method="POST" className="hidden">
-          {Object.entries(payfastData.fields).map(([key, value]) => (
-            <input key={key} type="hidden" name={key} value={value} />
-          ))}
-        </form>
-      )}
+
 
       {/* Top Navbar */}
       <nav className="glass-panel sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-t-0 border-x-0">
@@ -2070,14 +2056,7 @@ function DashboardContent() {
         </div>
       )}
 
-      {/* Hidden PayFast Form */}
-      {payfastData && (
-        <form id="payfast-dashboard-form" action={payfastData.url} method="POST" className="hidden">
-          {Object.entries(payfastData.fields).map(([key, value]) => (
-            <input key={key} type="hidden" name={key} value={value} />
-          ))}
-        </form>
-      )}
+
 
       {/* RE-AUTHENTICATION MODAL FOR EMAIL CHANGE */}
       {showReauthModal && (
