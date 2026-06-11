@@ -208,18 +208,24 @@ export default function PricingTiers() {
                     <span>R {(numJobs * (batchType === "resume" ? 18 : 25)).toFixed(2)}</span>
                   </div>
                   {(() => {
-                    const getDiscountRate = (jobs: number) => {
-                      if (jobs >= 30) return 0.29;
-                      if (jobs >= 25) return 0.23;
-                      if (jobs >= 20) return 0.19;
-                      if (jobs >= 11) return 0.13;
-                      if (jobs >= 5) return 0.09;
-                      return 0;
+                    // Use a mathematically sound power curve so the total price always increases, 
+                    // but the discount smoothly lands EXACTLY on 350 for 50 resumes, and 500 for 50 combos.
+                    // Resume: 18 * 50^power = 350 => power = log(350/18) / log(50)
+                    // Combo: 25 * 50^power = 500 => power = log(500/25) / log(50)
+                    const getFinalPrice = (jobs: number, type: "resume" | "combo") => {
+                      if (jobs <= 1) return type === "resume" ? 18 : 25;
+                      const power = type === "resume" 
+                        ? Math.log(350 / 18) / Math.log(50) 
+                        : Math.log(500 / 25) / Math.log(50);
+                      const baseUnit = type === "resume" ? 18 : 25;
+                      return baseUnit * Math.pow(jobs, power);
                     };
-                    const rate = getDiscountRate(numJobs);
+
                     const basePrice = numJobs * (batchType === "resume" ? 18 : 25);
-                    const discountAmount = basePrice * rate;
-                    const finalPrice = basePrice - discountAmount;
+                    const finalPrice = getFinalPrice(numJobs, batchType);
+                    const discountAmount = basePrice - finalPrice;
+                    const rate = discountAmount / basePrice;
+
                     return (
                       <>
                         {rate > 0 && (
@@ -241,16 +247,15 @@ export default function PricingTiers() {
             
             <button
               onClick={() => {
-                const getDiscountRate = (jobs: number) => {
-                  if (jobs >= 30) return 0.29;
-                  if (jobs >= 25) return 0.23;
-                  if (jobs >= 20) return 0.19;
-                  if (jobs >= 11) return 0.13;
-                  if (jobs >= 5) return 0.09;
-                  return 0;
+                const getFinalPrice = (jobs: number, type: "resume" | "combo") => {
+                  if (jobs <= 1) return type === "resume" ? 18 : 25;
+                  const power = type === "resume" 
+                    ? Math.log(350 / 18) / Math.log(50) 
+                    : Math.log(500 / 25) / Math.log(50);
+                  const baseUnit = type === "resume" ? 18 : 25;
+                  return baseUnit * Math.pow(jobs, power);
                 };
-                const rate = getDiscountRate(numJobs);
-                const finalPrice = (numJobs * (batchType === "resume" ? 18 : 25)) * (1 - rate);
+                const finalPrice = getFinalPrice(numJobs, batchType);
                 handleSelectPlan(
                   `Batch Autopilot (${numJobs} jobs, ${batchType === "resume" ? "Resume Only" : "Combo"})`,
                   `R ${finalPrice.toFixed(2)}`
