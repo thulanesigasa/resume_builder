@@ -349,9 +349,8 @@ if PAYFAST_TEST_MODE and (not PAYFAST_MERCHANT_ID.startswith("100") or PAYFAST_M
 
 def generate_payfast_signature(data: dict, passphrase: str = None):
     # PayFast requires fields in the EXACT ORDER they appear — do NOT sort
-    # Also skip any empty-string values
-    filtered = {k: v for k, v in data.items() if v != ""}
-    pf_string = urllib.parse.urlencode(filtered)
+    # Do NOT strip empty strings! PayFast includes empty fields in ITN hashes (e.g. custom_str1=)
+    pf_string = urllib.parse.urlencode(data)
     if passphrase:
         pf_string += f"&passphrase={urllib.parse.quote_plus(passphrase)}"
     logger.info(f"[PayFast] Signature string: {pf_string}")
