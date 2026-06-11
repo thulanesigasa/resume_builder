@@ -404,16 +404,13 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
         payfast_url = "https://sandbox.payfast.co.za/eng/process" if PAYFAST_TEST_MODE else "https://www.payfast.co.za/eng/process"
         logger.info(f"PayFast mode: {'SANDBOX' if PAYFAST_TEST_MODE else 'LIVE'}, URL: {payfast_url}")
 
-        import json as json_mod
-        # Store the signed form fields alongside the order so the redirect endpoint can serve them
+        # Insert the order into the database WITHOUT form_fields or payfast_url to avoid schema cache errors
         supabase.table("payfast_orders").insert({
             "user_id": user.id,
             "m_payment_id": m_payment_id,
             "amount_gross": payload.amount,
             "item_name": payload.plan_name,
             "status": "PENDING",
-            "form_fields": json_mod.dumps(pf_data),
-            "payfast_url": payfast_url,
         }).execute()
 
         # Return only the checkout_id — the frontend will navigate (full page redirect)
@@ -446,9 +443,50 @@ async def payfast_redirect(checkout_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Checkout session not found or already used")
 
     order = order_res.data[0]
-    import json as json_mod
-    pf_data = json_mod.loads(order["form_fields"])
-    payfast_url = order["payfast_url"]
+    
+    # We must fetch the user's profile to populate the required PayFast fields
+    user_id = order["user_id"]
+    profile_res = supabase.table("profiles").select("*").eq("id", user_id).execute()
+    profile = profile_res.data[0] if profile_res.data else {}
+    
+    # Reconstruct the fields exactly as they were
+    name_first = profile.get("first_name", "") or "User"
+    name_last = profile.get("last_name", "")
+    
+    # For email we need the auth user, but since we don't have the token in the GET request,
+    # we can try to find an email or just use a placeholder (Payfast allows this if missing)
+    # Let's try to get email from profile raw_info if it exists
+    email_address = "unknown@example.com"
+    try:
+        if profile.get("raw_info"):
+            import json as json_mod
+            raw_info = json_mod.loads(profile["raw_info"])
+            if raw_info.get("email"):
+                email_address = raw_info["email"]
+    except:
+        pass
+
+    base_url = os.getenv("NEXT_PUBLIC_APP_URL", "https://rbptech.co.za")
+    safe_item_name = order["item_name"].replace("&", "and").replace("  ", " ").strip()
+
+    pf_data = {
+        "merchant_id": PAYFAST_MERCHANT_ID,
+        "merchant_key": PAYFAST_MERCHANT_KEY,
+        "return_url": f"{base_url}/dashboard?checkout_success=true",
+        "cancel_url": f"{base_url}/dashboard?checkout_cancel=true",
+        "notify_url": "https://rbptech-backend.onrender.com/api/payfast/itn",
+        "name_first": name_first,
+        "name_last": name_last if name_last else "",
+        "email_address": email_address,
+        "m_payment_id": checkout_id,
+        "amount": f"{order['amount_gross']:.2f}",
+        "item_name": safe_item_name,
+    }
+
+    signature = generate_payfast_signature(pf_data, PAYFAST_PASSPHRASE if PAYFAST_PASSPHRASE else None)
+    pf_data["signature"] = signature
+
+    payfast_url = "https://sandbox.payfast.co.za/eng/process" if PAYFAST_TEST_MODE else "https://www.payfast.co.za/eng/process"
 
     hidden_inputs = "\n    ".join(
         f'<input type="hidden" name="{k}" value="{v}" />'
