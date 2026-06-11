@@ -430,14 +430,21 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
 @app.post("/api/payfast/itn")
 async def payfast_itn(request: Request):
     try:
+        # Read the raw request body to preserve exact encoding and parameter order for validation
+        raw_body = await request.body()
+        raw_body_str = raw_body.decode('utf-8')
+        
+        # Parse the form data
         form_data = await request.form()
         pf_dict = dict(form_data)
         
         logger.info(f"Received ITN from PayFast: {pf_dict}")
         
+        # Extract received signature and calculate ours
         received_signature = pf_dict.pop("signature", None)
         calculated_signature = generate_payfast_signature(pf_dict, PAYFAST_PASSPHRASE)
         
+        # Check 1: Verify the signature in the notification
         if received_signature != calculated_signature:
             logger.error("Invalid ITN signature")
             raise HTTPException(status_code=400, detail="Invalid signature")
@@ -451,37 +458,77 @@ async def payfast_itn(request: Request):
             raise HTTPException(status_code=500, detail="Database not configured")
 
         if payment_status == "COMPLETE":
-            order_res = supabase.table("payfast_orders").update({
+            # Fetch the order from the database first to run security checks
+            order_res = supabase.table("payfast_orders").select("*").eq("m_payment_id", m_payment_id).eq("status", "PENDING").execute()
+            if not order_res.data:
+                logger.warning(f"Order not found or not pending in database: {m_payment_id}")
+                return "OK" # Return OK to prevent retries if it was already processed
+            
+            order = order_res.data[0]
+            user_id = order["user_id"]
+            
+            # Check 3: Compare payment data (amount expected vs amount_gross)
+            expected_amount = float(order["amount_gross"])
+            received_amount = float(pf_dict.get("amount_gross", 0))
+            if abs(expected_amount - received_amount) > 0.01:
+                logger.error(f"PayFast ITN amount mismatch: expected {expected_amount}, received {received_amount}")
+                raise HTTPException(status_code=400, detail="Amount mismatch")
+                
+            # Check 4: Perform a server request to confirm the details
+            payfast_host = "sandbox.payfast.co.za" if PAYFAST_TEST_MODE else "www.payfast.co.za"
+            validate_url = f"https://{payfast_host}/eng/query/validate"
+            
+            # Build the validation payload by stripping 'signature' from raw body
+            parts = [p for p in raw_body_str.split('&') if not p.startswith('signature=')]
+            validation_payload = '&'.join(parts)
+            
+            import requests
+            from fastapi.concurrency import run_in_threadpool
+            
+            def do_post():
+                return requests.post(
+                    validate_url,
+                    data=validation_payload,
+                    headers={"Content-Type": "application/x-www-form-urlencoded"}
+                )
+                
+            val_res = await run_in_threadpool(do_post)
+            val_status = val_res.text.strip()
+            
+            if val_status != "VALID":
+                logger.error(f"PayFast ITN validation check 4 failed. PayFast response: {val_status}")
+                raise HTTPException(status_code=400, detail="Server validation failed")
+
+            # Update the order status to COMPLETE
+            supabase.table("payfast_orders").update({
                 "status": "COMPLETE",
                 "pf_payment_id": pf_payment_id
-            }).eq("m_payment_id", m_payment_id).eq("status", "PENDING").execute()
+            }).eq("m_payment_id", m_payment_id).execute()
             
-            if order_res.data:
-                order = order_res.data[0]
-                user_id = order["user_id"]
-                
-                # Assign credits based on plan
-                credits_to_add = 1
-                if "combo" in order["item_name"].lower():
-                    credits_to_add = 2
-                elif "batch" in order["item_name"].lower():
-                    # calculate roughly from amount
-                    amt = float(order["amount_gross"])
-                    credits_to_add = int(amt / 15) # Approx logic for batches
-                
-                profile_res = supabase.table("profiles").select("credits").eq("id", user_id).execute()
-                current_credits = profile_res.data[0].get("credits", 0) if profile_res.data else 0
-                
-                from datetime import datetime, timezone
-                supabase.table("profiles").upsert({
-                    "id": user_id,
-                    "credits": current_credits + credits_to_add,
-                    "updated_at": datetime.now(timezone.utc).isoformat()
-                }).execute()
-                
-                logger.info(f"Successfully processed ITN for order {m_payment_id}, added {credits_to_add} credits.")
+            # Assign credits based on plan
+            credits_to_add = 1
+            if "combo" in order["item_name"].lower():
+                credits_to_add = 2
+            elif "batch" in order["item_name"].lower():
+                # calculate roughly from amount
+                amt = float(order["amount_gross"])
+                credits_to_add = int(amt / 15) # Approx logic for batches
+            
+            from datetime import datetime, timezone
+            profile_res = supabase.table("profiles").select("credits").eq("id", user_id).execute()
+            current_credits = profile_res.data[0].get("credits", 0) if profile_res.data else 0
+            
+            supabase.table("profiles").upsert({
+                "id": user_id,
+                "credits": current_credits + credits_to_add,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }).execute()
+            
+            logger.info(f"Successfully processed ITN for order {m_payment_id}, added {credits_to_add} credits.")
         
         return "OK"
+    except HTTPException as he:
+        raise he
     except Exception as e:
         logger.error(f"Error processing PayFast ITN: {e}")
         raise HTTPException(status_code=500, detail=str(e))
