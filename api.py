@@ -453,18 +453,14 @@ async def payfast_redirect(checkout_id: str, request: Request):
     name_first = profile.get("first_name", "") or "User"
     name_last = profile.get("last_name", "")
     
-    # For email we need the auth user, but since we don't have the token in the GET request,
-    # we can try to find an email or just use a placeholder (Payfast allows this if missing)
-    # Let's try to get email from profile raw_info if it exists
+    # We use the Supabase admin API to fetch the user's email from the auth.users table
     email_address = "unknown@example.com"
     try:
-        if profile.get("raw_info"):
-            import json as json_mod
-            raw_info = json_mod.loads(profile["raw_info"])
-            if raw_info.get("email"):
-                email_address = raw_info["email"]
-    except:
-        pass
+        user_res = supabase.auth.admin.get_user_by_id(user_id)
+        if user_res and user_res.user and user_res.user.email:
+            email_address = user_res.user.email
+    except Exception as e:
+        logger.error(f"Could not fetch user email for {user_id}: {e}")
 
     base_url = os.getenv("NEXT_PUBLIC_APP_URL", "https://rbptech.co.za")
     safe_item_name = order["item_name"].replace("&", "and").replace("  ", " ").strip()
