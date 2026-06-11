@@ -543,15 +543,6 @@ async def payfast_itn(request: Request):
         
         logger.info(f"Received ITN from PayFast: {pf_dict}")
         
-        # Extract received signature and calculate ours
-        received_signature = pf_dict.pop("signature", None)
-        calculated_signature = generate_payfast_signature(pf_dict, PAYFAST_PASSPHRASE)
-        
-        # Check 1: Verify the signature in the notification
-        if received_signature != calculated_signature:
-            logger.error("Invalid ITN signature")
-            raise HTTPException(status_code=400, detail="Invalid signature")
-            
         m_payment_id = pf_dict.get("m_payment_id")
         payment_status = pf_dict.get("payment_status")
         pf_payment_id = pf_dict.get("pf_payment_id")
@@ -560,8 +551,17 @@ async def payfast_itn(request: Request):
         if not supabase:
             raise HTTPException(status_code=500, detail="Database not configured")
 
-        if payment_status == "COMPLETE":
-            # Fetch the order from the database first to run security checks
+        if payment_status == "COMPLETE" and m_payment_id:
+            # Check 1: Verify the signature in the notification
+            received_signature = pf_dict.pop("signature", None)
+            calculated_signature = generate_payfast_signature(pf_dict, PAYFAST_PASSPHRASE)
+            
+            if received_signature != calculated_signature:
+                logger.error(f"Invalid ITN signature. Recv: {received_signature}, Calc: {calculated_signature}")
+                supabase.table("payfast_orders").update({"status": "ERR_SIG"}).eq("m_payment_id", m_payment_id).execute()
+                raise HTTPException(status_code=400, detail="Invalid signature")
+
+            # Fetch the order from the database
             order_res = supabase.table("payfast_orders").select("*").eq("m_payment_id", m_payment_id).eq("status", "PENDING").execute()
             if not order_res.data:
                 logger.warning(f"Order not found or not pending in database: {m_payment_id}")
@@ -575,6 +575,7 @@ async def payfast_itn(request: Request):
             received_amount = float(pf_dict.get("amount_gross", 0))
             if abs(expected_amount - received_amount) > 0.01:
                 logger.error(f"PayFast ITN amount mismatch: expected {expected_amount}, received {received_amount}")
+                supabase.table("payfast_orders").update({"status": "ERR_AMT"}).eq("m_payment_id", m_payment_id).execute()
                 raise HTTPException(status_code=400, detail="Amount mismatch")
                 
             # Check 4: Perform a server request to confirm the details
@@ -600,6 +601,7 @@ async def payfast_itn(request: Request):
             
             if val_status != "VALID":
                 logger.error(f"PayFast ITN validation check 4 failed. PayFast response: {val_status}")
+                supabase.table("payfast_orders").update({"status": f"ERR_VAL_{val_status[:5]}"}).eq("m_payment_id", m_payment_id).execute()
                 raise HTTPException(status_code=400, detail="Server validation failed")
 
             # Update the order status to COMPLETE
@@ -613,19 +615,17 @@ async def payfast_itn(request: Request):
             if "combo" in order["item_name"].lower():
                 credits_to_add = 2
             elif "batch" in order["item_name"].lower():
-                # calculate roughly from amount
                 amt = float(order["amount_gross"])
-                credits_to_add = int(amt / 15) # Approx logic for batches
+                credits_to_add = int(amt / 15)
             
             from datetime import datetime, timezone
             profile_res = supabase.table("profiles").select("credits").eq("id", user_id).execute()
             current_credits = profile_res.data[0].get("credits", 0) if profile_res.data else 0
             
-            supabase.table("profiles").upsert({
-                "id": user_id,
+            supabase.table("profiles").update({
                 "credits": current_credits + credits_to_add,
                 "updated_at": datetime.now(timezone.utc).isoformat()
-            }).execute()
+            }).eq("id", user_id).execute()
             
             logger.info(f"Successfully processed ITN for order {m_payment_id}, added {credits_to_add} credits.")
         
