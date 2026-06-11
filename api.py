@@ -380,18 +380,7 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
         import uuid
         m_payment_id = uuid.uuid4().hex  # 32-char alphanumeric, no hyphens (PayFast requirement)
 
-        # Create an order in DB
-        order_insert = supabase.table("payfast_orders").insert({
-            "user_id": user.id,
-            "m_payment_id": m_payment_id,
-            "amount_gross": payload.amount,
-            "item_name": payload.plan_name,
-            "status": "PENDING"
-        }).execute()
-
         base_url = os.getenv("NEXT_PUBLIC_APP_URL", "https://rbptech.co.za")
-        
-        # Sanitise item_name: PayFast only allows alphanumeric + spaces + hyphens
         safe_item_name = payload.plan_name.replace("&", "and").replace("  ", " ").strip()
 
         # Build pf_data in the exact order PayFast expects
@@ -409,24 +398,64 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
             "item_name": safe_item_name,
         }
 
-        # Sign BEFORE adding signature key
         signature = generate_payfast_signature(pf_data, PAYFAST_PASSPHRASE if PAYFAST_PASSPHRASE else None)
         pf_data["signature"] = signature
 
         payfast_url = "https://sandbox.payfast.co.za/eng/process" if PAYFAST_TEST_MODE else "https://www.payfast.co.za/eng/process"
         logger.info(f"PayFast mode: {'SANDBOX' if PAYFAST_TEST_MODE else 'LIVE'}, URL: {payfast_url}")
 
-        # Build hidden input fields for the auto-submitting form
-        hidden_inputs = "\n".join(
-            f'<input type="hidden" name="{k}" value="{v}" />'
-            for k, v in pf_data.items()
-        )
+        import json as json_mod
+        # Store the signed form fields alongside the order so the redirect endpoint can serve them
+        supabase.table("payfast_orders").insert({
+            "user_id": user.id,
+            "m_payment_id": m_payment_id,
+            "amount_gross": payload.amount,
+            "item_name": payload.plan_name,
+            "status": "PENDING",
+            "form_fields": json_mod.dumps(pf_data),
+            "payfast_url": payfast_url,
+        }).execute()
 
-        # Return a self-submitting HTML page served from the backend domain.
-        # This completely bypasses the Next.js CSP because the form submission
-        # originates from rbptech-backend.onrender.com, not the Next.js app.
-        from fastapi.responses import HTMLResponse
-        html_page = f"""<!DOCTYPE html>
+        # Return only the checkout_id — the frontend will navigate (full page redirect)
+        # to /api/payfast/redirect/{checkout_id} which serves the HTML from Render's domain.
+        # This means the self-submitting form runs under Render's security context,
+        # completely bypassing the Next.js Content-Security-Policy.
+        return {"checkout_id": m_payment_id}
+
+    except Exception as e:
+        logger.error(f"Error creating PayFast checkout: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+from fastapi.responses import HTMLResponse
+
+@app.get("/api/payfast/redirect/{checkout_id}")
+async def payfast_redirect(checkout_id: str, request: Request):
+    """
+    Serves a self-submitting HTML form for PayFast.
+    The frontend navigates here via window.location.href, causing a full browser
+    navigation to the Render domain. The Next.js CSP never sees this request,
+    so the form submission to PayFast is not blocked.
+    """
+    supabase = get_supabase_client()
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Database not configured")
+
+    order_res = supabase.table("payfast_orders").select("*").eq("m_payment_id", checkout_id).eq("status", "PENDING").execute()
+    if not order_res.data:
+        raise HTTPException(status_code=404, detail="Checkout session not found or already used")
+
+    order = order_res.data[0]
+    import json as json_mod
+    pf_data = json_mod.loads(order["form_fields"])
+    payfast_url = order["payfast_url"]
+
+    hidden_inputs = "\n    ".join(
+        f'<input type="hidden" name="{k}" value="{v}" />'
+        for k, v in pf_data.items()
+    )
+
+    html_page = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -465,11 +494,7 @@ async def create_payfast_checkout(payload: CheckoutRequest, request: Request, us
 </body>
 </html>"""
 
-        return HTMLResponse(content=html_page, status_code=200)
-
-    except Exception as e:
-        logger.error(f"Error creating PayFast checkout: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return HTMLResponse(content=html_page, status_code=200)
 
 @app.post("/api/payfast/itn")
 async def payfast_itn(request: Request):

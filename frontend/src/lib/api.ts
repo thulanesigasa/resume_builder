@@ -179,10 +179,7 @@ export const api = {
       throw new Error('Session expired. Redirecting to login...');
     }
 
-    // POST to backend — which now returns a self-submitting HTML page served
-    // from the Render domain. We navigate the current window to it so the
-    // form submission originates from Render's domain, completely bypassing
-    // the Next.js Content-Security-Policy.
+    // POST to backend to create the order and get the checkout ID
     const res = await fetch(`${API_BASE_URL}/api/payfast/create-checkout`, {
       method: 'POST',
       headers: {
@@ -197,11 +194,14 @@ export const api = {
       throw new Error(err.detail || 'Failed to initialize Payfast checkout');
     }
 
-    // Backend returns an HTML page — write it into the current document so
-    // the auto-submit form runs in the same browsing context (no popup blocker).
-    const html = await res.text();
-    document.open();
-    document.write(html);
-    document.close();
+    const data = await res.json();
+    
+    // Navigate the browser entirely away from the Next.js app to the backend's Render domain.
+    // The backend serves the auto-submitting HTML page, bypassing the Next.js CSP entirely.
+    if (typeof window !== 'undefined' && data.checkout_id) {
+      window.location.href = `${API_BASE_URL}/api/payfast/redirect/${data.checkout_id}`;
+    } else {
+      throw new Error('Failed to get checkout ID from server');
+    }
   }
 };
