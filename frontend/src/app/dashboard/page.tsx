@@ -176,7 +176,7 @@ function DashboardContent() {
     
     localStorage.setItem("edit_company", app.company_name);
     localStorage.setItem("edit_job_title", app.job_title);
-    localStorage.setItem("edit_ats_score", JSON.stringify({ score: app.ats_score }));
+    localStorage.setItem("edit_ats_score", JSON.stringify({ score: app.ats_score, missing_keywords: [] }));
     localStorage.setItem("edit_selected_resume_template", selectedResume);
     localStorage.setItem("edit_selected_cl_template", selectedCl);
     localStorage.setItem("edit_app_id", app.id);
@@ -834,16 +834,15 @@ function DashboardContent() {
         company_name: company,
         resume_url: null,
         cover_letter_url: null,
-        ats_score: currentAts,
+        ats_score: currentAts ? currentAts.score : null,
         resume_json: generatedResumeJson,
         cl_json: generatedClJson,
       };
       const { data: newApp, error: appError } = await supabase.from("applications").insert(dbApp).select().single();
       if (appError) throw appError;
 
-      // Deduct credits
+      // Update local state for credits
       const costInCredits = requirements.resume && requirements.cover_letter ? 2 : 1;
-      await supabase.from("profiles").update({ credits: userCredits - costInCredits }).eq("id", user.id);
       setUserCredits(userCredits - costInCredits);
 
       setGenSteps((prev) => [...prev, "Success! Directing to Editor workspace..."]);
