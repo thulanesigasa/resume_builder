@@ -124,6 +124,13 @@ function DashboardContent() {
   const [reauthError, setReauthError] = useState<string | null>(null);
   const [isReauthenticating, setIsReauthenticating] = useState(false);
 
+  // Create from Scratch Builder Modal
+  const [showBuilderModal, setShowBuilderModal] = useState(false);
+  const [builderSummary, setBuilderSummary] = useState("");
+  const [builderExperience, setBuilderExperience] = useState("");
+  const [builderEducation, setBuilderEducation] = useState("");
+  const [builderSkills, setBuilderSkills] = useState("");
+
   const handlePreview = async (templateName: string, type: string) => {
     setPreviewTemplate({ name: templateName, type });
     setPreviewLoading(true);
@@ -491,6 +498,26 @@ function DashboardContent() {
     } finally {
       setSavingProfile(false);
     }
+  };
+
+  const handleSaveBuilder = async () => {
+    const compiledText = `
+--- PROFESSIONAL SUMMARY ---
+${builderSummary.trim()}
+
+--- EXPERIENCE ---
+${builderExperience.trim()}
+
+--- EDUCATION ---
+${builderEducation.trim()}
+
+--- SKILLS ---
+${builderSkills.trim()}
+    `.trim();
+
+    setProfileRaw(compiledText);
+    setShowBuilderModal(false);
+    triggerToast("Builder details applied! Click 'Save Master CV Text' to finalize and compile your PDF.", "success");
   };
 
   const handleParseCvPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1420,6 +1447,21 @@ function DashboardContent() {
                       {parsingCv && <span className="text-xs text-brand-indigo animate-pulse mt-2">Reading PDF text...</span>}
                     </div>
 
+                    <div className="flex items-center gap-4 text-xs font-semibold text-brand-navy/40">
+                      <hr className="flex-1 border-brand-navy/10" />
+                      <span>OR</span>
+                      <hr className="flex-1 border-brand-navy/10" />
+                    </div>
+
+                    <button
+                      onClick={() => setShowBuilderModal(true)}
+                      className="w-full py-3 border border-brand-indigo/30 rounded-xl bg-brand-indigo/[0.02] hover:bg-brand-indigo/[0.05] transition-colors flex flex-col items-center justify-center text-center group"
+                    >
+                      <Plus className="w-6 h-6 text-brand-indigo mb-1 group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-semibold text-brand-deep">Create from Scratch</span>
+                      <span className="text-[10px] text-brand-navy/60 mt-0.5">Use our interactive builder to write your resume</span>
+                    </button>
+
                     {/* Master CV File details preview/download */}
                     {masterCvUrl && (
                       <div className="p-3.5 rounded-lg bg-brand-navy/5 border border-brand-navy/10 flex items-center justify-between">
@@ -2153,6 +2195,88 @@ function DashboardContent() {
                   {isReauthenticating ? "Verifying..." : "Confirm"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODALS */}
+      {showBuilderModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-brand-deep/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-brand-navy/10 flex items-center justify-between bg-brand-navy/5">
+              <h3 className="text-lg font-bold text-brand-deep flex items-center gap-2">
+                <FileText className="w-5 h-5 text-brand-indigo" />
+                Resume Builder
+              </h3>
+              <button 
+                onClick={() => setShowBuilderModal(false)}
+                className="text-xs font-bold text-brand-navy/50 hover:text-brand-deep transition-colors uppercase tracking-wider"
+              >
+                Close
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <p className="text-sm text-brand-navy/70">
+                Fill out the sections below to build your Master CV from scratch. This information will be used by our AI to tailor your applications.
+              </p>
+              
+              <div>
+                <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">Professional Summary</label>
+                <textarea 
+                  className="w-full h-24 px-4 py-3 glass-input text-sm"
+                  placeholder="A brief overview of your professional background and goals..."
+                  value={builderSummary}
+                  onChange={e => setBuilderSummary(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">Work Experience</label>
+                <textarea 
+                  className="w-full h-32 px-4 py-3 glass-input text-sm"
+                  placeholder="E.g.&#10;Software Engineer at Google (2020 - Present)&#10;- Developed scalable microservices&#10;- Led a team of 3 developers"
+                  value={builderExperience}
+                  onChange={e => setBuilderExperience(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">Education</label>
+                <textarea 
+                  className="w-full h-24 px-4 py-3 glass-input text-sm"
+                  placeholder="E.g.&#10;B.S. in Computer Science - University of Tech (2016 - 2020)"
+                  value={builderEducation}
+                  onChange={e => setBuilderEducation(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-brand-navy/70 uppercase mb-2">Skills</label>
+                <textarea 
+                  className="w-full h-20 px-4 py-3 glass-input text-sm"
+                  placeholder="JavaScript, Python, React, AWS, Project Management..."
+                  value={builderSkills}
+                  onChange={e => setBuilderSkills(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-brand-navy/10 bg-brand-navy/5 flex justify-end gap-3">
+              <button 
+                onClick={() => setShowBuilderModal(false)}
+                className="px-4 py-2 btn-secondary text-sm"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSaveBuilder}
+                className="px-6 py-2 btn-primary text-sm flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Apply to Master CV
+              </button>
             </div>
           </div>
         </div>
