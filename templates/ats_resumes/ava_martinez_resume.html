@@ -3,8 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <style>
+    :root {
+        --accent: {{ accent_color or '#a02020' }};
+        --title-font: '{{ title_font or "Helvetica" }}', sans-serif;
+        --body-font: '{{ body_font or "Helvetica" }}', sans-serif;
+    }
     body {
-        font-family: 'Helvetica', 'Arial', sans-serif;
+        font-family: var(--body-font);
         font-size: 9.5pt;
         line-height: 1.3; /* Tighter line height */
         color: #000;
@@ -15,7 +20,7 @@
         overflow: hidden;
     }
     .top-bar {
-        background-color: #a02020; /* Dark Red */
+        background-color: var(--accent); /* Dark Red */
         height: 15px;
         width: 100%;
     }
@@ -27,6 +32,7 @@
     .header-box h1 {
         font-size: 32pt;
         margin: 0 0 5px 0;
+        font-family: var(--title-font);
     }
     .header-box h1 .first-name { font-weight: bold; }
     .header-box h1 .last-name { font-weight: normal; }
@@ -34,6 +40,7 @@
         font-size: 12pt;
         font-weight: normal;
         margin: 0 0 10px 0;
+        font-family: var(--title-font);
     }
     .contact {
         font-size: 9pt;
@@ -49,11 +56,12 @@
     .section-header {
         font-size: 14pt;
         font-weight: bold;
-        color: #000;
-        border-bottom: 2px solid #000;
+        color: var(--accent);
+        border-bottom: 2px solid var(--accent);
         margin-top: 20px;
         margin-bottom: 10px;
         padding-bottom: 2px;
+        font-family: var(--title-font);
     }
     .job { margin-bottom: 15px; }
     .job-top { display: block; font-weight: bold; }
@@ -74,11 +82,14 @@
         </div>
     </div>
 
+    {% if professional_summary %}
     <div class="summary">
         {{ professional_summary }}
     </div>
+    {% endif %}
 
     <div class="content-area">
+        {% if experience %}
         <div class="section">
             <div class="section-header">Professional Experience</div>
             {% for job in experience %}
@@ -92,7 +103,9 @@
             </div>
             {% endfor %}
         </div>
+        {% endif %}
 
+        {% if education %}
         <div class="section">
             <div class="section-header">Education</div>
             {% for edu in education %}
@@ -101,7 +114,9 @@
             </div>
             {% endfor %}
         </div>
+        {% endif %}
 
+        {% if skills or technical_skills %}
         <div class="section">
             <div class="section-header">Key Skills</div>
             {% set skill_list = (skills or technical_skills)[:10] %}
@@ -123,6 +138,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         {% if volunteering %}
         <div class="section">

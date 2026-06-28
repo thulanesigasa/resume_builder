@@ -332,6 +332,37 @@ async def auto_name_document(payload: AutoNameRequest, request: Request, user: d
         logger.error(f"Error auto-naming document: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+class ImproveTextRequest(BaseModel):
+    text: str
+    context: str = ""
+
+@app.post("/api/improve-text")
+@limiter.limit("30/minute")
+async def improve_text_api(payload: ImproveTextRequest, request: Request, user: dict = Depends(verify_token)):
+    logger.info(f"API Improve Text request received from user: {user.id}")
+    try:
+        from src.ai_engine.openai_client import improve_text
+        improved = improve_text(payload.text, payload.context)
+        return {"improved_text": improved}
+    except Exception as e:
+        logger.error(f"Error improving text: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class GenerateSummaryRequest(BaseModel):
+    resume_data: dict
+
+@app.post("/api/generate-summary")
+@limiter.limit("20/minute")
+async def generate_summary_api(payload: GenerateSummaryRequest, request: Request, user: dict = Depends(verify_token)):
+    logger.info(f"API Generate Summary options request received from user: {user.id}")
+    try:
+        from src.ai_engine.openai_client import generate_summary_options
+        options = generate_summary_options(payload.resume_data)
+        return {"options": options}
+    except Exception as e:
+        logger.error(f"Error generating summary options: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # =========================================================
 # PAYFAST INTEGRATION
 # =========================================================

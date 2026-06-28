@@ -3,6 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --accent: {{ accent_color or '#4f46e5' }};
+            --title-font: '{{ title_font or 'Inter' }}', sans-serif;
+            --body-font: '{{ body_font or 'Lato' }}', sans-serif;
+        }
+        body { font-family: var(--body-font); }
+        h1, h2 { font-family: var(--title-font); }
+        .last-name, h2, .divider { color: var(--accent); }
+        .divider { border-color: var(--accent); }
+        .job-title { color: var(--accent); }
+    </style>
 </head>
 <body>
     <div class="page-container">
@@ -26,12 +38,15 @@
         <div class="divider"></div>
 
         <!-- OBJECTIVE / SUMMARY -->
+        {% if professional_summary %}
         <div class="section">
             <h2>Professional Summary</h2>
             <p>{{ professional_summary }}</p>
         </div>
+        {% endif %}
 
         <!-- EXPERIENCE -->
+        {% if experience %}
         <div class="section">
             <h2>Experience</h2>
             {% for job in experience %}
@@ -51,8 +66,10 @@
             </div>
             {% endfor %}
         </div>
+        {% endif %}
 
         <!-- EDUCATION -->
+        {% if education %}
         <div class="section">
             <h2>Education</h2>
             <div class="grid-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -69,6 +86,7 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div>
@@ -111,6 +129,7 @@
 
             <div>
                 <!-- SKILLS -->
+                {% if skills or technical_skills %}
                 <div class="section">
                     <h2>Technical Skills</h2>
                     {% set skill_list = (skills or technical_skills)[:10] %}
@@ -132,6 +151,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
                 <!-- LANGUAGES -->
                 {% if languages %}
