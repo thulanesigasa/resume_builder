@@ -68,14 +68,17 @@ export default function LandingPage() {
         {/* Editorial Feature Grid */}
         <section className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 pt-12">
           {/* Feature 01: Full Width */}
-          <div className="md:col-span-12 glass-panel p-10 rounded-2xl relative overflow-hidden group animate-in fade-in slide-in-from-bottom-12 duration-700 delay-100 fill-mode-both cursor-default">
-            <div className="absolute -top-12 -right-6 text-[150px] font-black text-brand-navy/5 select-none leading-none pointer-events-none group-hover:text-brand-indigo/5 transition-colors duration-500">
+          <div 
+            className="md:col-span-12 glass-panel p-10 rounded-2xl relative overflow-hidden group animate-in fade-in slide-in-from-bottom-12 duration-700 delay-100 fill-mode-both cursor-pointer focus:outline-none"
+            tabIndex={0}
+          >
+            <div className="absolute -top-12 -right-6 text-[150px] font-black text-brand-navy/5 select-none leading-none pointer-events-none group-hover:text-brand-indigo/5 group-focus:text-brand-indigo/5 transition-colors duration-500">
               01
             </div>
             <div className="relative z-10 max-w-xl">
               <div className="text-brand-indigo font-bold tracking-widest text-[10px] uppercase mb-3">01 / AI Tailoring</div>
-              <h3 className="text-2xl font-extrabold text-brand-deep transition-transform duration-500 group-hover:-translate-y-1">Semantic Alignment Pipeline</h3>
-              <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100">
+              <h3 className="text-2xl font-extrabold text-brand-deep transition-transform duration-500 group-hover:-translate-y-1 group-focus:-translate-y-1">Semantic Alignment Pipeline</h3>
+              <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] group-focus:grid-rows-[1fr] transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 group-focus:opacity-100">
                 <div className="overflow-hidden">
                   <p className="text-sm text-brand-navy/70 leading-relaxed pt-3">
                     Optimized CV customization aligned directly with targeted job specifications. Our engine rewrites your history to maximize keyword density without hallucinations.
@@ -86,11 +89,14 @@ export default function LandingPage() {
           </div>
 
           {/* Feature 02: Half */}
-          <div className="md:col-span-6 glass-panel p-10 rounded-2xl relative overflow-hidden group animate-in fade-in slide-in-from-bottom-12 duration-700 delay-200 fill-mode-both cursor-default">
+          <div 
+            className="md:col-span-6 glass-panel p-10 rounded-2xl relative overflow-hidden group animate-in fade-in slide-in-from-bottom-12 duration-700 delay-200 fill-mode-both cursor-pointer focus:outline-none"
+            tabIndex={0}
+          >
             <div className="relative z-10">
               <div className="text-brand-navy/40 font-bold tracking-widest text-[10px] uppercase mb-3">02 / UX</div>
-              <h3 className="text-xl font-extrabold text-brand-deep transition-transform duration-500 group-hover:-translate-y-1">Interactive Layout Editor</h3>
-              <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100">
+              <h3 className="text-xl font-extrabold text-brand-deep transition-transform duration-500 group-hover:-translate-y-1 group-focus:-translate-y-1">Interactive Layout Editor</h3>
+              <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] group-focus:grid-rows-[1fr] transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 group-focus:opacity-100">
                 <div className="overflow-hidden">
                   <p className="text-sm text-brand-navy/70 leading-relaxed pt-3">
                     Fine-tune layouts instantly with drag-and-drop sections, click-to-edit fields, and live previews. Complete control.
@@ -101,11 +107,14 @@ export default function LandingPage() {
           </div>
 
           {/* Feature 03: Half */}
-          <div className="md:col-span-6 glass-panel p-10 rounded-2xl relative overflow-hidden group border-t-4 border-t-brand-indigo/20 animate-in fade-in slide-in-from-bottom-12 duration-700 delay-300 fill-mode-both cursor-default">
+          <div 
+            className="md:col-span-6 glass-panel p-10 rounded-2xl relative overflow-hidden group border-t-4 border-t-brand-indigo/20 focus:border-t-brand-indigo animate-in fade-in slide-in-from-bottom-12 duration-700 delay-300 fill-mode-both cursor-pointer focus:outline-none"
+            tabIndex={0}
+          >
             <div className="relative z-10">
               <div className="text-brand-navy/40 font-bold tracking-widest text-[10px] uppercase mb-3">03 / Parsing</div>
-              <h3 className="text-xl font-extrabold text-brand-deep transition-transform duration-500 group-hover:-translate-y-1">Server-Side PDF Compilers</h3>
-              <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100">
+              <h3 className="text-xl font-extrabold text-brand-deep transition-transform duration-500 group-hover:-translate-y-1 group-focus:-translate-y-1">Server-Side PDF Compilers</h3>
+              <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] group-focus:grid-rows-[1fr] transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 group-focus:opacity-100">
                 <div className="overflow-hidden">
                   <p className="text-sm text-brand-navy/70 leading-relaxed pt-3">
                     Generate clean, strictly-formatted PDFs compiled natively to ensure 100% readability by enterprise ATS systems.

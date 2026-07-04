@@ -62,15 +62,16 @@ export default function FAQPage() {
         {faqs.map((faq, idx) => (
           <div 
             key={idx} 
-            className="glass-panel rounded-2xl overflow-hidden border border-brand-navy/10 hover:border-brand-indigo/30 hover:shadow-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both group cursor-default"
+            className="glass-panel rounded-2xl overflow-hidden border border-brand-navy/10 hover:border-brand-indigo/30 focus-within:border-brand-indigo/30 hover:shadow-md focus-within:shadow-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both group cursor-pointer focus:outline-none"
             style={{ animationDelay: `${idx * 100}ms` }}
+            tabIndex={0}
           >
             <div className="w-full text-left px-6 py-5 flex items-center justify-between font-bold text-brand-deep">
               {faq.question}
-              <ChevronDown className="w-5 h-5 text-brand-indigo transition-transform duration-500 group-hover:rotate-180" />
+              <ChevronDown className="w-5 h-5 text-brand-indigo transition-transform duration-500 group-hover:rotate-180 group-focus-within:rotate-180" />
             </div>
             
-            <div className="px-6 grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100">
+            <div className="px-6 grid grid-rows-[0fr] group-hover:grid-rows-[1fr] group-focus-within:grid-rows-[1fr] transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
               <div className="overflow-hidden">
                 <p className="text-sm text-brand-navy/70 leading-relaxed pb-5">
                   {faq.answer}
