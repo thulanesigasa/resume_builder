@@ -1112,9 +1112,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         company_name: documentTitle || "Master Resume",
         job_title: "General CV",
         resume_url: res.download_url,
-        resume_json: dummyData,
-        status: "Compiled",
-        created_at: new Date().toISOString()
+        resume_json: dummyData
       };
 
       const { error: dbError } = await supabase.from("applications").insert(dbApp);
