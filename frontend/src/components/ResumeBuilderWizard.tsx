@@ -215,7 +215,7 @@ interface ResumeBuilderWizardProps {
   onComplete?: () => void;
 }
 
-const STEPS = ["CONTACT", "EXPERIENCE", "EDUCATION", "ABOUT", "PROFESSIONAL SUMMARY", "CERTIFICATES", "SKILLS", "FINISH IT", "DOWNLOAD"];
+const STEPS = ["CONTACT", "EXPERIENCE", "EDUCATION", "PROFESSIONAL SUMMARY", "CERTIFICATES", "SKILLS", "FINISH IT", "DOWNLOAD"];
 
 export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel, onComplete }: ResumeBuilderWizardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -227,7 +227,6 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const [experiences, setExperiences] = useState([{ id: "1", title: "", employer: "", startDate: "", endDate: "", city: "", current: false, description: "" }]);
   const [educations, setEducations] = useState([{ id: "1", school: "", degree: "", startDate: "", endDate: "", city: "", current: false, description: "" }]);
   const [skills, setSkills] = useState([{ id: "1", name: "", level: "Expert" }]);
-  const [about, setAbout] = useState("");
   const [summary, setSummary] = useState("");
   const [documentTitle, setDocumentTitle] = useState("Untitled Resume");
   const [format, setFormat] = useState({ template: "ats_resume_template.html", accentColor: "#4f46e5", titleFont: "BEBAS NEUE (DEFAULT)", bodyFont: "Lato (default)", language: "English" });
@@ -235,7 +234,6 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   // --- AI State ---
   const [improvingExpId, setImprovingExpId] = useState<string | null>(null);
   const [improvingSummary, setImprovingSummary] = useState(false);
-  const [improvingAbout, setImprovingAbout] = useState(false);
   const [summaryOptions, setSummaryOptions] = useState<string[]>([]);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
@@ -289,7 +287,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const [isCompiling, setIsCompiling] = useState(false);
 
   useEffect(() => {
-    if (currentStep === 8) {
+    if (currentStep === 7) {
       setIsStep7Preparing(true);
       const timer = setTimeout(() => {
         setIsStep7Preparing(false);
@@ -330,8 +328,12 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         if (parsed.experiences) setExperiences(parsed.experiences);
         if (parsed.educations) setEducations(parsed.educations);
         if (parsed.skills) setSkills(parsed.skills);
-        if (parsed.about) setAbout(parsed.about);
-        if (parsed.summary) setSummary(parsed.summary);
+        // Map old draft 'about' to summary if summary is empty
+        if (parsed.summary) {
+          setSummary(parsed.summary);
+        } else if (parsed.about) {
+          setSummary(parsed.about);
+        }
         if (parsed.documentTitle) setDocumentTitle(parsed.documentTitle);
         if (parsed.format) {
           // Backward compatibility check for old template names
@@ -351,9 +353,9 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   // --- Save Draft on Change ---
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem("resume_wizard_draft", JSON.stringify({ contact, experiences, educations, skills, about, summary, documentTitle, format }));
+      localStorage.setItem("resume_wizard_draft", JSON.stringify({ contact, experiences, educations, skills, summary, documentTitle, format }));
     }
-  }, [contact, experiences, educations, skills, about, summary, documentTitle, format, isLoaded]);
+  }, [contact, experiences, educations, skills, summary, documentTitle, format, isLoaded]);
 
   useEffect(() => {
     if (selectedTemplate) {
@@ -364,7 +366,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   // --- Live Preview API Hook ---
   useEffect(() => {
     if (!isLoaded) return;
-    const hasData = contact.firstName || contact.lastName || about || summary || experiences[0]?.employer || educations[0]?.school || skills[0]?.name;
+    const hasData = contact.firstName || contact.lastName || summary || experiences[0]?.employer || educations[0]?.school || skills[0]?.name;
     if (!hasData) {
       setPreviewHtml(null);
       return;
@@ -385,7 +387,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             linkedin: "",
             github: ""
           },
-          professional_summary: summary || about || "",
+          professional_summary: summary || "",
           skills: skills.filter(s => s.name).map(s => s.name),
           technical_skills: skills.filter(s => s.name).map(s => s.name),
           experience: experiences.filter(e => e.title || e.employer).map(e => ({
@@ -416,7 +418,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       }
     }, 1000); // 1-second debounce
     return () => clearTimeout(timeoutId);
-  }, [contact, experiences, educations, skills, about, summary, format, isLoaded]);
+  }, [contact, experiences, educations, skills, summary, format, isLoaded]);
 
   // --- AI Handlers ---
   const handleImproveExperience = async (id: string, text: string, employer: string, title: string) => {
@@ -433,15 +435,12 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   };
 
-  const handleImproveSummary = async () => {
+  const handleImproveSummary = async (isShort = false) => {
     setImprovingSummary(true);
     try {
       // Gather all resume details to build a rich context
       let context = `Generate or improve a professional summary using the following complete resume details:\n\n`;
       context += `Name: ${contact.firstName} ${contact.lastName}\n`;
-      if (about) {
-        context += `About Me (User's introduction): ${about}\n`;
-      }
       if (experiences.length > 0) {
         context += `Experiences:\n`;
         experiences.forEach(e => {
@@ -462,9 +461,15 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       if (activeSkills.length > 0) {
         context += `Skills: ${activeSkills.join(", ")}\n`;
       }
-      context += `\nINSTRUCTIONS: You must write a high-quality professional summary of exactly 4 sentences (or roughly 3 lines). Make it sound extremely professional, action-oriented, and highlight the user's key experiences and skills. Do not add any greeting, signature, or markdown.`;
 
-      const res = await api.improveText(summary || "Generate a summary from scratch.", context);
+      if (isShort) {
+        context += `\nINSTRUCTIONS: Write a short introduction about the user. It must be exactly 2 sentences (or roughly 2 lines) in length. Make it engaging, professional, and personal. Do not use quotes, greetings, signatures, or markdown.`;
+      } else {
+        context += `\nINSTRUCTIONS: You must write a high-quality professional summary of exactly 4 sentences (or roughly 3 lines). Make it sound extremely professional, action-oriented, and highlight the user's key experiences and skills. Do not add any greeting, signature, or markdown.`;
+      }
+
+      const contextHint = isShort ? "about" : "summary";
+      const res = await api.improveText(summary || "Generate a summary from scratch.", `${contextHint}\n${context}`);
       setSummary(res.improved_text);
     } catch (e) {
       console.error(e);
@@ -473,47 +478,11 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   };
 
-  const handleImproveAbout = async () => {
-    setImprovingAbout(true);
-    try {
-      let context = `Generate a short 'About Me' introduction of exactly 2 sentences based on the following resume details:\n\n`;
-      context += `Name: ${contact.firstName} ${contact.lastName}\n`;
-      if (experiences.length > 0) {
-        context += `Experiences:\n`;
-        experiences.forEach(e => {
-          if (e.title || e.employer) {
-            context += `- ${e.title} at ${e.employer} (${e.startDate} - ${e.endDate}). Duties: ${e.description}\n`;
-          }
-        });
-      }
-      if (educations.length > 0) {
-        context += `Education:\n`;
-        educations.forEach(e => {
-          if (e.school || e.degree) {
-            context += `- ${e.degree} at ${e.school} (${e.startDate} - ${e.current ? 'Present' : e.endDate})\n`;
-          }
-        });
-      }
-      const activeSkills = skills.filter(s => s.name).map(s => s.name);
-      if (activeSkills.length > 0) {
-        context += `Skills: ${activeSkills.join(", ")}\n`;
-      }
-      context += `\nINSTRUCTIONS: Write a high-quality 'About Me' introduction of exactly 2 sentences (or roughly 2 lines). Make it personal, professional, and punchy. Output ONLY the 2 sentences. No greetings, no signature, and no markdown.`;
-
-      const res = await api.improveText(about || "Introduce myself briefly.", context);
-      setAbout(res.improved_text);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setImprovingAbout(false);
-    }
-  };
-
   const handleGenerateSummaryOptions = async () => {
     setIsGeneratingSummary(true);
     try {
       const resumeData = {
-        about,
+        about: summary || "",
         experiences,
         educations,
         skills
@@ -660,7 +629,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           school: e.school,
           degree: e.degree
         })),
-        about: about || "",
+        about: summary || "",
         certificates: certificates.map(c => ({
           name: c.name,
           extracted_text: c.extracted_text
@@ -742,7 +711,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const stepHasData = (stepIndex: number): boolean => {
     if (stepIndex === 1) return experiences.some(e => e.employer.trim() || e.title.trim());
     if (stepIndex === 2) return educations.some(e => e.school.trim() || e.degree.trim());
-    if (stepIndex === 6) return skills.some(s => s.name.trim());
+    if (stepIndex === 5) return skills.some(s => s.name.trim());
     return true;
   };
 
@@ -755,7 +724,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const handleNext = () => {
     if (!validateStep(currentStep)) return;
     // Soft-confirm if section is empty (experience, education, skills)
-    if ([1, 2, 6].includes(currentStep) && !stepHasData(currentStep)) {
+    if ([1, 2, 5].includes(currentStep) && !stepHasData(currentStep)) {
       setConfirmSkipModal({
         message: STEP_EMPTY_MESSAGES[currentStep],
         onConfirm: () => {
@@ -789,7 +758,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           linkedin: "",
           github: ""
         },
-        professional_summary: summary || about || "",
+        professional_summary: summary || "",
         skills: skills.filter(s => s.name).map(s => s.name),
         technical_skills: skills.filter(s => s.name).map(s => s.name),
         experience: experiences.filter(e => e.title || e.employer).map(e => ({
@@ -863,13 +832,10 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       compiled += `Phone: ${contact.phone}\n`;
       compiled += `Location: ${contact.city}, ${contact.postalCode}\n\n`;
 
-      if (about) {
-        compiled += `--- ABOUT ---\n`;
-        compiled += `${about}\n\n`;
+      if (summary) {
+        compiled += `--- PROFESSIONAL SUMMARY ---\n`;
+        compiled += `${summary}\n\n`;
       }
-
-      compiled += `--- PROFESSIONAL SUMMARY ---\n`;
-      compiled += `${summary}\n\n`;
 
       compiled += `--- EXPERIENCE ---\n`;
       experiences.forEach(exp => {
@@ -958,7 +924,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                         setCurrentStep(i);
                         return;
                       }
-                      if ([1, 2, 6].includes(i) && !stepHasData(i)) {
+                      if ([1, 2, 5].includes(i) && !stepHasData(i)) {
                         setConfirmSkipModal({
                           message: STEP_EMPTY_MESSAGES[i],
                           onConfirm: () => {
@@ -1245,59 +1211,15 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             </div>
           )}
 
-          {/* STEP 4: ABOUT */}
+          {/* STEP 4: PROFESSIONAL SUMMARY */}
           {currentStep === 3 && (
-             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-              <div>
-                <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
-                  <span className="text-brand-indigo">Write down</span> your about
-                </h2>
-                <p className="text-brand-navy/70 font-medium">
-                  Tell us about yourself (keep it to 2 sentences or 2 lines)
-                </p>
-              </div>
-
-              <div className="relative border border-brand-navy/10 rounded-xl overflow-hidden glass-panel shadow-sm mt-8">
-                <div className="p-6 relative">
-                  {improvingAbout && (
-                    <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-t-xl">
-                      <Loader2 className="w-6 h-6 text-brand-indigo animate-spin" />
-                    </div>
-                  )}
-                  <textarea 
-                    className="w-full h-48 text-base text-brand-deep placeholder-brand-navy/30 bg-transparent focus:outline-none resize-none font-medium leading-relaxed" 
-                    placeholder="Provide a brief manual introduction about yourself..."
-                    value={about}
-                    onChange={e => setAbout(e.target.value)}
-                  />
-                </div>
-                <div className="bg-white/50 border-t border-brand-navy/5 p-4 flex flex-col md:flex-row justify-between items-center gap-4">
-                  <div className="flex gap-4 text-brand-deep">
-                    <Bold className="w-4 h-4 cursor-pointer hover:text-brand-indigo" />
-                    <Italic className="w-4 h-4 cursor-pointer hover:text-brand-indigo" />
-                    <List className="w-4 h-4 cursor-pointer hover:text-brand-indigo" />
-                  </div>
-                  <button 
-                    onClick={handleImproveAbout}
-                    disabled={improvingAbout}
-                    className="w-full md:w-auto bg-brand-indigo/10 hover:bg-brand-indigo/20 text-brand-indigo px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    Perfecting with AI
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 5: PROFESSIONAL SUMMARY */}
-          {currentStep === 4 && (
              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
                 <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
                   <span className="text-brand-indigo">Write down</span> your professional summary
                 </h2>
                 <p className="text-brand-navy/70 font-medium">
-                  Provide a brief summary, or click "Perfecting with AI" to generate a perfect 4-sentence summary from your resume details.
+                  Provide a brief summary, or use AI to generate a concise 2-sentence intro or a full 4-sentence professional summary from your details.
                 </p>
               </div>
 
@@ -1321,7 +1243,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                     <Italic className="w-4 h-4 cursor-pointer hover:text-brand-indigo" />
                     <List className="w-4 h-4 cursor-pointer hover:text-brand-indigo" />
                   </div>
-                  <div className="flex gap-2 w-full md:w-auto">
+                  <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
                     <button 
                       onClick={handleGenerateSummaryOptions}
                       disabled={isGeneratingSummary}
@@ -1331,11 +1253,18 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                       Generate Options
                     </button>
                     <button 
-                      onClick={handleImproveSummary}
+                      onClick={() => handleImproveSummary(true)}
                       disabled={improvingSummary}
-                      className="flex-1 md:flex-none bg-brand-indigo/10 hover:bg-brand-indigo/20 text-brand-indigo px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="flex-1 md:flex-none bg-brand-indigo/10 hover:bg-brand-indigo/20 text-brand-indigo px-4 py-2.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                      Perfecting with AI
+                      Perfect with AI (Short 2-Sentences)
+                    </button>
+                    <button 
+                      onClick={() => handleImproveSummary(false)}
+                      disabled={improvingSummary}
+                      className="flex-1 md:flex-none bg-brand-indigo hover:bg-brand-indigo/90 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+                    >
+                      Perfect with AI (Full 4-Sentences)
                     </button>
                   </div>
                 </div>
@@ -1364,8 +1293,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             </div>
           )}
 
-          {/* STEP 6: CERTIFICATES */}
-          {currentStep === 5 && (
+          {/* STEP 5: CERTIFICATES */}
+          {currentStep === 4 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
                 <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
@@ -1498,8 +1427,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             </div>
           )}
 
-          {/* STEP 7: SKILLS */}
-          {currentStep === 6 && (
+          {/* STEP 6: SKILLS */}
+          {currentStep === 5 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
                 <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
@@ -1593,8 +1522,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             </div>
           )}
 
-          {/* STEP 8: FINISH IT */}
-          {currentStep === 7 && (
+          {/* STEP 7: FINISH IT */}
+          {currentStep === 6 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div className="relative group max-w-lg">
                 <input 
@@ -1671,8 +1600,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             </div>
           )}
 
-          {/* STEP 9: DOWNLOAD */}
-          {currentStep === 8 && (
+          {/* STEP 8: DOWNLOAD */}
+          {currentStep === 7 && (
             isStep7Preparing ? (
               <div className="space-y-6 flex flex-col items-center justify-center text-center h-full animate-in fade-in">
                 <Loader2 className="w-12 h-12 text-brand-indigo animate-spin mb-2" />
@@ -1709,7 +1638,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             </button>
           )}
 
-          {currentStep < 8 ? (
+          {currentStep < 7 ? (
             <button onClick={handleNext} className="btn-primary text-sm shadow-lg shadow-brand-indigo/20 flex items-center gap-2 px-8 py-3.5">
               Next to {STEPS[currentStep + 1] === 'FINISH IT' ? 'Finish it' : STEPS[currentStep + 1] === 'PROFESSIONAL SUMMARY' ? 'Professional Summary' : STEPS[currentStep + 1].charAt(0) + STEPS[currentStep + 1].slice(1).toLowerCase()} <ChevronRight className="w-4 h-4" />
             </button>
