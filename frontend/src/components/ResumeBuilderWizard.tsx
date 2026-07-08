@@ -225,7 +225,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   // --- State ---
   const [contact, setContact] = useState({ firstName: "", lastName: "", city: "", postalCode: "", phone: "", email: "" });
   const [experiences, setExperiences] = useState([{ id: "1", title: "", employer: "", startDate: "", endDate: "", city: "", current: false, description: "" }]);
-  const [educations, setEducations] = useState([{ id: "1", school: "", degree: "", startDate: "", endDate: "", city: "", description: "" }]);
+  const [educations, setEducations] = useState([{ id: "1", school: "", degree: "", startDate: "", endDate: "", city: "", current: false, description: "" }]);
   const [skills, setSkills] = useState([{ id: "1", name: "", level: "Expert" }]);
   const [about, setAbout] = useState("");
   const [summary, setSummary] = useState("");
@@ -358,7 +358,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             institution: e.school || "Institution Name",
             degree: e.degree || "Degree",
             qualification: e.degree || "Degree",
-            dates: `${e.startDate} - ${e.endDate}`
+            dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`
           })),
           // Provide empty arrays for optional template sections to prevent Jinja2 errors
           certifications: [],
@@ -414,7 +414,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         context += `Education:\n`;
         educations.forEach(e => {
           if (e.school || e.degree) {
-            context += `- ${e.degree} at ${e.school} (${e.startDate} - ${e.endDate})\n`;
+            context += `- ${e.degree} at ${e.school} (${e.startDate} - ${e.current ? 'Present' : e.endDate})\n`;
           }
         });
       }
@@ -566,7 +566,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           institution: e.school || "Institution Name",
           degree: e.degree || "Degree",
           qualification: e.degree || "Degree",
-          dates: `${e.startDate} - ${e.endDate}`
+          dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`
         })),
         certifications: [],
         professional_memberships: [],
@@ -649,7 +649,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       educations.forEach(edu => {
         if (edu.degree || edu.school) {
           compiled += `**${edu.degree}** - ${edu.school} (${edu.city})\n`;
-          compiled += `${edu.startDate} - ${edu.endDate}\n`;
+          compiled += `${edu.startDate} - ${edu.current ? 'Present' : edu.endDate}\n`;
           if (edu.description) compiled += `${edu.description}\n`;
           compiled += `\n`;
         }
@@ -980,8 +980,16 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                     <MonthYearPicker
                       label="End Date"
                       value={edu.endDate}
+                      disabled={edu.current}
                       onChange={v => { const newArr = [...educations]; newArr[index].endDate = v; setEducations(newArr); }}
                     />
+                  </div>
+
+                  <div className="flex gap-6 items-center">
+                    <label className="flex items-center gap-2 text-sm text-brand-navy/70 font-medium cursor-pointer">
+                      <input type="checkbox" checked={edu.current || false} onChange={e => { const newArr = [...educations]; newArr[index].current = e.target.checked; setEducations(newArr); }} className="w-4 h-4 rounded border-brand-navy/20 text-brand-indigo focus:ring-brand-indigo" />
+                      I currently study here
+                    </label>
                   </div>
 
                   {/* Row 3: City — full width */}
@@ -993,7 +1001,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
               ))}
 
               <button 
-                onClick={() => setEducations([...educations, { id: Date.now().toString(), school: "", degree: "", startDate: "", endDate: "", city: "", description: "" }])}
+                onClick={() => setEducations([...educations, { id: Date.now().toString(), school: "", degree: "", startDate: "", endDate: "", city: "", current: false, description: "" }])}
                 className="flex items-center gap-2 text-brand-indigo font-bold text-sm hover:underline"
               >
                 <Plus className="w-4 h-4" /> Add Education
