@@ -271,6 +271,10 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
 
+  // --- Step Bar ref for accurate centering ---
+  const stepBarRef = useRef<HTMLDivElement>(null);
+  const [stepBarWidth, setStepBarWidth] = useState(0);
+
   // --- Custom Confirm Modal State ---
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmAction, setDeleteConfirmAction] = useState<{
@@ -283,6 +287,16 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   useEffect(() => {
     certificatesRef.current = certificates;
   }, [certificates]);
+
+  // Measure step bar container width for accurate translateX centering
+  useEffect(() => {
+    const el = stepBarRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(() => setStepBarWidth(el.offsetWidth));
+    obs.observe(el);
+    setStepBarWidth(el.offsetWidth);
+    return () => obs.disconnect();
+  }, []);
 
   const formatBytes = (bytes: number, decimals = 1) => {
     if (bytes === 0) return '0 Bytes';
@@ -1195,7 +1209,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         
         {/* Progress Bar — auto-centering sliding steps */}
         <div className="w-full border-b border-brand-navy/10 bg-white/40 backdrop-blur-xl sticky top-0 z-20">
-          <div className="relative w-full overflow-hidden" style={{ height: '72px' }}>
+          <div ref={stepBarRef} className="relative w-full overflow-hidden" style={{ height: '72px' }}>
 
             {/* Connector line — fixed behind the dots */}
             <div className="absolute left-0 right-0 h-0.5 bg-brand-navy/10 z-0 pointer-events-none" style={{ top: '20px' }} />
@@ -1207,7 +1221,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                 top: 0,
                 left: 0,
                 height: '72px',
-                transform: `translateX(calc(50% - ${currentStep * 96 + 48}px))`,
+                // stepBarWidth is the real container px width, measured via ResizeObserver
+                transform: `translateX(${stepBarWidth / 2 - currentStep * 96 - 48}px)`,
                 width: `${STEPS.length * 96}px`,
               }}
             >
