@@ -1619,7 +1619,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                       {uploadingFiles.map((f) => (
                         <div 
                           key={f.id}
-                          className={`p-4 rounded-xl border bg-white shadow-sm flex flex-col gap-3 transition-all duration-300 ${
+                          className={`p-4 rounded-xl border bg-white shadow-sm flex flex-col gap-3 transition-all duration-300 w-full overflow-hidden ${
                             f.status === 'error' 
                               ? 'border-red-200 bg-red-50/10' 
                               : f.status === 'success' 
@@ -1627,9 +1627,9 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                                 : 'border-brand-navy/10 hover:border-brand-indigo/20'
                           }`}
                         >
-                          <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center justify-between gap-4 w-full">
                             {/* File Info */}
-                            <div className="flex items-center gap-3 truncate flex-1">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
                               <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                                 f.status === 'error' 
                                   ? 'bg-red-100 text-red-500' 
