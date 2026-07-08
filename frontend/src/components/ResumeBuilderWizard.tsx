@@ -235,6 +235,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   // --- AI State ---
   const [improvingExpId, setImprovingExpId] = useState<string | null>(null);
   const [improvingSummary, setImprovingSummary] = useState(false);
+  const [improvingAbout, setImprovingAbout] = useState(false);
   const [summaryOptions, setSummaryOptions] = useState<string[]>([]);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
@@ -469,6 +470,42 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       console.error(e);
     } finally {
       setImprovingSummary(false);
+    }
+  };
+
+  const handleImproveAbout = async () => {
+    setImprovingAbout(true);
+    try {
+      let context = `Generate a short 'About Me' introduction of exactly 2 sentences based on the following resume details:\n\n`;
+      context += `Name: ${contact.firstName} ${contact.lastName}\n`;
+      if (experiences.length > 0) {
+        context += `Experiences:\n`;
+        experiences.forEach(e => {
+          if (e.title || e.employer) {
+            context += `- ${e.title} at ${e.employer} (${e.startDate} - ${e.endDate}). Duties: ${e.description}\n`;
+          }
+        });
+      }
+      if (educations.length > 0) {
+        context += `Education:\n`;
+        educations.forEach(e => {
+          if (e.school || e.degree) {
+            context += `- ${e.degree} at ${e.school} (${e.startDate} - ${e.current ? 'Present' : e.endDate})\n`;
+          }
+        });
+      }
+      const activeSkills = skills.filter(s => s.name).map(s => s.name);
+      if (activeSkills.length > 0) {
+        context += `Skills: ${activeSkills.join(", ")}\n`;
+      }
+      context += `\nINSTRUCTIONS: Write a high-quality 'About Me' introduction of exactly 2 sentences (or roughly 2 lines). Make it personal, professional, and punchy. Output ONLY the 2 sentences. No greetings, no signature, and no markdown.`;
+
+      const res = await api.improveText(about || "Introduce myself briefly.", context);
+      setAbout(res.improved_text);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setImprovingAbout(false);
     }
   };
 
@@ -1222,12 +1259,31 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
 
               <div className="relative border border-brand-navy/10 rounded-xl overflow-hidden glass-panel shadow-sm mt-8">
                 <div className="p-6 relative">
+                  {improvingAbout && (
+                    <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-t-xl">
+                      <Loader2 className="w-6 h-6 text-brand-indigo animate-spin" />
+                    </div>
+                  )}
                   <textarea 
                     className="w-full h-48 text-base text-brand-deep placeholder-brand-navy/30 bg-transparent focus:outline-none resize-none font-medium leading-relaxed" 
                     placeholder="Provide a brief manual introduction about yourself..."
                     value={about}
                     onChange={e => setAbout(e.target.value)}
                   />
+                </div>
+                <div className="bg-white/50 border-t border-brand-navy/5 p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                  <div className="flex gap-4 text-brand-deep">
+                    <Bold className="w-4 h-4 cursor-pointer hover:text-brand-indigo" />
+                    <Italic className="w-4 h-4 cursor-pointer hover:text-brand-indigo" />
+                    <List className="w-4 h-4 cursor-pointer hover:text-brand-indigo" />
+                  </div>
+                  <button 
+                    onClick={handleImproveAbout}
+                    disabled={improvingAbout}
+                    className="w-full md:w-auto bg-brand-indigo/10 hover:bg-brand-indigo/20 text-brand-indigo px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    Perfecting with AI
+                  </button>
                 </div>
               </div>
             </div>

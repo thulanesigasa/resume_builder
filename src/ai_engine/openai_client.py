@@ -200,9 +200,17 @@ def improve_text(text: str, context: str = "") -> str:
     if not api_client:
         return text
 
-    is_summary = "summary" in context.lower() or "about" in context.lower()
+    is_summary = "summary" in context.lower()
+    is_about = "about" in context.lower()
     
-    if is_summary:
+    if is_about:
+        system_prompt = (
+            "You are an expert resume writer and ATS optimization AI. "
+            "Your task is to write a highly professional, concise 'About Me' introduction about the user. "
+            "Keep it to exactly 2 sentences (or roughly 2 lines) in length. Make it engaging, professional, and personal. "
+            "Output ONLY the 2 sentences. No quotes, no markdown, no conversational filler."
+        )
+    elif is_summary:
         system_prompt = (
             "You are an expert resume writer and ATS optimization AI. "
             "Your task is to rewrite the user's professional summary to make it sound professional, action-oriented, and impactful. "
