@@ -523,9 +523,9 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       }
 
       if (isShort) {
-        context += `\nINSTRUCTIONS: Write a professional summary about the user. CRITICAL RULE: It must consist of exactly 3 full sentences and 2 short sentences. Make it engaging, professional, and personal. Do not use quotes, greetings, signatures, or markdown.`;
+        context += `\nINSTRUCTIONS: Write a highly impactful professional summary about the user. CRITICAL RULE: It must consist of EXACTLY 1 SENTENCE. Make it engaging, professional, and personal. Do not use quotes, greetings, signatures, or markdown.`;
       } else {
-        context += `\nINSTRUCTIONS: You must write a high-quality professional summary. CRITICAL RULE: It must consist of exactly 3 full sentences and 2 short sentences. Make it sound extremely professional, action-oriented, and highlight the user's key experiences and skills. Do not add any greeting, signature, or markdown.`;
+        context += `\nINSTRUCTIONS: Write a highly impactful professional summary about the user. CRITICAL RULE: It must consist of EXACTLY 1 SENTENCE. Make it sound extremely professional, action-oriented, and highlight the user's key experiences and skills. Do not add any greeting, signature, or markdown.`;
       }
 
       const contextHint = isShort ? "about" : "summary";
@@ -1574,7 +1574,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                   <span className="text-brand-indigo">Write down</span> your professional summary
                 </h2>
                 <p className="text-brand-navy/70 font-medium">
-                  Provide a brief summary, or use AI to generate a highly professional summary consisting of 3 full sentences and 2 short sentences.
+                  Provide a brief summary, or use AI to generate options of 2 to 3 lines, or perfect your text into 1 impactful sentence.
                 </p>
               </div>
 
@@ -1612,7 +1612,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                       disabled={improvingSummary}
                       className="flex-1 md:flex-none bg-brand-indigo hover:bg-brand-indigo/90 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                     >
-                      Perfect with AI (3 Full, 2 Short Sentences)
+                      Perfect with AI (1 Sentence)
                     </button>
                   </div>
                 </div>
