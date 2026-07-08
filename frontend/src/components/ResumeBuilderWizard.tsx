@@ -233,7 +233,7 @@ interface ResumeBuilderWizardProps {
   onComplete?: () => void;
 }
 
-const STEPS = ["CONTACT", "EXPERIENCE", "EDUCATION", "PROFESSIONAL SUMMARY", "CERTIFICATES", "SKILLS", "FINISH IT", "DOWNLOAD"];
+const STEPS = ["CONTACT", "EXPERIENCE", "EDUCATION", "CERTIFICATES", "SKILLS", "PROFESSIONAL SUMMARY", "FINISH IT", "DOWNLOAD"];
 
 export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel, onComplete }: ResumeBuilderWizardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -517,6 +517,14 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           }
         });
       }
+      if (certificates.length > 0) {
+        context += `Certificates:\n`;
+        certificates.forEach(c => {
+          if (c.name) {
+            context += `- ${c.name}\n`;
+          }
+        });
+      }
       const activeSkills = skills.filter(s => s.name).map(s => s.name);
       if (activeSkills.length > 0) {
         context += `Skills: ${activeSkills.join(", ")}\n`;
@@ -545,6 +553,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         about: summary || "",
         experiences,
         educations,
+        certificates: certificates.map(c => c.name).filter(Boolean),
         skills
       };
       const res = await api.generateSummary(resumeData);
@@ -1017,20 +1026,20 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const stepHasData = (stepIndex: number): boolean => {
     if (stepIndex === 1) return experiences.some(e => e.employer.trim() || e.title.trim());
     if (stepIndex === 2) return educations.some(e => e.school.trim() || e.degree.trim());
-    if (stepIndex === 5) return skills.some(s => s.name.trim());
+    if (stepIndex === 4) return skills.some(s => s.name.trim());
     return true;
   };
 
   const STEP_EMPTY_MESSAGES: Record<number, string> = {
     1: "You haven't added any work experience. Many employers require this. Are you sure you want to continue without it?",
     2: "You haven't added any education. Are you sure you want to continue without it?",
-    6: "You haven't added any skills. Skills help recruiters find you. Are you sure you want to continue without them?",
+    4: "You haven't added any skills. Skills help recruiters find you. Are you sure you want to continue without them?",
   };
 
   const handleNext = () => {
     if (!validateStep(currentStep)) return;
     // Soft-confirm if section is empty (experience, education, skills)
-    if ([1, 2, 5].includes(currentStep) && !stepHasData(currentStep)) {
+    if ([1, 2, 4].includes(currentStep) && !stepHasData(currentStep)) {
       setConfirmSkipModal({
         message: STEP_EMPTY_MESSAGES[currentStep],
         onConfirm: () => {
@@ -1277,7 +1286,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                       } else {
                         for (let i = currentStep; i < idx; i++) {
                           if (!validateStep(i)) { setCurrentStep(i); return; }
-                          if ([1, 2, 5].includes(i) && !stepHasData(i)) {
+                          if ([1, 2, 4].includes(i) && !stepHasData(i)) {
                             setConfirmSkipModal({
                               message: STEP_EMPTY_MESSAGES[i],
                               onConfirm: () => { setConfirmSkipModal(null); setCurrentStep(idx); }
@@ -1565,7 +1574,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           )}
 
           {/* STEP 4: PROFESSIONAL SUMMARY */}
-          {currentStep === 3 && (
+          {currentStep === 5 && (
              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
                 <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
@@ -1640,7 +1649,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           )}
 
           {/* STEP 5: CERTIFICATES */}
-          {currentStep === 4 && (
+          {currentStep === 3 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
                 <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
@@ -1955,7 +1964,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           )}
 
           {/* STEP 6: SKILLS */}
-          {currentStep === 5 && (
+          {currentStep === 4 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
                 <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
