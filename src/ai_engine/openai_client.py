@@ -291,9 +291,10 @@ def generate_skills_suggestions(resume_data: dict) -> list[str]:
     system_prompt = (
         "You are an expert resume writer and ATS optimization AI. "
         "The user will provide their resume details (experience, education, certificates, about) in JSON format. "
-        "Your task is to analyze their background and extract/generate a list of exactly 8-12 highly relevant skills "
-        "(both hard/technical and soft skills) that would optimize their resume for ATS matching. "
-        "Output the result strictly as a JSON object with a single key 'skills' mapping to a list of strings."
+        "Your task is to analyze their background and extract/generate a list of exactly 8 highly relevant skills "
+        "that would optimize their resume for ATS matching. "
+        "CRITICAL RULE: You MUST provide exactly 4 hard/technical skills and exactly 4 soft skills (a 1:1 ratio). "
+        "Output the result strictly as a JSON object with a single key 'skills' mapping to a flat list of 8 strings."
     )
 
     try:
