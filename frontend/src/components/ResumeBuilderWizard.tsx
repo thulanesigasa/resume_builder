@@ -790,19 +790,25 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   };
 
-  const handleDeleteQueueCert = async (fId: string, dbId: string) => {
+  const handleDeleteQueueCert = async (fId: string, dbId?: string) => {
     if (!confirm("Are you sure you want to delete this certificate? This will remove it from Credentials & Certificates.")) return;
     try {
-      const { error } = await supabase.from("certificates").delete().eq("id", dbId);
-      if (error) throw error;
+      if (dbId) {
+        const { data: deletedRows, error } = await supabase.from("certificates").delete().eq("id", dbId).select();
+        if (error) throw error;
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) {
-        await supabase.storage.from("resumes").remove([`${session.user.id}/certificates/${dbId}.pdf`]).catch(() => {});
-        
-        // Refresh certificates list
-        const { data } = await supabase.from("certificates").select("*").eq("user_id", session.user.id);
-        if (data) setCertificates(data);
+        if (!deletedRows || deletedRows.length === 0) {
+          throw new Error("No record deleted. You may not have permission or the record was already deleted.");
+        }
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          await supabase.storage.from("resumes").remove([`${session.user.id}/certificates/${dbId}.pdf`]).catch(() => {});
+          
+          // Refresh certificates list
+          const { data } = await supabase.from("certificates").select("*").eq("user_id", session.user.id);
+          if (data) setCertificates(data);
+        }
       }
 
       // Remove from queue
@@ -845,8 +851,12 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     if (!confirm("Are you sure you want to delete this certificate? This will remove it from Credentials & Certificates.")) return;
 
     try {
-      const { error } = await supabase.from("certificates").delete().eq("id", certId);
+      const { data: deletedRows, error } = await supabase.from("certificates").delete().eq("id", certId).select();
       if (error) throw error;
+
+      if (!deletedRows || deletedRows.length === 0) {
+        throw new Error("No record deleted. You may not have permission or the record was already deleted.");
+      }
 
       await supabase.storage.from("resumes").remove([`${userId}/certificates/${certId}.pdf`]).catch(() => {});
 
@@ -1641,7 +1651,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                                   </span>
                                   <button
                                     type="button"
-                                    onClick={() => f.dbRecordId && handleDeleteQueueCert(f.id, f.dbRecordId)}
+                                    onClick={() => handleDeleteQueueCert(f.id, f.dbRecordId)}
                                     className="text-brand-navy/40 hover:text-red-500 transition-colors p-1"
                                     title="Delete certificate"
                                   >
@@ -1657,6 +1667,14 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                                     className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-600 font-bold text-[10px] rounded-full flex items-center gap-1 transition-colors"
                                   >
                                     <RefreshCw className="w-3 h-3" /> Retry
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteQueueCert(f.id, f.dbRecordId)}
+                                    className="text-brand-navy/40 hover:text-red-500 transition-colors p-1"
+                                    title="Remove from queue"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
                               )}
