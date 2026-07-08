@@ -1193,50 +1193,62 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       {/* LEFT COLUMN: WIZARD */}
       <div className="w-full lg:w-[50%] xl:w-[50%] flex flex-col h-full bg-white/30 backdrop-blur-xl overflow-y-auto relative">
         
-        {/* Progress Bar */}
-        <div className="w-full border-b border-brand-navy/10 bg-white/40 backdrop-blur-xl px-8 py-4 sticky top-0 z-20">
-          <div className="max-w-4xl mx-auto flex items-center justify-between relative">
-            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-brand-navy/10 z-0"></div>
-            <div 
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 bg-brand-indigo z-0 transition-all duration-300"
-              style={{ width: `${(currentStep / (STEPS.length - 1)) * 100}%` }}
-            ></div>
-            
-            {STEPS.map((step, idx) => {
-              const isActive = idx === currentStep;
-              const isCompleted = idx < currentStep;
-              return (
-                <div key={step} className="relative z-10 flex flex-col items-center gap-2 bg-transparent px-2 cursor-pointer" onClick={() => {
-                  if (idx <= currentStep) {
-                    setCurrentStep(idx);
-                  } else {
-                    // Validate + soft-confirm each intermediate step
-                    for (let i = currentStep; i < idx; i++) {
-                      if (!validateStep(i)) {
-                        setCurrentStep(i);
-                        return;
-                      }
-                      if ([1, 2, 5].includes(i) && !stepHasData(i)) {
-                        setConfirmSkipModal({
-                          message: STEP_EMPTY_MESSAGES[i],
-                          onConfirm: () => {
-                            setConfirmSkipModal(null);
-                            setCurrentStep(idx);
+        {/* Progress Bar — auto-centering sliding steps */}
+        <div className="w-full border-b border-brand-navy/10 bg-white/40 backdrop-blur-xl sticky top-0 z-20 overflow-hidden">
+          <div className="relative w-full py-4 overflow-hidden">
+
+            {/* Connector line — fixed behind the dots */}
+            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-brand-navy/10 z-0 pointer-events-none" />
+
+            {/* Sliding track — shifts so active step is always centered */}
+            <div
+              className="flex items-start justify-start transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              style={{
+                // Each step item is 96px wide. Center active step in the viewport.
+                transform: `translateX(calc(50% - ${currentStep * 96 + 48}px))`,
+                width: `${STEPS.length * 96}px`,
+              }}
+            >
+              {STEPS.map((step, idx) => {
+                const isActive = idx === currentStep;
+                const isCompleted = idx < currentStep;
+                const dist = Math.abs(idx - currentStep);
+                return (
+                  <div
+                    key={step}
+                    className="flex flex-col items-center gap-2 cursor-pointer px-2 transition-all duration-500"
+                    style={{
+                      width: '96px',
+                      opacity: dist === 0 ? 1 : dist === 1 ? 0.55 : 0.2,
+                      transform: `scale(${dist === 0 ? 1 : dist === 1 ? 0.88 : 0.75})`,
+                    }}
+                    onClick={() => {
+                      if (idx <= currentStep) {
+                        setCurrentStep(idx);
+                      } else {
+                        for (let i = currentStep; i < idx; i++) {
+                          if (!validateStep(i)) { setCurrentStep(i); return; }
+                          if ([1, 2, 5].includes(i) && !stepHasData(i)) {
+                            setConfirmSkipModal({
+                              message: STEP_EMPTY_MESSAGES[i],
+                              onConfirm: () => { setConfirmSkipModal(null); setCurrentStep(idx); }
+                            });
+                            return;
                           }
-                        });
-                        return;
+                        }
+                        setCurrentStep(idx);
                       }
-                    }
-                    setCurrentStep(idx);
-                  }
-                }}>
-                  <div className={`w-4 h-4 rounded-full border-2 ${isActive || isCompleted ? 'border-brand-indigo bg-brand-indigo shadow-[0_0_10px_rgba(79,70,229,0.5)]' : 'border-brand-navy/20 bg-white'}`}></div>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${isActive || isCompleted ? 'text-brand-indigo' : 'text-brand-navy/40'}`}>
-                    {step}
-                  </span>
-                </div>
-              );
-            })}
+                    }}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 transition-all duration-300 ${isActive || isCompleted ? 'border-brand-indigo bg-brand-indigo shadow-[0_0_10px_rgba(79,70,229,0.5)]' : 'border-brand-navy/20 bg-white'}`} />
+                    <span className={`text-[10px] font-bold uppercase tracking-wider text-center whitespace-nowrap transition-colors duration-300 ${isActive ? 'text-brand-indigo' : isCompleted ? 'text-brand-indigo/60' : 'text-brand-navy/30'}`}>
+                      {step}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
           </div>
         </div>
 
