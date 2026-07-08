@@ -523,9 +523,9 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       }
 
       if (isShort) {
-        context += `\nINSTRUCTIONS: Write a short introduction about the user. It must be exactly 2 sentences (or roughly 2 lines) in length. Make it engaging, professional, and personal. Do not use quotes, greetings, signatures, or markdown.`;
+        context += `\nINSTRUCTIONS: Write a professional summary about the user. CRITICAL RULE: It must consist of exactly 3 full sentences and 2 short sentences. Make it engaging, professional, and personal. Do not use quotes, greetings, signatures, or markdown.`;
       } else {
-        context += `\nINSTRUCTIONS: You must write a high-quality professional summary of exactly 3 sentences (or roughly 3 lines). Make it sound extremely professional, action-oriented, and highlight the user's key experiences and skills. Do not add any greeting, signature, or markdown.`;
+        context += `\nINSTRUCTIONS: You must write a high-quality professional summary. CRITICAL RULE: It must consist of exactly 3 full sentences and 2 short sentences. Make it sound extremely professional, action-oriented, and highlight the user's key experiences and skills. Do not add any greeting, signature, or markdown.`;
       }
 
       const contextHint = isShort ? "about" : "summary";
@@ -1173,10 +1173,43 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       // Clear draft on successful completion
       localStorage.removeItem("resume_wizard_draft");
       
-      // Save compiled text in local state
+      // 7. Save compiled text into local state (profile tab)
       onSave(compiled.trim());
 
-      // Trigger completion callback
+      // 8. Persist Master CV Text Data → profiles.raw_info + Master_CV.txt in storage
+      try {
+        // a) Save to profiles.raw_info column
+        await supabase.from("profiles").upsert({
+          id: userId,
+          raw_info: compiled.trim(),
+          updated_at: new Date().toISOString(),
+        });
+
+        // b) Upload Master_CV.txt to storage
+        const txtBlob = new Blob([compiled.trim()], { type: "text/plain" });
+        const txtFile = new File([txtBlob], "Master_CV.txt", { type: "text/plain" });
+        await supabase.storage
+          .from("resumes")
+          .upload(`${userId}/master_cv/Master_CV.txt`, txtFile, { upsert: true });
+      } catch (saveErr) {
+        console.error("Failed to save Master CV text:", saveErr);
+      }
+
+      // 9. Override Active Master CV PDF in storage with the just-compiled PDF
+      try {
+        const pdfResp = await fetch(res.download_url);
+        if (pdfResp.ok) {
+          const pdfBlob = await pdfResp.blob();
+          const pdfFile = new File([pdfBlob], "Master_CV.pdf", { type: "application/pdf" });
+          await supabase.storage
+            .from("resumes")
+            .upload(`${userId}/master_cv/Master_CV.pdf`, pdfFile, { upsert: true });
+        }
+      } catch (pdfErr) {
+        console.error("Failed to override Master CV PDF:", pdfErr);
+      }
+
+      // Trigger completion callback (navigates to archive tab + reloads data)
       if (onComplete) {
         onComplete();
       }
@@ -1541,7 +1574,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                   <span className="text-brand-indigo">Write down</span> your professional summary
                 </h2>
                 <p className="text-brand-navy/70 font-medium">
-                  Provide a brief summary, or use AI to generate a concise 2-sentence intro or a full 3-sentence professional summary from your details.
+                  Provide a brief summary, or use AI to generate a highly professional summary consisting of 3 full sentences and 2 short sentences.
                 </p>
               </div>
 
@@ -1575,18 +1608,11 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                       Generate Options
                     </button>
                     <button 
-                      onClick={() => handleImproveSummary(true)}
-                      disabled={improvingSummary}
-                      className="flex-1 md:flex-none bg-brand-indigo/10 hover:bg-brand-indigo/20 text-brand-indigo px-4 py-2.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      Perfect with AI (Short 2-Sentences)
-                    </button>
-                    <button 
                       onClick={() => handleImproveSummary(false)}
                       disabled={improvingSummary}
                       className="flex-1 md:flex-none bg-brand-indigo hover:bg-brand-indigo/90 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                     >
-                      Perfect with AI (Full 3-Sentences)
+                      Perfect with AI (3 Full, 2 Short Sentences)
                     </button>
                   </div>
                 </div>

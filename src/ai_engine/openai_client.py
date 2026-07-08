@@ -256,7 +256,8 @@ def generate_summary_options(resume_data: dict) -> list[str]:
     system_prompt = (
         "You are an expert resume writer and ATS optimization AI. "
         "The user will provide their resume data (skills, education, experience) in JSON format. "
-        "Your task is to write exactly 3 distinct, highly professional, and impactful resume summary options (a few sentences each). "
+        "Your task is to write exactly 3 distinct, highly professional, and impactful resume summary options. "
+        "CRITICAL RULE: Each summary option MUST consist of exactly 3 full sentences and 2 short sentences. "
         "Option 1: Concise and impactful. "
         "Option 2: Detailed and achievements-focused. "
         "Option 3: Modern and forward-looking. "
