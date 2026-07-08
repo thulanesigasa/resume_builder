@@ -434,8 +434,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             github: ""
           },
           professional_summary: summary || "",
-          skills: skills.filter(s => s.name).map(s => s.name),
-          technical_skills: skills.filter(s => s.name).map(s => s.name),
+          skills: skills.filter(s => s.name).map(s => `${s.name} (${s.level})`),
+          technical_skills: skills.filter(s => s.name).map(s => `${s.name} (${s.level})`),
           experience: experiences.filter(e => e.title || e.employer).map(e => ({
             company: e.employer || "Employer",
             title: e.title || "Job Title",
@@ -1051,8 +1051,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           github: ""
         },
         professional_summary: summary || "",
-        skills: skills.filter(s => s.name).map(s => s.name),
-        technical_skills: skills.filter(s => s.name).map(s => s.name),
+        skills: skills.filter(s => s.name).map(s => `${s.name} (${s.level})`),
+        technical_skills: skills.filter(s => s.name).map(s => `${s.name} (${s.level})`),
         experience: experiences.filter(e => e.title || e.employer).map(e => ({
           company: e.employer || "Employer",
           title: e.title || "Job Title",
