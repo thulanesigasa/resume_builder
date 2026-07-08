@@ -1194,17 +1194,19 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       <div className="w-full lg:w-[50%] xl:w-[50%] flex flex-col h-full bg-white/30 backdrop-blur-xl overflow-y-auto relative">
         
         {/* Progress Bar — auto-centering sliding steps */}
-        <div className="w-full border-b border-brand-navy/10 bg-white/40 backdrop-blur-xl sticky top-0 z-20 overflow-hidden">
-          <div className="relative w-full py-4 overflow-hidden">
+        <div className="w-full border-b border-brand-navy/10 bg-white/40 backdrop-blur-xl sticky top-0 z-20">
+          <div className="relative w-full overflow-hidden" style={{ height: '72px' }}>
 
             {/* Connector line — fixed behind the dots */}
-            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-brand-navy/10 z-0 pointer-events-none" />
+            <div className="absolute left-0 right-0 h-0.5 bg-brand-navy/10 z-0 pointer-events-none" style={{ top: '20px' }} />
 
             {/* Sliding track — shifts so active step is always centered */}
             <div
-              className="flex items-start justify-start transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              className="absolute flex items-start transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
               style={{
-                // Each step item is 96px wide. Center active step in the viewport.
+                top: 0,
+                left: 0,
+                height: '72px',
                 transform: `translateX(calc(50% - ${currentStep * 96 + 48}px))`,
                 width: `${STEPS.length * 96}px`,
               }}
@@ -1216,11 +1218,12 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                 return (
                   <div
                     key={step}
-                    className="flex flex-col items-center gap-2 cursor-pointer px-2 transition-all duration-500"
+                    className="flex flex-col items-center gap-2 cursor-pointer px-2 pt-3 transition-all duration-500"
                     style={{
                       width: '96px',
                       opacity: dist === 0 ? 1 : dist === 1 ? 0.55 : 0.2,
                       transform: `scale(${dist === 0 ? 1 : dist === 1 ? 0.88 : 0.75})`,
+                      transformOrigin: 'top center',
                     }}
                     onClick={() => {
                       if (idx <= currentStep) {
@@ -1240,8 +1243,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                       }
                     }}
                   >
-                    <div className={`w-4 h-4 rounded-full border-2 transition-all duration-300 ${isActive || isCompleted ? 'border-brand-indigo bg-brand-indigo shadow-[0_0_10px_rgba(79,70,229,0.5)]' : 'border-brand-navy/20 bg-white'}`} />
-                    <span className={`text-[10px] font-bold uppercase tracking-wider text-center whitespace-nowrap transition-colors duration-300 ${isActive ? 'text-brand-indigo' : isCompleted ? 'text-brand-indigo/60' : 'text-brand-navy/30'}`}>
+                    <div className={`w-4 h-4 rounded-full border-2 transition-all duration-300 flex-shrink-0 ${isActive || isCompleted ? 'border-brand-indigo bg-brand-indigo shadow-[0_0_10px_rgba(79,70,229,0.5)]' : 'border-brand-navy/20 bg-white'}`} />
+                    <span className={`text-[10px] font-bold uppercase tracking-wider text-center whitespace-nowrap transition-colors duration-300 leading-tight ${isActive ? 'text-brand-indigo' : isCompleted ? 'text-brand-indigo/60' : 'text-brand-navy/30'}`}>
                       {step}
                     </span>
                   </div>
