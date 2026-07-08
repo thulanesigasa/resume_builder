@@ -1712,9 +1712,9 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => handleDeleteQueueCert(f.id, f.dbRecordId)}
+                                    onClick={() => setUploadingFiles(prev => prev.filter(item => item.id !== f.id))}
                                     className="text-brand-navy/40 hover:text-red-500 transition-colors p-1"
-                                    title="Remove from queue"
+                                    title="Dismiss"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
