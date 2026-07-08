@@ -465,7 +465,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       if (isShort) {
         context += `\nINSTRUCTIONS: Write a short introduction about the user. It must be exactly 2 sentences (or roughly 2 lines) in length. Make it engaging, professional, and personal. Do not use quotes, greetings, signatures, or markdown.`;
       } else {
-        context += `\nINSTRUCTIONS: You must write a high-quality professional summary of exactly 4 sentences (or roughly 3 lines). Make it sound extremely professional, action-oriented, and highlight the user's key experiences and skills. Do not add any greeting, signature, or markdown.`;
+        context += `\nINSTRUCTIONS: You must write a high-quality professional summary of exactly 3 sentences (or roughly 3 lines). Make it sound extremely professional, action-oriented, and highlight the user's key experiences and skills. Do not add any greeting, signature, or markdown.`;
       }
 
       const contextHint = isShort ? "about" : "summary";
@@ -1219,7 +1219,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                   <span className="text-brand-indigo">Write down</span> your professional summary
                 </h2>
                 <p className="text-brand-navy/70 font-medium">
-                  Provide a brief summary, or use AI to generate a concise 2-sentence intro or a full 4-sentence professional summary from your details.
+                  Provide a brief summary, or use AI to generate a concise 2-sentence intro or a full 3-sentence professional summary from your details.
                 </p>
               </div>
 
@@ -1264,7 +1264,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                       disabled={improvingSummary}
                       className="flex-1 md:flex-none bg-brand-indigo hover:bg-brand-indigo/90 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                     >
-                      Perfect with AI (Full 4-Sentences)
+                      Perfect with AI (Full 3-Sentences)
                     </button>
                   </div>
                 </div>

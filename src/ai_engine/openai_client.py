@@ -215,7 +215,7 @@ def improve_text(text: str, context: str = "") -> str:
             "You are an expert resume writer and ATS optimization AI. "
             "Your task is to rewrite the user's professional summary to make it sound professional, action-oriented, and impactful. "
             "Keep it concise. Do not use filler words. "
-            "CRITICAL: The output must be exactly 4 sentences (or roughly 3 lines) in length. "
+            "CRITICAL: The output must be exactly 3 sentences (or roughly 3 lines) in length. "
             "Output ONLY the improved text. No quotes, no markdown, no conversational filler."
         )
     else:
