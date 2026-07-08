@@ -268,6 +268,14 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
 
+  // --- Custom Confirm Modal State ---
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmAction, setDeleteConfirmAction] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void> | void;
+  } | null>(null);
+
   const formatBytes = (bytes: number, decimals = 1) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -790,32 +798,40 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   };
 
-  const handleDeleteQueueCert = async (fId: string, dbId?: string) => {
-    if (!confirm("Are you sure you want to delete this certificate? This will remove it from Credentials & Certificates.")) return;
-    try {
-      if (dbId) {
-        const { data: deletedRows, error } = await supabase.from("certificates").delete().eq("id", dbId).select();
-        if (error) throw error;
+  const handleDeleteQueueCert = (fId: string, dbId?: string) => {
+    setDeleteConfirmAction({
+      title: "Delete Certificate",
+      message: "Are you sure you want to delete this certificate? This will permanently remove it from your Credentials & Certificates.",
+      onConfirm: async () => {
+        try {
+          if (dbId) {
+            const { data: deletedRows, error } = await supabase.from("certificates").delete().eq("id", dbId).select();
+            if (error) throw error;
 
-        if (!deletedRows || deletedRows.length === 0) {
-          throw new Error("No record deleted. You may not have permission or the record was already deleted.");
-        }
+            if (!deletedRows || deletedRows.length === 0) {
+              throw new Error("No record deleted. You may not have permission or the record was already deleted.");
+            }
 
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          await supabase.storage.from("resumes").remove([`${session.user.id}/certificates/${dbId}.pdf`]).catch(() => {});
-          
-          // Refresh certificates list
-          const { data } = await supabase.from("certificates").select("*").eq("user_id", session.user.id);
-          if (data) setCertificates(data);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user?.id) {
+              await supabase.storage.from("resumes").remove([`${session.user.id}/certificates/${dbId}.pdf`]).catch(() => {});
+              
+              // Refresh certificates list
+              const { data } = await supabase.from("certificates").select("*").eq("user_id", session.user.id);
+              if (data) setCertificates(data);
+            }
+          }
+
+          // Remove from queue
+          setUploadingFiles(prev => prev.filter(f => f.id !== fId));
+        } catch (e: any) {
+          alert("Failed to delete certificate: " + e.message);
+        } finally {
+          setDeleteConfirmOpen(false);
         }
       }
-
-      // Remove from queue
-      setUploadingFiles(prev => prev.filter(f => f.id !== fId));
-    } catch (e: any) {
-      alert("Failed to delete certificate: " + e.message);
-    }
+    });
+    setDeleteConfirmOpen(true);
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -848,22 +864,29 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     const userId = session?.user?.id;
     if (!userId) return;
 
-    if (!confirm("Are you sure you want to delete this certificate? This will remove it from Credentials & Certificates.")) return;
+    setDeleteConfirmAction({
+      title: "Delete Certificate",
+      message: "Are you sure you want to delete this certificate? This will permanently remove it from your Credentials & Certificates.",
+      onConfirm: async () => {
+        try {
+          const { data: deletedRows, error } = await supabase.from("certificates").delete().eq("id", certId).select();
+          if (error) throw error;
 
-    try {
-      const { data: deletedRows, error } = await supabase.from("certificates").delete().eq("id", certId).select();
-      if (error) throw error;
+          if (!deletedRows || deletedRows.length === 0) {
+            throw new Error("No record deleted. You may not have permission or the record was already deleted.");
+          }
 
-      if (!deletedRows || deletedRows.length === 0) {
-        throw new Error("No record deleted. You may not have permission or the record was already deleted.");
+          await supabase.storage.from("resumes").remove([`${userId}/certificates/${certId}.pdf`]).catch(() => {});
+
+          setCertificates(prev => prev.filter(c => c.id !== certId));
+        } catch (e: any) {
+          alert("Failed to delete certificate: " + e.message);
+        } finally {
+          setDeleteConfirmOpen(false);
+        }
       }
-
-      await supabase.storage.from("resumes").remove([`${userId}/certificates/${certId}.pdf`]).catch(() => {});
-
-      setCertificates(prev => prev.filter(c => c.id !== certId));
-    } catch (e: any) {
-      alert("Failed to delete certificate: " + e.message);
-    }
+    });
+    setDeleteConfirmOpen(true);
   };
 
   const handleGenerateSkills = async () => {
@@ -2161,6 +2184,33 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                 className="flex-1 py-2.5 rounded-xl bg-brand-indigo text-white font-bold text-sm hover:bg-brand-indigo/90 transition-all shadow-md shadow-brand-indigo/20"
               >
                 Continue Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Delete Confirmation Modal */}
+      {deleteConfirmOpen && deleteConfirmAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl border border-brand-navy/10 max-w-sm w-full p-8 animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-full bg-red-50 border-2 border-red-200 flex items-center justify-center mb-4 mx-auto">
+              <AlertCircle className="w-6 h-6 text-red-500" />
+            </div>
+            <h3 className="text-lg font-bold text-brand-deep text-center mb-2">{deleteConfirmAction.title}</h3>
+            <p className="text-sm text-brand-navy/70 text-center mb-6 leading-relaxed">{deleteConfirmAction.message}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="flex-1 py-2.5 rounded-xl border-2 border-brand-navy/20 text-brand-navy/70 font-semibold text-sm hover:border-brand-navy/40 hover:text-brand-deep transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteConfirmAction.onConfirm()}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-all shadow-md shadow-red-500/20"
+              >
+                Delete
               </button>
             </div>
           </div>
