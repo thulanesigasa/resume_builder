@@ -581,6 +581,16 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       return;
     }
 
+    // Check pre-upload duplicate name
+    const isDuplicate = certificates.some(cert => 
+      cert.name.toLowerCase() === file.name.toLowerCase() ||
+      cert.name.toLowerCase() === file.name.replace(/\.[^/.]+$/, "").toLowerCase()
+    );
+    if (isDuplicate) {
+      setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: "This file has already been uploaded." } : f));
+      return;
+    }
+
     setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "uploading", progress: 0, speed: "", eta: "", errorMsg: undefined } : f));
 
     const formData = new FormData();
@@ -642,6 +652,14 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             throw new Error("Could not extract any text.");
           }
 
+          // Check text duplicate to avoid twin saving
+          const isTextDuplicate = certificates.some(cert => 
+            cert.extracted_text.trim().toLowerCase() === extractedText.trim().toLowerCase()
+          );
+          if (isTextDuplicate) {
+            throw new Error("This certificate is already saved.");
+          }
+
           const nameRes = await api.autoNameDocument(extractedText);
           const aiName = nameRes.name || "Untitled Document";
 
@@ -665,6 +683,10 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
 
           setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "success", progress: 100 } : f));
           
+          // Auto-fill manual form inputs
+          setNewCertName(aiName);
+          setManualCertText(extractedText);
+
           // Refresh certificates list
           const { data } = await supabase
             .from("certificates")
@@ -701,7 +723,21 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   };
 
   const addFilesToUploadQueue = (files: File[]) => {
-    const newItems = files.map(file => ({
+    const validFiles = files.filter(file => {
+      const isDuplicate = certificates.some(cert => 
+        cert.name.toLowerCase() === file.name.toLowerCase() ||
+        cert.name.toLowerCase() === file.name.replace(/\.[^/.]+$/, "").toLowerCase()
+      );
+      if (isDuplicate) {
+        alert(`The certificate "${file.name}" has already been uploaded.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    const newItems = validFiles.map(file => ({
       id: Math.random().toString(36).substr(2, 9),
       file,
       name: file.name,
