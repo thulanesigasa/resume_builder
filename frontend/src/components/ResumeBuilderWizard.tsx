@@ -220,6 +220,10 @@ interface UploadingFile {
   eta: string;
   status: "idle" | "uploading" | "success" | "error";
   errorMsg?: string;
+  dbRecordId?: string;
+  aiName?: string;
+  aiDescription?: string;
+  isEditing?: boolean;
 }
 
 interface ResumeBuilderWizardProps {
@@ -681,11 +685,15 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
               .upload(`${userId}/certificates/${certRecord.id}.pdf`, file, { upsert: true });
           }
 
-          setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "success", progress: 100 } : f));
-          
-          // Auto-fill manual form inputs
-          setNewCertName(aiName);
-          setManualCertText(extractedText);
+          setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { 
+            ...f, 
+            status: "success", 
+            progress: 100,
+            dbRecordId: certRecord?.id,
+            aiName: aiName,
+            aiDescription: extractedText,
+            isEditing: false
+          } : f));
 
           // Refresh certificates list
           const { data } = await supabase
@@ -753,6 +761,55 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     newItems.forEach(item => {
       uploadSingleFile(item.id, item.file);
     });
+  };
+
+  const handleUpdateQueueCert = async (fId: string, dbId: string, newName: string, newDesc: string) => {
+    if (!newName.trim() || !newDesc.trim()) return;
+    try {
+      const { error } = await supabase
+        .from("certificates")
+        .update({
+          name: newName,
+          extracted_text: newDesc
+        })
+        .eq("id", dbId);
+
+      if (error) throw error;
+
+      // Update uploadingFiles state
+      setUploadingFiles(prev => prev.map(f => f.id === fId ? { ...f, aiName: newName, aiDescription: newDesc, isEditing: false } : f));
+
+      // Refresh certificates list
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        const { data } = await supabase.from("certificates").select("*").eq("user_id", session.user.id);
+        if (data) setCertificates(data);
+      }
+    } catch (err: any) {
+      alert("Failed to update certificate: " + err.message);
+    }
+  };
+
+  const handleDeleteQueueCert = async (fId: string, dbId: string) => {
+    if (!confirm("Are you sure you want to delete this certificate? This will remove it from Credentials & Certificates.")) return;
+    try {
+      const { error } = await supabase.from("certificates").delete().eq("id", dbId);
+      if (error) throw error;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        await supabase.storage.from("resumes").remove([`${session.user.id}/certificates/${dbId}.pdf`]).catch(() => {});
+        
+        // Refresh certificates list
+        const { data } = await supabase.from("certificates").select("*").eq("user_id", session.user.id);
+        if (data) setCertificates(data);
+      }
+
+      // Remove from queue
+      setUploadingFiles(prev => prev.filter(f => f.id !== fId));
+    } catch (e: any) {
+      alert("Failed to delete certificate: " + e.message);
+    }
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -1550,7 +1607,9 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                                 <FileText className="w-5 h-5" />
                               </div>
                               <div className="truncate flex-1 min-w-0">
-                                <h5 className="text-xs font-bold text-brand-deep truncate mb-0.5">{f.name}</h5>
+                                <h5 className="text-xs font-bold text-brand-deep truncate mb-0.5">
+                                  {f.status === 'success' && f.aiName ? f.aiName : f.name}
+                                </h5>
                                 <p className="text-[10px] text-brand-navy/50 font-semibold uppercase flex items-center gap-2">
                                   <span>PDF</span>
                                   <span>•</span>
@@ -1567,9 +1626,28 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                                 </span>
                               )}
                               {f.status === "success" && (
-                                <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                                  <Check className="w-3 h-3" /> Done
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, isEditing: !item.isEditing } : item));
+                                    }}
+                                    className="text-[10px] font-bold text-brand-indigo hover:underline px-2 py-1"
+                                  >
+                                    {f.isEditing ? "Close" : "Edit Details"}
+                                  </button>
+                                  <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                    <Check className="w-3 h-3" /> Done
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => f.dbRecordId && handleDeleteQueueCert(f.id, f.dbRecordId)}
+                                    className="text-brand-navy/40 hover:text-red-500 transition-colors p-1"
+                                    title="Delete certificate"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
                               )}
                               {f.status === "error" && (
                                 <div className="flex items-center gap-2">
@@ -1597,6 +1675,53 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                               <div className="flex justify-between text-[9px] font-bold text-brand-navy/60">
                                 <span>{f.speed}</span>
                                 <span>{f.eta}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Inline Edit Panel */}
+                          {f.status === "success" && f.isEditing && (
+                            <div className="space-y-3 pt-2 border-t border-brand-navy/5 animate-in fade-in">
+                              <div className="relative">
+                                <label className="absolute -top-2 left-2.5 bg-white px-1 text-[9px] font-bold text-brand-navy/50 uppercase">Certificate Name</label>
+                                <input
+                                  type="text"
+                                  className="w-full px-3 py-2 border border-brand-navy/10 rounded-lg text-xs font-medium text-brand-deep focus:outline-none focus:border-brand-indigo"
+                                  value={f.aiName || ""}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, aiName: val } : item));
+                                  }}
+                                />
+                              </div>
+                              <div className="relative">
+                                <label className="absolute -top-2 left-2.5 bg-white px-1 text-[9px] font-bold text-brand-navy/50 uppercase">Credential Description</label>
+                                <textarea
+                                  className="w-full h-20 px-3 py-2 border border-brand-navy/10 rounded-lg text-[11px] font-medium text-brand-deep focus:outline-none focus:border-brand-indigo resize-none"
+                                  value={f.aiDescription || ""}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, aiDescription: val } : item));
+                                  }}
+                                />
+                              </div>
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, isEditing: false } : item));
+                                  }}
+                                  className="px-3 py-1.5 text-xs text-brand-navy/60 hover:text-brand-deep font-bold"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => f.dbRecordId && handleUpdateQueueCert(f.id, f.dbRecordId, f.aiName || "", f.aiDescription || "")}
+                                  className="px-4 py-1.5 bg-brand-indigo text-white font-bold text-[10px] rounded-lg transition-colors hover:bg-brand-indigo/90"
+                                >
+                                  Save Changes
+                                </button>
                               </div>
                             </div>
                           )}
