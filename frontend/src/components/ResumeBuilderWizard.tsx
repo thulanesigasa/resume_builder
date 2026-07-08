@@ -257,12 +257,15 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
 
   // --- Certificates State ---
   const [certificates, setCertificates] = useState<any[]>([]);
+  // Ref that always mirrors the latest certificates — safe to read inside async upload closures
+  const certificatesRef = useRef<any[]>([]);
   const [uploadingCert, setUploadingCert] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
   const [newCertName, setNewCertName] = useState("");
   const [manualCertText, setManualCertText] = useState("");
   const certFileInputRef = useRef<HTMLInputElement>(null);
   const [certUrls, setCertUrls] = useState<Record<string, string>>({});
+  const [manualSaveSuccess, setManualSaveSuccess] = useState(false);
 
   // --- New Advanced Upload States ---
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
@@ -275,6 +278,11 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     message: string;
     onConfirm: () => Promise<void> | void;
   } | null>(null);
+
+  // Keep ref always in sync with state so async closures can read fresh data
+  useEffect(() => {
+    certificatesRef.current = certificates;
+  }, [certificates]);
 
   const formatBytes = (bytes: number, decimals = 1) => {
     if (bytes === 0) return '0 Bytes';
@@ -576,7 +584,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         }
         setCertUrls(urls);
       }
-      alert("Manual certificate saved successfully!");
+      setManualSaveSuccess(true);
+      setTimeout(() => setManualSaveSuccess(false), 4000);
     } catch (err: any) {
       alert("Failed to save certificate: " + err.message);
     } finally {
@@ -593,13 +602,15 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       return;
     }
 
-    // Check pre-upload duplicate name
-    const isDuplicate = certificates.some(cert => 
-      cert.name.toLowerCase() === file.name.toLowerCase() ||
-      cert.name.toLowerCase() === file.name.replace(/\.[^/.]+$/, "").toLowerCase()
-    );
+    // Check pre-upload duplicate name using ref (always fresh, no stale closure)
+    const freshCerts = certificatesRef.current;
+    const fileBaseName = file.name.replace(/\.[^/.]+$/, "").toLowerCase();
+    const isDuplicate = freshCerts.some(cert => {
+      const certName = (cert.name || "").toLowerCase();
+      return certName === file.name.toLowerCase() || certName === fileBaseName;
+    });
     if (isDuplicate) {
-      setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: "This file has already been uploaded." } : f));
+      setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: "A certificate with this name already exists in your saved credentials." } : f));
       return;
     }
 
@@ -664,12 +675,14 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             throw new Error("Could not extract any text.");
           }
 
-          // Check text duplicate to avoid twin saving
-          const isTextDuplicate = certificates.some(cert => 
-            cert.extracted_text.trim().toLowerCase() === extractedText.trim().toLowerCase()
+          // Check text duplicate using ref (always fresh, no stale closure)
+          const freshCertsNow = certificatesRef.current;
+          const normText = extractedText.trim().toLowerCase();
+          const isTextDuplicate = freshCertsNow.some(cert => 
+            (cert.extracted_text || "").trim().toLowerCase() === normText
           );
           if (isTextDuplicate) {
-            throw new Error("This certificate is already saved.");
+            throw new Error("This certificate is already saved in your Credentials & Certificates.");
           }
 
           const nameRes = await api.autoNameDocument(extractedText);
@@ -739,13 +752,19 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   };
 
   const addFilesToUploadQueue = (files: File[]) => {
+    const freshCerts = certificatesRef.current;
     const validFiles = files.filter(file => {
-      const isDuplicate = certificates.some(cert => 
-        cert.name.toLowerCase() === file.name.toLowerCase() ||
-        cert.name.toLowerCase() === file.name.replace(/\.[^/.]+$/, "").toLowerCase()
-      );
+      const fileBaseName = file.name.replace(/\.[^/.]+$/, "").toLowerCase();
+      const isDuplicate = freshCerts.some(cert => {
+        const certName = (cert.name || "").toLowerCase();
+        return certName === file.name.toLowerCase() || certName === fileBaseName;
+      });
       if (isDuplicate) {
-        alert(`The certificate "${file.name}" has already been uploaded.`);
+        setDeleteConfirmAction(null); // clear any lingering confirm state
+        setUploadingFiles(prev => [
+          ...prev,
+          { id: Math.random().toString(36).substr(2, 9), file, name: file.name, size: file.size, progress: 0, speed: "", eta: "", status: "error" as const, errorMsg: `"${file.name}" already exists in your saved certificates.` }
+        ]);
         return false;
       }
       return true;
@@ -1808,16 +1827,29 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                   </div>
                 </div>
 
+                {/* Manual save success toast */}
+                {manualSaveSuccess && (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl animate-in fade-in slide-in-from-bottom-2">
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <span className="text-sm font-semibold text-green-700">Certificate saved to your Credentials & Certificates!</span>
+                  </div>
+                )}
+
                 <button
                   type="button"
                   onClick={handleSaveManualCertificate}
                   disabled={uploadingCert || (!newCertName.trim() || !manualCertText.trim())}
-                  className="w-full py-3 btn-primary text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                  className={`w-full py-3 text-sm flex items-center justify-center gap-2 disabled:opacity-50 rounded-xl font-bold transition-all duration-300 ${manualSaveSuccess ? 'bg-green-500 text-white shadow-green-500/20 shadow-lg' : 'btn-primary'}`}
                 >
                   {uploadingCert ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>{uploadProgress}</span>
+                    </>
+                  ) : manualSaveSuccess ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Saved!</span>
                     </>
                   ) : (
                     <>
