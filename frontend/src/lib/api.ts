@@ -208,6 +208,19 @@ export const api = {
     return res.json();
   },
 
+  async generateSkills(resumeData: any): Promise<{ skills: string[] }> {
+    const res = await fetch(`${API_BASE_URL}/api/generate-skills`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify({ resume_data: resumeData }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to generate skills' }));
+      throw new Error(err.detail || 'Failed to generate skills');
+    }
+    return res.json();
+  },
+
   async createPayfastCheckout(amount: number, planName: string) {
     // Get the auth token first
     const { data: { session } } = await supabase.auth.getSession();

@@ -215,7 +215,7 @@ interface ResumeBuilderWizardProps {
   onComplete?: () => void;
 }
 
-const STEPS = ["CONTACT", "EXPERIENCE", "EDUCATION", "SKILLS", "ABOUT", "PROFESSIONAL SUMMARY", "FINISH IT", "DOWNLOAD"];
+const STEPS = ["CONTACT", "EXPERIENCE", "EDUCATION", "ABOUT", "PROFESSIONAL SUMMARY", "CERTIFICATES", "SKILLS", "FINISH IT", "DOWNLOAD"];
 
 export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel, onComplete }: ResumeBuilderWizardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -238,6 +238,45 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const [summaryOptions, setSummaryOptions] = useState<string[]>([]);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
+  // --- Certificates State ---
+  const [certificates, setCertificates] = useState<any[]>([]);
+  const [uploadingCert, setUploadingCert] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
+  const [newCertName, setNewCertName] = useState("");
+  const [manualCertText, setManualCertText] = useState("");
+  const [certPdfFiles, setCertPdfFiles] = useState<File[]>([]);
+  const certFileInputRef = useRef<HTMLInputElement>(null);
+  const [certUrls, setCertUrls] = useState<Record<string, string>>({});
+
+  // --- AI Skills State ---
+  const [isGeneratingSkills, setIsGeneratingSkills] = useState(false);
+  const [skillsOptions, setSkillsOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchCerts = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+      const { data } = await supabase
+        .from("certificates")
+        .select("*")
+        .eq("user_id", session.user.id);
+      if (data) {
+        setCertificates(data);
+        const urls: Record<string, string> = {};
+        for (const cert of data) {
+          const { data: signData } = await supabase.storage
+            .from("resumes")
+            .createSignedUrl(`${session.user.id}/certificates/${cert.id}.pdf`, 7200);
+          if (signData?.signedUrl) {
+            urls[cert.id] = signData.signedUrl;
+          }
+        }
+        setCertUrls(urls);
+      }
+    };
+    fetchCerts();
+  }, []);
+
   // --- Live Preview State ---
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
@@ -249,7 +288,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const [isCompiling, setIsCompiling] = useState(false);
 
   useEffect(() => {
-    if (currentStep === 7) {
+    if (currentStep === 8) {
       setIsStep7Preparing(true);
       const timer = setTimeout(() => {
         setIsStep7Preparing(false);
@@ -452,6 +491,166 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   };
 
+  const handleUploadCertificateInWizard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    if (certPdfFiles.length === 0 && (!manualCertText.trim() || !newCertName.trim())) {
+      alert("Please upload PDF documents or manually provide a name and text description.");
+      return;
+    }
+
+    setUploadingCert(true);
+    setUploadProgress("Starting upload...");
+    try {
+      let uploadedCount = 0;
+      
+      // 1. Process files if uploaded
+      for (const file of certPdfFiles) {
+        setUploadProgress(`Parsing ${file.name}...`);
+        const parseRes = await api.parseCv(file, userId);
+        const extractedText = parseRes.extracted_text;
+        
+        if (!extractedText.trim()) {
+          alert(`Skipped ${file.name}: Could not extract any text.`);
+          continue;
+        }
+
+        const nameRes = await api.autoNameDocument(extractedText);
+        const aiName = nameRes.name || "Untitled Document";
+
+        const { data: certRecord, error: insertError } = await supabase
+          .from("certificates")
+          .insert({
+            user_id: userId,
+            name: aiName,
+            extracted_text: extractedText,
+          })
+          .select("id")
+          .single();
+
+        if (insertError) throw insertError;
+
+        if (certRecord) {
+          await supabase.storage
+            .from("resumes")
+            .upload(`${userId}/certificates/${certRecord.id}.pdf`, file, { upsert: true });
+        }
+        uploadedCount++;
+      }
+
+      // 2. Process manual entry if provided
+      if (manualCertText.trim() && newCertName.trim()) {
+        setUploadProgress("Saving manual entry...");
+        const { error: manualError } = await supabase
+          .from("certificates")
+          .insert({
+            user_id: userId,
+            name: newCertName,
+            extracted_text: manualCertText,
+          });
+        if (manualError) throw manualError;
+        uploadedCount++;
+      }
+
+      setNewCertName("");
+      setManualCertText("");
+      setCertPdfFiles([]);
+      if (certFileInputRef.current) certFileInputRef.current.value = "";
+
+      // Refresh certificates
+      setUploadProgress("Refreshing certificates...");
+      const { data } = await supabase
+        .from("certificates")
+        .select("*")
+        .eq("user_id", userId);
+      if (data) {
+        setCertificates(data);
+        const urls: Record<string, string> = {};
+        for (const cert of data) {
+          const { data: signData } = await supabase.storage
+            .from("resumes")
+            .createSignedUrl(`${userId}/certificates/${cert.id}.pdf`, 7200);
+          if (signData?.signedUrl) {
+            urls[cert.id] = signData.signedUrl;
+          }
+        }
+        setCertUrls(urls);
+      }
+      
+      if (uploadedCount > 0) {
+        alert(`${uploadedCount} Certificate(s) saved successfully!`);
+      }
+    } catch (err: any) {
+      alert("Failed to process document(s): " + err.message);
+    } finally {
+      setUploadingCert(false);
+      setUploadProgress("");
+    }
+  };
+
+  const handleDeleteCertInWizard = async (certId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    if (!confirm("Are you sure you want to delete this certificate? This will remove it from Credentials & Certificates.")) return;
+
+    try {
+      const { error } = await supabase.from("certificates").delete().eq("id", certId);
+      if (error) throw error;
+
+      await supabase.storage.from("resumes").remove([`${userId}/certificates/${certId}.pdf`]).catch(() => {});
+
+      setCertificates(prev => prev.filter(c => c.id !== certId));
+    } catch (e: any) {
+      alert("Failed to delete certificate: " + e.message);
+    }
+  };
+
+  const handleGenerateSkills = async () => {
+    setIsGeneratingSkills(true);
+    try {
+      const resumeData = {
+        experiences: experiences.filter(e => e.employer || e.title).map(e => ({
+          title: e.title,
+          employer: e.employer,
+          description: e.description
+        })),
+        educations: educations.filter(e => e.school || e.degree).map(e => ({
+          school: e.school,
+          degree: e.degree
+        })),
+        about: about || "",
+        certificates: certificates.map(c => ({
+          name: c.name,
+          extracted_text: c.extracted_text
+        }))
+      };
+      
+      const res = await api.generateSkills(resumeData);
+      setSkillsOptions(res.skills || []);
+    } catch (e: any) {
+      console.error(e);
+      alert("Failed to generate skills suggestions: " + e.message);
+    } finally {
+      setIsGeneratingSkills(false);
+    }
+  };
+
+  const handleAddSuggestedSkill = (skillName: string) => {
+    const exists = skills.some(s => s.name.toLowerCase() === skillName.toLowerCase());
+    if (exists) return;
+    
+    if (skills.length === 1 && !skills[0].name.trim()) {
+      setSkills([{ id: skills[0].id, name: skillName, level: "Expert" }]);
+    } else {
+      setSkills([...skills, { id: Date.now().toString(), name: skillName, level: "Expert" }]);
+    }
+  };
+
   // --- DND Sensors ---
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -506,20 +705,20 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const stepHasData = (stepIndex: number): boolean => {
     if (stepIndex === 1) return experiences.some(e => e.employer.trim() || e.title.trim());
     if (stepIndex === 2) return educations.some(e => e.school.trim() || e.degree.trim());
-    if (stepIndex === 3) return skills.some(s => s.name.trim());
+    if (stepIndex === 6) return skills.some(s => s.name.trim());
     return true;
   };
 
   const STEP_EMPTY_MESSAGES: Record<number, string> = {
     1: "You haven't added any work experience. Many employers require this. Are you sure you want to continue without it?",
     2: "You haven't added any education. Are you sure you want to continue without it?",
-    3: "You haven't added any skills. Skills help recruiters find you. Are you sure you want to continue without them?",
+    6: "You haven't added any skills. Skills help recruiters find you. Are you sure you want to continue without them?",
   };
 
   const handleNext = () => {
     if (!validateStep(currentStep)) return;
     // Soft-confirm if section is empty (experience, education, skills)
-    if ([1, 2, 3].includes(currentStep) && !stepHasData(currentStep)) {
+    if ([1, 2, 6].includes(currentStep) && !stepHasData(currentStep)) {
       setConfirmSkipModal({
         message: STEP_EMPTY_MESSAGES[currentStep],
         onConfirm: () => {
@@ -722,7 +921,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                         setCurrentStep(i);
                         return;
                       }
-                      if ([1, 2, 3].includes(i) && !stepHasData(i)) {
+                      if ([1, 2, 6].includes(i) && !stepHasData(i)) {
                         setConfirmSkipModal({
                           message: STEP_EMPTY_MESSAGES[i],
                           onConfirm: () => {
@@ -1009,47 +1208,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             </div>
           )}
 
-          {/* STEP 4: SKILLS */}
+          {/* STEP 4: ABOUT */}
           {currentStep === 3 && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-              <div>
-                <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
-                  <span className="text-brand-indigo">Tell us</span> about your skills
-                </h2>
-                <p className="text-brand-navy/70 font-medium">
-                  Pick 6 skills that match the job ad. Drag and drop to reorder.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndSkills}>
-                  <SortableContext items={skills} strategy={verticalListSortingStrategy}>
-                    {skills.map((skill, index) => (
-                      <SortableSkillItem 
-                        key={skill.id} 
-                        id={skill.id} 
-                        skill={skill} 
-                        index={index} 
-                        onChangeName={(val: string) => { const newArr = [...skills]; newArr[index].name = val; setSkills(newArr); }}
-                        onChangeLevel={(val: string) => { const newArr = [...skills]; newArr[index].level = val; setSkills(newArr); }}
-                        onDelete={() => setSkills(skills.filter(s => s.id !== skill.id))}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              </div>
-
-              <button 
-                onClick={() => setSkills([...skills, { id: Date.now().toString(), name: "", level: "Expert" }])}
-                className="flex items-center gap-2 text-brand-indigo font-bold text-sm hover:underline"
-              >
-                <Plus className="w-4 h-4" /> Add Skill
-              </button>
-            </div>
-          )}
-
-          {/* STEP 5: ABOUT */}
-          {currentStep === 4 && (
              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
                 <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
@@ -1073,8 +1233,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             </div>
           )}
 
-          {/* STEP 6: PROFESSIONAL SUMMARY */}
-          {currentStep === 5 && (
+          {/* STEP 5: PROFESSIONAL SUMMARY */}
+          {currentStep === 4 && (
              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
                 <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
@@ -1148,8 +1308,237 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             </div>
           )}
 
-          {/* STEP 7: FINISH IT */}
+          {/* STEP 6: CERTIFICATES */}
+          {currentStep === 5 && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+              <div>
+                <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
+                  <span className="text-brand-indigo">Upload</span> your credentials & certificates
+                </h2>
+                <p className="text-brand-navy/70 font-medium">
+                  Add certificates, transcripts, or awards. These will be saved in your profile credentials but won't print directly on this resume.
+                </p>
+              </div>
+
+              {/* Upload Form */}
+              <div className="glass-panel p-6 rounded-xl border border-brand-navy/10 space-y-6">
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-2 p-4 border border-dashed border-brand-navy/20 rounded-xl bg-brand-navy/[0.01] hover:bg-brand-navy/[0.03] transition-colors relative flex flex-col items-center justify-center text-center">
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      multiple
+                      ref={certFileInputRef}
+                      onChange={(e) => setCertPdfFiles(Array.from(e.target.files || []))}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      disabled={uploadingCert}
+                    />
+                    <Plus className="w-8 h-8 text-brand-indigo mb-2" />
+                    <span className="text-xs font-semibold text-brand-deep">
+                      {certPdfFiles.length > 0 ? `${certPdfFiles.length} file(s) selected` : "Upload PDF Certificates"}
+                    </span>
+                    <span className="text-[10px] text-brand-navy/60 mt-1">Click to select files (transcripts, certificates, degrees)</span>
+                  </div>
+                  
+                  {certPdfFiles.length > 0 && (
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCertPdfFiles([])}
+                        className="px-3 py-1 text-xs text-brand-navy/60 hover:text-red-500 font-bold"
+                      >
+                        Clear Selection
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-4 text-xs font-semibold text-brand-navy/40">
+                  <hr className="flex-1 border-brand-navy/10" />
+                  <span>OR MANUAL ENTRY</span>
+                  <hr className="flex-1 border-brand-navy/10" />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="relative">
+                    <label className="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider rounded-md">Certificate Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. AWS Certified Solutions Architect"
+                      className="w-full px-4 py-3 glass-input text-sm text-brand-deep font-medium"
+                      value={newCertName}
+                      onChange={(e) => setNewCertName(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="relative">
+                    <label className="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider rounded-md">Credential Description</label>
+                    <textarea
+                      placeholder="Paste manual credential text or description here..."
+                      className="w-full h-24 px-4 py-3 glass-input text-xs text-brand-deep font-medium resize-none"
+                      value={manualCertText}
+                      onChange={(e) => setManualCertText(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleUploadCertificateInWizard}
+                  disabled={uploadingCert || (certPdfFiles.length === 0 && (!newCertName.trim() || !manualCertText.trim()))}
+                  className="w-full py-3 btn-primary text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {uploadingCert ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{uploadProgress}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span>Save Certificate</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Saved Certificates List */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-brand-navy/70 uppercase tracking-wider">Saved Certificates</h4>
+                {certificates.length === 0 ? (
+                  <p className="text-xs text-brand-navy/50 italic">No certificates saved to your profile yet.</p>
+                ) : (
+                  <div className="grid gap-2 max-h-60 overflow-y-auto pr-1">
+                    {certificates.map((cert) => (
+                      <div
+                        key={cert.id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-white border border-brand-navy/10 hover:border-brand-indigo/30 transition-colors shadow-sm"
+                      >
+                        <span className="text-xs font-bold text-brand-deep truncate max-w-[70%]">{cert.name}</span>
+                        <div className="flex items-center gap-2">
+                          {certUrls[cert.id] && (
+                            <a
+                              href={certUrls[cert.id]}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-2.5 py-1 btn-secondary text-[10px] font-bold flex items-center gap-1"
+                            >
+                              View PDF
+                            </a>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCertInWizard(cert.id)}
+                            className="text-brand-navy/60 hover:text-red-500 transition-colors p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 7: SKILLS */}
           {currentStep === 6 && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+              <div>
+                <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
+                  <span className="text-brand-indigo">Tell us</span> about your skills
+                </h2>
+                <p className="text-brand-navy/70 font-medium">
+                  Pick 6 skills that match the job ad. Drag and drop to reorder.
+                </p>
+              </div>
+
+              {/* AI Skill Generator Section */}
+              <div className="glass-panel p-5 rounded-xl border border-brand-indigo/20 bg-brand-indigo/5 space-y-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-brand-deep">AI Skills Generator</h4>
+                    <p className="text-xs text-brand-navy/60 leading-relaxed mt-0.5">
+                      Analyze your experience, education, and certificates to suggest optimal keywords.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGenerateSkills}
+                    disabled={isGeneratingSkills}
+                    className="w-full md:w-auto bg-brand-indigo hover:bg-brand-indigo/90 text-white font-bold text-xs px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                  >
+                    {isGeneratingSkills ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-3 h-3" />
+                        <span>Generate with AI</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {skillsOptions.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-brand-indigo/10 animate-in fade-in">
+                    <p className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Suggested Skills</p>
+                    <div className="flex flex-wrap gap-2">
+                      {skillsOptions.map((opt, i) => {
+                        const exists = skills.some(s => s.name.toLowerCase() === opt.toLowerCase());
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => handleAddSuggestedSkill(opt)}
+                            disabled={exists}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                              exists
+                                ? 'bg-brand-navy/5 border-brand-navy/10 text-brand-navy/40 cursor-not-allowed'
+                                : 'bg-white border-brand-indigo/20 text-brand-indigo hover:bg-brand-indigo hover:text-white hover:border-brand-indigo hover:scale-105 shadow-sm'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndSkills}>
+                  <SortableContext items={skills} strategy={verticalListSortingStrategy}>
+                    {skills.map((skill, index) => (
+                      <SortableSkillItem 
+                        key={skill.id} 
+                        id={skill.id} 
+                        skill={skill} 
+                        index={index} 
+                        onChangeName={(val: string) => { const newArr = [...skills]; newArr[index].name = val; setSkills(newArr); }}
+                        onChangeLevel={(val: string) => { const newArr = [...skills]; newArr[index].level = val; setSkills(newArr); }}
+                        onDelete={() => setSkills(skills.filter(s => s.id !== skill.id))}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </div>
+
+              <button 
+                onClick={() => setSkills([...skills, { id: Date.now().toString(), name: "", level: "Expert" }])}
+                className="flex items-center gap-2 text-brand-indigo font-bold text-sm hover:underline"
+              >
+                <Plus className="w-4 h-4" /> Add Skill
+              </button>
+            </div>
+          )}
+
+          {/* STEP 8: FINISH IT */}
+          {currentStep === 7 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div className="relative group max-w-lg">
                 <input 
@@ -1226,8 +1615,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             </div>
           )}
 
-          {/* STEP 8: DOWNLOAD */}
-          {currentStep === 7 && (
+          {/* STEP 9: DOWNLOAD */}
+          {currentStep === 8 && (
             isStep7Preparing ? (
               <div className="space-y-6 flex flex-col items-center justify-center text-center h-full animate-in fade-in">
                 <Loader2 className="w-12 h-12 text-brand-indigo animate-spin mb-2" />
@@ -1264,7 +1653,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             </button>
           )}
 
-          {currentStep < 7 ? (
+          {currentStep < 8 ? (
             <button onClick={handleNext} className="btn-primary text-sm shadow-lg shadow-brand-indigo/20 flex items-center gap-2 px-8 py-3.5">
               Next to {STEPS[currentStep + 1] === 'FINISH IT' ? 'Finish it' : STEPS[currentStep + 1] === 'PROFESSIONAL SUMMARY' ? 'Professional Summary' : STEPS[currentStep + 1].charAt(0) + STEPS[currentStep + 1].slice(1).toLowerCase()} <ChevronRight className="w-4 h-4" />
             </button>

@@ -363,6 +363,21 @@ async def generate_summary_api(payload: GenerateSummaryRequest, request: Request
         logger.error(f"Error generating summary options: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+class GenerateSkillsRequest(BaseModel):
+    resume_data: dict
+
+@app.post("/api/generate-skills")
+@limiter.limit("20/minute")
+async def generate_skills_api(payload: GenerateSkillsRequest, request: Request, user: dict = Depends(verify_token)):
+    logger.info(f"API Generate Skills request received from user: {user.id}")
+    try:
+        from src.ai_engine.openai_client import generate_skills_suggestions
+        skills = generate_skills_suggestions(payload.resume_data)
+        return {"skills": skills}
+    except Exception as e:
+        logger.error(f"Error generating skills suggestions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # =========================================================
 # PAYFAST INTEGRATION
 # =========================================================

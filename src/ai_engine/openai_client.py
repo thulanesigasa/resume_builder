@@ -270,3 +270,36 @@ def generate_summary_options(resume_data: dict) -> list[str]:
     except Exception as e:
         logger.error(f"Failed to generate summary options: {e}")
         return [f"Error: {str(e)}", "Please try again later.", "Failed to generate options."]
+
+def generate_skills_suggestions(resume_data: dict) -> list[str]:
+    """
+    Generates a list of suggested skills based on the user's resume data (experiences, educations, certificates, and about).
+    """
+    api_client = get_client()
+    if not api_client:
+        return ["Failed to connect to AI generator."]
+
+    system_prompt = (
+        "You are an expert resume writer and ATS optimization AI. "
+        "The user will provide their resume details (experience, education, certificates, about) in JSON format. "
+        "Your task is to analyze their background and extract/generate a list of exactly 8-12 highly relevant skills "
+        "(both hard/technical and soft skills) that would optimize their resume for ATS matching. "
+        "Output the result strictly as a JSON object with a single key 'skills' mapping to a list of strings."
+    )
+
+    try:
+        response = api_client.chat.completions.create(
+            model=OPENAI_MODEL_NAME,
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': json.dumps(resume_data)}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.4
+        )
+        data = json.loads(response.choices[0].message.content)
+        return data.get("skills", [])
+    except Exception as e:
+        logger.error(f"Failed to generate skills: {e}")
+        return []
+
