@@ -17,9 +17,11 @@ import {
   AlignLeft,
   Info,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  FileText,
+  RefreshCw
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, API_BASE_URL } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -208,6 +210,18 @@ function SortableSkillItem({ id, skill, index, onChangeName, onChangeLevel, onDe
   );
 }
 
+interface UploadingFile {
+  id: string;
+  file: File;
+  name: string;
+  size: number;
+  progress: number;
+  speed: string;
+  eta: string;
+  status: "idle" | "uploading" | "success" | "error";
+  errorMsg?: string;
+}
+
 interface ResumeBuilderWizardProps {
   selectedTemplate?: string;
   onSave: (compiledMarkdown: string) => void;
@@ -243,9 +257,21 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const [uploadProgress, setUploadProgress] = useState("");
   const [newCertName, setNewCertName] = useState("");
   const [manualCertText, setManualCertText] = useState("");
-  const [certPdfFiles, setCertPdfFiles] = useState<File[]>([]);
   const certFileInputRef = useRef<HTMLInputElement>(null);
   const [certUrls, setCertUrls] = useState<Record<string, string>>({});
+
+  // --- New Advanced Upload States ---
+  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
+  const [isDragActive, setIsDragActive] = useState(false);
+
+  const formatBytes = (bytes: number, decimals = 1) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  };
 
   // --- AI Skills State ---
   const [isGeneratingSkills, setIsGeneratingSkills] = useState(false);
@@ -497,77 +523,30 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   };
 
-  const handleUploadCertificateInWizard = async (e: React.FormEvent) => {
+  const handleSaveManualCertificate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newCertName.trim() || !manualCertText.trim()) return;
+
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
     if (!userId) return;
 
-    if (certPdfFiles.length === 0 && (!manualCertText.trim() || !newCertName.trim())) {
-      alert("Please upload PDF documents or manually provide a name and text description.");
-      return;
-    }
-
     setUploadingCert(true);
-    setUploadProgress("Starting upload...");
+    setUploadProgress("Saving manual entry...");
     try {
-      let uploadedCount = 0;
-      
-      // 1. Process files if uploaded
-      for (const file of certPdfFiles) {
-        setUploadProgress(`Parsing ${file.name}...`);
-        const parseRes = await api.parseCv(file, userId);
-        const extractedText = parseRes.extracted_text;
-        
-        if (!extractedText.trim()) {
-          alert(`Skipped ${file.name}: Could not extract any text.`);
-          continue;
-        }
-
-        const nameRes = await api.autoNameDocument(extractedText);
-        const aiName = nameRes.name || "Untitled Document";
-
-        const { data: certRecord, error: insertError } = await supabase
-          .from("certificates")
-          .insert({
-            user_id: userId,
-            name: aiName,
-            extracted_text: extractedText,
-          })
-          .select("id")
-          .single();
-
-        if (insertError) throw insertError;
-
-        if (certRecord) {
-          await supabase.storage
-            .from("resumes")
-            .upload(`${userId}/certificates/${certRecord.id}.pdf`, file, { upsert: true });
-        }
-        uploadedCount++;
-      }
-
-      // 2. Process manual entry if provided
-      if (manualCertText.trim() && newCertName.trim()) {
-        setUploadProgress("Saving manual entry...");
-        const { error: manualError } = await supabase
-          .from("certificates")
-          .insert({
-            user_id: userId,
-            name: newCertName,
-            extracted_text: manualCertText,
-          });
-        if (manualError) throw manualError;
-        uploadedCount++;
-      }
+      const { error: manualError } = await supabase
+        .from("certificates")
+        .insert({
+          user_id: userId,
+          name: newCertName,
+          extracted_text: manualCertText,
+        });
+      if (manualError) throw manualError;
 
       setNewCertName("");
       setManualCertText("");
-      setCertPdfFiles([]);
-      if (certFileInputRef.current) certFileInputRef.current.value = "";
 
       // Refresh certificates
-      setUploadProgress("Refreshing certificates...");
       const { data } = await supabase
         .from("certificates")
         .select("*")
@@ -585,15 +564,183 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         }
         setCertUrls(urls);
       }
-      
-      if (uploadedCount > 0) {
-        alert(`${uploadedCount} Certificate(s) saved successfully!`);
-      }
+      alert("Manual certificate saved successfully!");
     } catch (err: any) {
-      alert("Failed to process document(s): " + err.message);
+      alert("Failed to save certificate: " + err.message);
     } finally {
       setUploadingCert(false);
       setUploadProgress("");
+    }
+  };
+
+  const uploadSingleFile = async (uploadId: string, file: File) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) {
+      setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: "Session expired" } : f));
+      return;
+    }
+
+    setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "uploading", progress: 0, speed: "", eta: "", errorMsg: undefined } : f));
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("user_id", userId);
+
+    const xhr = new XMLHttpRequest();
+    
+    let lastLoaded = 0;
+    let lastTime = Date.now();
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const progress = Math.round((event.loaded / event.total) * 100);
+        
+        const now = Date.now();
+        const timeDiff = (now - lastTime) / 1000;
+        let speedStr = "";
+        let etaStr = "";
+
+        if (timeDiff >= 0.5) {
+          const loadedDiff = event.loaded - lastLoaded;
+          const speed = loadedDiff / timeDiff;
+          
+          if (speed > 1024 * 1024) {
+            speedStr = `${(speed / (1024 * 1024)).toFixed(1)} MB/s`;
+          } else if (speed > 1024) {
+            speedStr = `${(speed / 1024).toFixed(0)} KB/s`;
+          } else {
+            speedStr = `${speed.toFixed(0)} B/s`;
+          }
+
+          const remainingBytes = event.total - event.loaded;
+          if (speed > 0) {
+            const eta = Math.round(remainingBytes / speed);
+            etaStr = eta === 0 ? "finishing..." : `${eta}s left`;
+          }
+
+          lastLoaded = event.loaded;
+          lastTime = now;
+        }
+
+        setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { 
+          ...f, 
+          progress, 
+          speed: speedStr || f.speed, 
+          eta: etaStr || f.eta 
+        } : f));
+      }
+    };
+
+    xhr.onload = async () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const parseRes = JSON.parse(xhr.responseText);
+          const extractedText = parseRes.extracted_text;
+
+          if (!extractedText || !extractedText.trim()) {
+            throw new Error("Could not extract any text.");
+          }
+
+          const nameRes = await api.autoNameDocument(extractedText);
+          const aiName = nameRes.name || "Untitled Document";
+
+          const { data: certRecord, error: insertError } = await supabase
+            .from("certificates")
+            .insert({
+              user_id: userId,
+              name: aiName,
+              extracted_text: extractedText,
+            })
+            .select("id")
+            .single();
+
+          if (insertError) throw insertError;
+
+          if (certRecord) {
+            await supabase.storage
+              .from("resumes")
+              .upload(`${userId}/certificates/${certRecord.id}.pdf`, file, { upsert: true });
+          }
+
+          setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "success", progress: 100 } : f));
+          
+          // Refresh certificates list
+          const { data } = await supabase
+            .from("certificates")
+            .select("*")
+            .eq("user_id", userId);
+          if (data) {
+            setCertificates(data);
+            const urls: Record<string, string> = {};
+            for (const cert of data) {
+              const { data: signData } = await supabase.storage
+                .from("resumes")
+                .createSignedUrl(`${userId}/certificates/${cert.id}.pdf`, 7200);
+              if (signData?.signedUrl) {
+                urls[cert.id] = signData.signedUrl;
+              }
+            }
+            setCertUrls(urls);
+          }
+        } catch (err: any) {
+          setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: err.message || "Parse failed" } : f));
+        }
+      } else {
+        setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: `Upload failed (${xhr.status})` } : f));
+      }
+    };
+
+    xhr.onerror = () => {
+      setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: "Connection failed" } : f));
+    };
+
+    xhr.open("POST", `${API_BASE_URL}/api/parse-cv`);
+    xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
+    xhr.send(formData);
+  };
+
+  const addFilesToUploadQueue = (files: File[]) => {
+    const newItems = files.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      name: file.name,
+      size: file.size,
+      progress: 0,
+      speed: "",
+      eta: "",
+      status: "idle" as const,
+    }));
+
+    setUploadingFiles(prev => [...prev, ...newItems]);
+    
+    newItems.forEach(item => {
+      uploadSingleFile(item.id, item.file);
+    });
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true);
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type === "application/pdf");
+      if (files.length > 0) {
+        addFilesToUploadQueue(files);
+      } else {
+        alert("Only PDF files are supported for certificates.");
+      }
     }
   };
 
@@ -1300,43 +1447,135 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                 <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
                   <span className="text-brand-indigo">Upload</span> your credentials & certificates
                 </h2>
-                <p className="text-brand-navy/70 font-medium">
+                <p className="text-brand-navy/70 font-medium text-sm">
                   Add certificates, transcripts, or awards. These will be saved in your profile credentials but won't print directly on this resume.
                 </p>
               </div>
 
               {/* Upload Form */}
               <div className="glass-panel p-6 rounded-xl border border-brand-navy/10 space-y-6">
-                <div className="space-y-3">
-                  <div className="flex flex-col gap-2 p-4 border border-dashed border-brand-navy/20 rounded-xl bg-brand-navy/[0.01] hover:bg-brand-navy/[0.03] transition-colors relative flex flex-col items-center justify-center text-center">
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      multiple
-                      ref={certFileInputRef}
-                      onChange={(e) => setCertPdfFiles(Array.from(e.target.files || []))}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      disabled={uploadingCert}
-                    />
-                    <Plus className="w-8 h-8 text-brand-indigo mb-2" />
-                    <span className="text-xs font-semibold text-brand-deep">
-                      {certPdfFiles.length > 0 ? `${certPdfFiles.length} file(s) selected` : "Upload PDF Certificates"}
-                    </span>
-                    <span className="text-[10px] text-brand-navy/60 mt-1">Click to select files (transcripts, certificates, degrees)</span>
-                  </div>
-                  
-                  {certPdfFiles.length > 0 && (
-                    <div className="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setCertPdfFiles([])}
-                        className="px-3 py-1 text-xs text-brand-navy/60 hover:text-red-500 font-bold"
-                      >
-                        Clear Selection
-                      </button>
-                    </div>
-                  )}
+                
+                {/* Drag-and-drop zone */}
+                <div 
+                  onDragEnter={handleDrag}
+                  onDragOver={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDrop={handleDrop}
+                  className={`flex flex-col gap-2 p-6 border-2 border-dashed rounded-xl relative items-center justify-center text-center transition-all duration-300 ${
+                    isDragActive 
+                      ? 'border-brand-indigo bg-brand-indigo/[0.04] shadow-[0_0_20px_rgba(79,70,229,0.15)] scale-[1.01]' 
+                      : 'border-brand-navy/20 bg-brand-navy/[0.01] hover:bg-brand-navy/[0.02]'
+                  }`}
+                >
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    multiple
+                    ref={certFileInputRef}
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length > 0) addFilesToUploadQueue(files);
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <Plus className={`w-10 h-10 mb-2 transition-transform duration-300 ${isDragActive ? 'text-brand-indigo scale-110' : 'text-brand-indigo/60'}`} />
+                  <span className="text-sm font-bold text-brand-deep">
+                    {isDragActive ? "Drop files here!" : "Drag & Drop PDF Certificates"}
+                  </span>
+                  <span className="text-xs text-brand-navy/60 mt-1">Or click to select files (PDF transcripts, certificates, degrees)</span>
                 </div>
+
+                {/* Queue Card Indicators */}
+                {uploadingFiles.length > 0 && (
+                  <div className="space-y-3 pt-2 border-t border-brand-navy/5">
+                    <p className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Upload Queue</p>
+                    <div className="grid gap-3">
+                      {uploadingFiles.map((f) => (
+                        <div 
+                          key={f.id}
+                          className={`p-4 rounded-xl border bg-white shadow-sm flex flex-col gap-3 transition-all duration-300 ${
+                            f.status === 'error' 
+                              ? 'border-red-200 bg-red-50/10' 
+                              : f.status === 'success' 
+                                ? 'border-green-200' 
+                                : 'border-brand-navy/10 hover:border-brand-indigo/20'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-4">
+                            {/* File Info */}
+                            <div className="flex items-center gap-3 truncate flex-1">
+                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                f.status === 'error' 
+                                  ? 'bg-red-100 text-red-500' 
+                                  : f.status === 'success' 
+                                    ? 'bg-green-100 text-green-500' 
+                                    : 'bg-brand-indigo/10 text-brand-indigo animate-pulse'
+                              }`}>
+                                <FileText className="w-5 h-5" />
+                              </div>
+                              <div className="truncate flex-1 min-w-0">
+                                <h5 className="text-xs font-bold text-brand-deep truncate mb-0.5">{f.name}</h5>
+                                <p className="text-[10px] text-brand-navy/50 font-semibold uppercase flex items-center gap-2">
+                                  <span>PDF</span>
+                                  <span>•</span>
+                                  <span>{formatBytes(f.size)}</span>
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Status or Controls */}
+                            <div className="flex items-center gap-2">
+                              {f.status === "uploading" && (
+                                <span className="text-[10px] font-bold text-brand-indigo bg-brand-indigo/10 px-2 py-0.5 rounded-full">
+                                  {f.progress}%
+                                </span>
+                              )}
+                              {f.status === "success" && (
+                                <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                  <Check className="w-3 h-3" /> Done
+                                </span>
+                              )}
+                              {f.status === "error" && (
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => uploadSingleFile(f.id, f.file)}
+                                    className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-600 font-bold text-[10px] rounded-full flex items-center gap-1 transition-colors"
+                                  >
+                                    <RefreshCw className="w-3 h-3" /> Retry
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Progress bar and upload details */}
+                          {f.status === "uploading" && (
+                            <div className="space-y-1.5">
+                              <div className="w-full h-1.5 bg-brand-navy/5 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-brand-indigo transition-all duration-300"
+                                  style={{ width: `${f.progress}%` }}
+                                ></div>
+                              </div>
+                              <div className="flex justify-between text-[9px] font-bold text-brand-navy/60">
+                                <span>{f.speed}</span>
+                                <span>{f.eta}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Error message */}
+                          {f.status === "error" && f.errorMsg && (
+                            <p className="text-[10px] font-bold text-red-500/80 bg-red-50 p-2 rounded-lg leading-snug">
+                              Error: {f.errorMsg}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex items-center gap-4 text-xs font-semibold text-brand-navy/40">
                   <hr className="flex-1 border-brand-navy/10" />
@@ -1369,8 +1608,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
 
                 <button
                   type="button"
-                  onClick={handleUploadCertificateInWizard}
-                  disabled={uploadingCert || (certPdfFiles.length === 0 && (!newCertName.trim() || !manualCertText.trim()))}
+                  onClick={handleSaveManualCertificate}
+                  disabled={uploadingCert || (!newCertName.trim() || !manualCertText.trim())}
                   className="w-full py-3 btn-primary text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {uploadingCert ? (

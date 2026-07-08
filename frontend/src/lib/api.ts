@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
+export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
 
 // Intercept all API calls in this file to handle expired tokens globally
 const originalFetch = typeof window !== 'undefined' ? window.fetch : globalThis.fetch;
