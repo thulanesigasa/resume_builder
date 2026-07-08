@@ -946,6 +946,15 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                         <option value="Grade 11">Grade 11</option>
                         <option value="Grade 10">Grade 10</option>
                         <option value="Grade 9">Grade 9</option>
+                        <option value="National Certificate: N1">National Certificate: N1</option>
+                        <option value="National Certificate: N2">National Certificate: N2</option>
+                        <option value="National Certificate: N3">National Certificate: N3</option>
+                        <option value="National Certificate: N4">National Certificate: N4</option>
+                        <option value="National Certificate: N5">National Certificate: N5</option>
+                        <option value="National Certificate: N6">National Certificate: N6</option>
+                        <option value="NQF Level 2">NQF Level 2</option>
+                        <option value="NQF Level 3">NQF Level 3</option>
+                        <option value="NQF Level 4">NQF Level 4</option>
                         <option value="Higher Certificate">Higher Certificate</option>
                         <option value="National Diploma">National Diploma</option>
                         <option value="Bachelor's Degree">Bachelor's Degree</option>
@@ -1039,7 +1048,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                   <span className="text-brand-indigo">Write down</span> your about
                 </h2>
                 <p className="text-brand-navy/70 font-medium">
-                  Tell us about your experience should just be 2 lines or just 2 sentences
+                  Tell us about yourself (keep it to 2 sentences or 2 lines)
                 </p>
               </div>
 
