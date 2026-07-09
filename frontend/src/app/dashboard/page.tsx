@@ -1902,7 +1902,7 @@ function DashboardContent() {
                         <div className="space-y-2">
                           <div className="flex justify-between items-start">
                             <div className="text-[10px] text-brand-navy/60 font-mono">
-                              Compiled on {app.created_at?.slice(0, 10)}
+                              Compiled on {app.created_at ? new Date(app.created_at).toLocaleDateString("en-US", { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Unknown date"}
                             </div>
                             <input 
                               type="checkbox" 
@@ -1915,10 +1915,14 @@ function DashboardContent() {
                             />
                           </div>
                           <div className="text-sm font-bold text-brand-deep">
-                            {app.job_title} at <span className="text-brand-indigo">{app.company_name}</span>
+                            {app.job_title === "General CV" ? (
+                              <span className="text-brand-indigo">{app.company_name}</span>
+                            ) : (
+                              <>{app.job_title} at <span className="text-brand-indigo">{app.company_name}</span></>
+                            )}
                           </div>
                           <div className="inline-flex items-center gap-1 bg-brand-navy/5 border border-brand-navy/10 px-2 py-0.5 rounded text-[10px] text-brand-navy">
-                            ATS score: {app.ats_score !== null ? `${app.ats_score}%` : "N/A"}
+                            {app.job_title === "General CV" ? "ATS score: Master CV" : `ATS score: ${app.ats_score !== null ? `${app.ats_score}%` : "Pending"}`}
                           </div>
                         </div>
 

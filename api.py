@@ -254,11 +254,13 @@ async def compile_document(payload: CompileRequest, request: Request, user: dict
         candidate_name = payload.json_data.get("contact_info", {}).get("name", "Name_Surname").strip()
         candidate_name_safe = candidate_name.replace(" ", "_") if candidate_name else "Name_Surname"
         
+        import time
+        timestamp = int(time.time())
         # File name
         if payload.doc_type == "resume":
-            filename = f"{candidate_name_safe}_CV.pdf"
+            filename = f"{candidate_name_safe}_CV_{timestamp}.pdf"
         else:
-            filename = f"{candidate_name_safe}_CoverLetter.pdf"
+            filename = f"{candidate_name_safe}_CoverLetter_{timestamp}.pdf"
             
         # Compile PDF and upload to Supabase storage
         download_url = compile_to_pdf(html_content, folder_name, filename, user_id=payload.user_id)
