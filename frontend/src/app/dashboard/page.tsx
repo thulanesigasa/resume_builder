@@ -165,28 +165,124 @@ function DashboardContent() {
   };
 
   const handleOpenInEditor = (app: any) => {
-    if (!app.resume_json && !app.cl_json) {
-      triggerToast("Cannot edit: This application does not contain raw JSON data.", "error");
+    if (!app.resume_json) {
+      triggerToast("Cannot edit: This application does not contain resume data.", "error");
       return;
     }
-    
-    // Save to localStorage for editor access
-    if (app.resume_json) localStorage.setItem("edit_resume_json", JSON.stringify(app.resume_json));
-    else localStorage.removeItem("edit_resume_json");
-    
-    if (app.cl_json) localStorage.setItem("edit_cl_json", JSON.stringify(app.cl_json));
-    else localStorage.removeItem("edit_cl_json");
-    
-    localStorage.setItem("edit_company", app.company_name);
-    localStorage.setItem("edit_job_title", app.job_title);
-    localStorage.setItem("edit_ats_score", JSON.stringify({ score: app.ats_score, missing_keywords: [] }));
-    localStorage.setItem("edit_selected_resume_template", selectedResume);
-    localStorage.setItem("edit_selected_cl_template", selectedCl);
-    localStorage.setItem("edit_app_id", app.id);
-    localStorage.setItem("edit_resume_compile_count", String(app.resume_compile_count || 0));
-    localStorage.setItem("edit_cl_compile_count", String(app.cl_compile_count || 0));
-    
-    router.push("/editor");
+
+    try {
+      const r = app.resume_json;
+      const contact = {
+        firstName: r.contact_info?.name?.split(" ")[0] || "",
+        lastName: r.contact_info?.name?.split(" ").slice(1).join(" ") || "",
+        city: r.contact_info?.location || "",
+        postalCode: "",
+        phone: r.contact_info?.phone || "",
+        email: r.contact_info?.email || ""
+      };
+      
+      const experiences = (r.experience || []).map((e: any, i: number) => {
+         let startDate = "";
+         let endDate = "";
+         let current = false;
+         if (e.dates) {
+           const parts = e.dates.split(" - ");
+           startDate = parts[0] || "";
+           if (parts[1]) {
+             if (parts[1].toLowerCase().includes("present")) {
+               current = true;
+             } else {
+               endDate = parts[1];
+             }
+           }
+         }
+         return {
+           id: Date.now().toString() + i,
+           title: e.title || "",
+           employer: e.company || "",
+           city: "",
+           startDate,
+           endDate,
+           current,
+           description: (e.achievements || []).join("\n")
+         };
+      });
+
+      const educations = (r.education || []).map((e: any, i: number) => {
+         let startDate = "";
+         let endDate = "";
+         let current = false;
+         if (e.dates) {
+           const parts = e.dates.split(" - ");
+           startDate = parts[0] || "";
+           if (parts[1]) {
+             if (parts[1].toLowerCase().includes("present")) {
+               current = true;
+             } else {
+               endDate = parts[1];
+             }
+           }
+         }
+         let degree = e.degree || e.qualification || "";
+         let course = "";
+         if (degree.includes(" - ")) {
+           const parts = degree.split(" - ");
+           degree = parts[0];
+           course = parts.slice(1).join(" - ");
+         } else if (degree.includes(" in ")) {
+           const parts = degree.split(" in ");
+           degree = parts[0];
+           course = parts.slice(1).join(" in ");
+         }
+         return {
+           id: Date.now().toString() + i,
+           school: e.institution || "",
+           degree,
+           course,
+           city: "",
+           startDate,
+           endDate,
+           current,
+           description: ""
+         };
+      });
+
+      const skills = (r.skills || []).map((s: any, i: number) => {
+        let name = s;
+        let type = "Technical";
+        if (typeof s === 'object') {
+           name = s.name;
+           if (s.type) type = s.type;
+        }
+        return {
+          id: Date.now().toString() + i,
+          name: name || "",
+          level: "Expert",
+          type: type
+        };
+      });
+      
+      const summary = r.professional_summary || "";
+      const documentTitle = app.job_title === "General CV" ? app.company_name : `${app.job_title} at ${app.company_name}`;
+      
+      const draft = {
+        contact,
+        experiences: experiences.length > 0 ? experiences : [{ id: "1", title: "", employer: "", startDate: "", endDate: "", city: "", current: false, description: "" }],
+        educations: educations.length > 0 ? educations : [{ id: "1", school: "", degree: "", course: "", startDate: "", endDate: "", city: "", current: false, description: "" }],
+        skills: skills.length > 0 ? skills : [{ id: "1", name: "", level: "Expert", type: "Technical" }],
+        summary,
+        documentTitle,
+        format: { template: "ats_resume_template.html", accentColor: "#4f46e5", titleFont: "BEBAS NEUE (DEFAULT)", bodyFont: "Lato (default)", language: "English" }
+      };
+      
+      localStorage.setItem("resume_wizard_draft", JSON.stringify(draft));
+      
+      // Update active tab to builder to open the Wizard
+      setActiveTab("builder");
+    } catch (e) {
+      console.error(e);
+      triggerToast("Failed to load resume into Wizard.", "error");
+    }
   };
 
   const handleDeleteApps = async (ids: string[]) => {
