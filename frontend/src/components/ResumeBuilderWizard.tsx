@@ -1168,7 +1168,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       const link = document.createElement('a');
       link.href = res.download_url;
       link.target = '_blank';
-      link.download = `${(documentTitle || 'Resume').replace(/\s+/g, '_')}.pdf`;
+      const candidateName = `${contact.firstName} ${contact.lastName}`.trim() || "Name_Surname";
+      link.download = `${candidateName.replace(/\s+/g, '_')}_CV.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

@@ -251,11 +251,14 @@ async def compile_document(payload: CompileRequest, request: Request, user: dict
         if not html_content:
             raise HTTPException(status_code=500, detail="Failed to inject JSON into template HTML")
         
+        candidate_name = payload.json_data.get("contact_info", {}).get("name", "Name_Surname").strip()
+        candidate_name_safe = candidate_name.replace(" ", "_") if candidate_name else "Name_Surname"
+        
         # File name
         if payload.doc_type == "resume":
-            filename = f"Resume_{payload.company_name.replace(' ', '_')}.pdf"
+            filename = f"{candidate_name_safe}_CV.pdf"
         else:
-            filename = f"CoverLetter_{payload.company_name.replace(' ', '_')}.pdf"
+            filename = f"{candidate_name_safe}_CoverLetter.pdf"
             
         # Compile PDF and upload to Supabase storage
         download_url = compile_to_pdf(html_content, folder_name, filename, user_id=payload.user_id)
