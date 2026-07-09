@@ -436,11 +436,18 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   }, [contact, experiences, educations, skills, summary, documentTitle, format, isLoaded]);
 
+  const hasAppliedInitialTemplate = useRef(false);
   useEffect(() => {
+    if (!isLoaded) return; // Wait until draft has been loaded first
+    if (!hasAppliedInitialTemplate.current) {
+      // Skip the first run after load — the draft already set the correct template
+      hasAppliedInitialTemplate.current = true;
+      return;
+    }
     if (selectedTemplate) {
       setFormat(prev => ({ ...prev, template: selectedTemplate }));
     }
-  }, [selectedTemplate]);
+  }, [selectedTemplate, isLoaded]);
 
   // --- Live Preview API Hook ---
   useEffect(() => {
