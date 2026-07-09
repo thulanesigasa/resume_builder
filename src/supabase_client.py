@@ -1,3 +1,23 @@
+import httpx
+import warnings
+
+# Suppress SSL verification warnings
+warnings.filterwarnings("ignore", message="Unverified HTTPS request")
+warnings.filterwarnings("ignore", category=UserWarning)
+
+# Monkeypatch httpx Client & AsyncClient to bypass certificate verification (e.g. for corporate proxies/Zscaler)
+original_client_init = httpx.Client.__init__
+def patched_client_init(self, *args, **kwargs):
+    kwargs['verify'] = False
+    original_client_init(self, *args, **kwargs)
+httpx.Client.__init__ = patched_client_init
+
+original_async_init = httpx.AsyncClient.__init__
+def patched_async_init(self, *args, **kwargs):
+    kwargs['verify'] = False
+    original_async_init(self, *args, **kwargs)
+httpx.AsyncClient.__init__ = patched_async_init
+
 from supabase import create_client, Client
 from src.config import SUPABASE_URL, SUPABASE_KEY, SUPABASE_SERVICE_ROLE_KEY
 from src.utils.logger import logger

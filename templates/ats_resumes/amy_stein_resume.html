@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <style>
+    
     body {
-        font-family: 'Arial', sans-serif;
+        font-family: '{{ body_font or "Arial" }}', sans-serif;
         font-size: 9.5pt;
         line-height: 1.3; /* Tighter line height */
         color: #000;
@@ -20,11 +21,12 @@
         bottom: 0;
         left: 0;
         width: 25px;
-        background-color: #d2b48c; /* Tan/Beige */
+        background-color: {{ accent_color or '#d2b48c' }}; /* Tan/Beige */
     }
     .header h1 {
         font-size: 38pt;
         margin: 0 0 5px 0;
+        font-family: '{{ title_font or "Arial" }}', sans-serif;
     }
     .header h1 .first-name { font-weight: bold; }
     .header h1 .last-name { font-weight: normal; }
@@ -33,16 +35,18 @@
         margin-bottom: 10px;
     }
     .divider {
-        border-top: 1px solid #000;
+        border-top: 1px solid {{ accent_color or '#d2b48c' }};
         margin-bottom: 10px;
     }
     .section-header {
         font-size: 14pt;
         font-weight: bold;
-        border-bottom: 1px solid #000;
+        border-bottom: 1px solid {{ accent_color or '#d2b48c' }};
+        color: {{ accent_color or '#d2b48c' }};
         margin-top: 20px;
         margin-bottom: 10px;
         padding-bottom: 2px;
+        font-family: '{{ title_font or "Arial" }}', sans-serif;
     }
     .job { margin-bottom: 15px; }
     .job-top { display: block; }
@@ -68,9 +72,12 @@
         </div>
     </div>
     
+    {% if professional_summary %}
     <div class="divider"></div>
     <p>{{ professional_summary }}</p>
+    {% endif %}
 
+    {% if education %}
     <div class="section">
         <div class="section-header">Education</div>
         {% for edu in education %}
@@ -79,31 +86,51 @@
         </div>
         {% endfor %}
     </div>
+    {% endif %}
 
-    <div class="section">
-        <div class="section-header">Key Skills</div>
-        <div class="skills-container">
-            {% set skill_list = (skills or technical_skills)[:10] %}
-            {% set half = (skill_list|length / 2)|round(0, 'ceil')|int %}
-            <div style="display: table; width: 100%;">
-                <div style="display: table-cell; width: 50%; vertical-align: top; padding-right: 10px;">
-                    <ul>
-                        {% for skill in skill_list[:half] %}
-                        <li style="page-break-inside: avoid; margin-bottom: 4px;">{{ skill }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                <div style="display: table-cell; width: 50%; vertical-align: top;">
-                    <ul>
-                        {% for skill in skill_list[half:] %}
-                        <li style="page-break-inside: avoid; margin-bottom: 4px;">{{ skill }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% if skills or technical_skills or soft_skills %}
+      <div class="section">
+          <div class="section-header">Key Skills</div>
+          <div style="display: table; width: 100%;">
+              <div style="display: table-cell; width: 50%; vertical-align: top; padding-right: 10px;">
+                  {% if technical_skills %}
+                  <h3 style="font-size: 10pt; margin: 0 0 5px 0;">Technical</h3>
+                  <ul>
+                      {% for skill in technical_skills %}
+                      <li style="page-break-inside: avoid; margin-bottom: 4px;">{{ skill }}</li>
+                      {% endfor %}
+                  </ul>
+                  {% elif skills and not technical_skills and not soft_skills %}
+                  <ul>
+                      {% set half = (skills|length / 2)|round(0, 'ceil')|int %}
+                      {% for skill in skills[:half] %}
+                      <li style="page-break-inside: avoid; margin-bottom: 4px;">{{ skill }}</li>
+                      {% endfor %}
+                  </ul>
+                  {% endif %}
+              </div>
+              <div style="display: table-cell; width: 50%; vertical-align: top;">
+                  {% if soft_skills %}
+                  <h3 style="font-size: 10pt; margin: 0 0 5px 0;">Soft Skills</h3>
+                  <ul>
+                      {% for skill in soft_skills %}
+                      <li style="page-break-inside: avoid; margin-bottom: 4px;">{{ skill }}</li>
+                      {% endfor %}
+                  </ul>
+                  {% elif skills and not technical_skills and not soft_skills %}
+                  <ul>
+                      {% set half = (skills|length / 2)|round(0, 'ceil')|int %}
+                      {% for skill in skills[half:] %}
+                      <li style="page-break-inside: avoid; margin-bottom: 4px;">{{ skill }}</li>
+                      {% endfor %}
+                  </ul>
+                  {% endif %}
+              </div>
+          </div>
+      </div>
+      {% endif %}
 
+    {% if experience %}
     <div class="section">
         <div class="section-header">Professional Experience</div>
         {% for job in experience %}
@@ -118,6 +145,7 @@
         </div>
         {% endfor %}
     </div>
+    {% endif %}
 
     {% if certifications %}
     <div class="section">

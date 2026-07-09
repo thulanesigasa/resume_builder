@@ -242,6 +242,7 @@ async def get_ats_score(payload: AtsScoreRequest, request: Request, user: dict =
 @limiter.limit("20/minute")
 async def compile_document(payload: CompileRequest, request: Request, user: dict = Depends(verify_token)):
     logger.info(f"API Compile request received for: {payload.doc_type}")
+    logger.info(f"[DEBUG] template_name received: {payload.template_name}")
     try:
         # Create folder name
         folder_name = create_application_folder_name(payload.company_name, payload.job_title)
@@ -251,11 +252,16 @@ async def compile_document(payload: CompileRequest, request: Request, user: dict
         if not html_content:
             raise HTTPException(status_code=500, detail="Failed to inject JSON into template HTML")
         
+        candidate_name = payload.json_data.get("contact_info", {}).get("name", "Name_Surname").strip()
+        candidate_name_safe = candidate_name.replace(" ", "_") if candidate_name else "Name_Surname"
+        
+        import time
+        timestamp = int(time.time())
         # File name
         if payload.doc_type == "resume":
-            filename = f"Resume_{payload.company_name.replace(' ', '_')}.pdf"
+            filename = f"{candidate_name_safe}_CV_{timestamp}.pdf"
         else:
-            filename = f"CoverLetter_{payload.company_name.replace(' ', '_')}.pdf"
+            filename = f"{candidate_name_safe}_CoverLetter_{timestamp}.pdf"
             
         # Compile PDF and upload to Supabase storage
         download_url = compile_to_pdf(html_content, folder_name, filename, user_id=payload.user_id)
@@ -330,6 +336,52 @@ async def auto_name_document(payload: AutoNameRequest, request: Request, user: d
         return {"name": ai_name}
     except Exception as e:
         logger.error(f"Error auto-naming document: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class ImproveTextRequest(BaseModel):
+    text: str
+    context: str = ""
+
+@app.post("/api/improve-text")
+@limiter.limit("30/minute")
+async def improve_text_api(payload: ImproveTextRequest, request: Request, user: dict = Depends(verify_token)):
+    logger.info(f"API Improve Text request received from user: {user.id}")
+    try:
+        from src.ai_engine.openai_client import improve_text
+        improved = improve_text(payload.text, payload.context)
+        return {"improved_text": improved}
+    except Exception as e:
+        logger.error(f"Error improving text: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class GenerateSummaryRequest(BaseModel):
+    resume_data: dict
+
+@app.post("/api/generate-summary")
+@limiter.limit("20/minute")
+async def generate_summary_api(payload: GenerateSummaryRequest, request: Request, user: dict = Depends(verify_token)):
+    logger.info(f"API Generate Summary options request received from user: {user.id}")
+    try:
+        from src.ai_engine.openai_client import generate_summary_options
+        options = generate_summary_options(payload.resume_data)
+        return {"options": options}
+    except Exception as e:
+        logger.error(f"Error generating summary options: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class GenerateSkillsRequest(BaseModel):
+    resume_data: dict
+
+@app.post("/api/generate-skills")
+@limiter.limit("20/minute")
+async def generate_skills_api(payload: GenerateSkillsRequest, request: Request, user: dict = Depends(verify_token)):
+    logger.info(f"API Generate Skills request received from user: {user.id}")
+    try:
+        from src.ai_engine.openai_client import generate_skills_suggestions
+        skills = generate_skills_suggestions(payload.resume_data)
+        return {"skills": skills}
+    except Exception as e:
+        logger.error(f"Error generating skills suggestions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # =========================================================

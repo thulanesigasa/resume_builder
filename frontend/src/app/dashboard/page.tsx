@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
+import ResumeBuilderWizard from "@/components/ResumeBuilderWizard";
 import {
   User,
   LogOut,
@@ -32,7 +33,7 @@ function DashboardContent() {
   const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"profile" | "generate" | "batch" | "archive">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "generate" | "batch" | "archive" | "builder">("profile");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [deleteCertId, setDeleteCertId] = useState<string | null>(null);
 
@@ -124,6 +125,8 @@ function DashboardContent() {
   const [reauthError, setReauthError] = useState<string | null>(null);
   const [isReauthenticating, setIsReauthenticating] = useState(false);
 
+
+
   const handlePreview = async (templateName: string, type: string) => {
     setPreviewTemplate({ name: templateName, type });
     setPreviewLoading(true);
@@ -162,28 +165,165 @@ function DashboardContent() {
   };
 
   const handleOpenInEditor = (app: any) => {
-    if (!app.resume_json && !app.cl_json) {
-      triggerToast("Cannot edit: This application does not contain raw JSON data.", "error");
+    if (!app.resume_json) {
+      triggerToast("Cannot edit: This application does not contain resume data.", "error");
       return;
     }
-    
-    // Save to localStorage for editor access
-    if (app.resume_json) localStorage.setItem("edit_resume_json", JSON.stringify(app.resume_json));
-    else localStorage.removeItem("edit_resume_json");
-    
-    if (app.cl_json) localStorage.setItem("edit_cl_json", JSON.stringify(app.cl_json));
-    else localStorage.removeItem("edit_cl_json");
-    
-    localStorage.setItem("edit_company", app.company_name);
-    localStorage.setItem("edit_job_title", app.job_title);
-    localStorage.setItem("edit_ats_score", JSON.stringify({ score: app.ats_score, missing_keywords: [] }));
-    localStorage.setItem("edit_selected_resume_template", selectedResume);
-    localStorage.setItem("edit_selected_cl_template", selectedCl);
-    localStorage.setItem("edit_app_id", app.id);
-    localStorage.setItem("edit_resume_compile_count", String(app.resume_compile_count || 0));
-    localStorage.setItem("edit_cl_compile_count", String(app.cl_compile_count || 0));
-    
-    router.push("/editor");
+
+    try {
+      const r = app.resume_json;
+      const contact = {
+        firstName: r.contact_info?._wizard?.firstName || r.contact_info?.name?.split(" ")[0] || "",
+        lastName: r.contact_info?._wizard?.lastName || r.contact_info?.name?.split(" ").slice(1).join(" ") || "",
+        city: r.contact_info?._wizard?.city || r.contact_info?.location || "",
+        postalCode: r.contact_info?._wizard?.postalCode || "",
+        phone: r.contact_info?.phone || "",
+        email: r.contact_info?.email || ""
+      };
+      
+      const experiences = (r.experience || []).map((e: any, i: number) => {
+         if (e._wizard) {
+           return {
+             id: Date.now().toString() + i,
+             title: e.title || "",
+             employer: e.company || "",
+             city: e._wizard.city || "",
+             startDate: e._wizard.startDate || "",
+             endDate: e._wizard.endDate || "",
+             current: e._wizard.current || false,
+             description: (e.achievements || []).join("\n")
+           };
+         }
+         let startDate = "";
+         let endDate = "";
+         let current = false;
+         if (e.dates) {
+           const parts = e.dates.split(" - ");
+           startDate = parts[0] || "";
+           if (parts[1]) {
+             if (parts[1].toLowerCase().includes("present")) {
+               current = true;
+             } else {
+               endDate = parts[1];
+             }
+           }
+         }
+         return {
+           id: Date.now().toString() + i,
+           title: e.title || "",
+           employer: e.company || "",
+           city: "",
+           startDate,
+           endDate,
+           current,
+           description: (e.achievements || []).join("\n")
+         };
+      });
+
+      const educations = (r.education || []).map((e: any, i: number) => {
+         if (e._wizard) {
+           return {
+             id: Date.now().toString() + i,
+             school: e.institution || "",
+             degree: e._wizard.degree || "",
+             course: e._wizard.course || "",
+             city: e._wizard.city || "",
+             startDate: e._wizard.startDate || "",
+             endDate: e._wizard.endDate || "",
+             current: e._wizard.current || false,
+             description: ""
+           };
+         }
+         let startDate = "";
+         let endDate = "";
+         let current = false;
+         if (e.dates) {
+           const parts = e.dates.split(" - ");
+           startDate = parts[0] || "";
+           if (parts[1]) {
+             if (parts[1].toLowerCase().includes("present")) {
+               current = true;
+             } else {
+               endDate = parts[1];
+             }
+           }
+         }
+         let degree = e.degree || e.qualification || "";
+         let course = "";
+         if (degree.includes(" - ")) {
+           const parts = degree.split(" - ");
+           degree = parts[0];
+           course = parts.slice(1).join(" - ");
+         } else if (degree.includes(" in ")) {
+           const parts = degree.split(" in ");
+           degree = parts[0];
+           course = parts.slice(1).join(" in ");
+         }
+         return {
+           id: Date.now().toString() + i,
+           school: e.institution || "",
+           degree,
+           course,
+           city: "",
+           startDate,
+           endDate,
+           current,
+           description: ""
+         };
+      });
+
+      const skills = (r.skills || []).map((s: any, i: number) => {
+        let name = s;
+        if (typeof s === 'object') {
+           name = s.name;
+        }
+        
+        let type = "Technical";
+        // Deduce type from r.soft_skills if available (works for AI-tailored and older CVs)
+        if (r.soft_skills && Array.isArray(r.soft_skills) && r.soft_skills.includes(name)) {
+            type = "Soft";
+        } else if (typeof s === 'object' && s.type) {
+            type = s.type;
+        }
+        
+        return {
+          id: Date.now().toString() + i,
+          name: name || "",
+          level: "Expert",
+          type: type
+        };
+      });
+      
+      const summary = r.professional_summary || "";
+      const documentTitle = app.job_title === "General CV" ? app.company_name : `${app.job_title} at ${app.company_name}`;
+      
+      const formatState = r._wizard_format || {
+        template: selectedResume || "ats_resume_template.html",
+        accentColor: r.accent_color || "#4f46e5",
+        titleFont: r.title_font || "BEBAS NEUE (DEFAULT)",
+        bodyFont: r.body_font || "Lato",
+        language: "English"
+      };
+      
+      const draft = {
+        contact,
+        experiences: experiences.length > 0 ? experiences : [{ id: "1", title: "", employer: "", startDate: "", endDate: "", city: "", current: false, description: "" }],
+        educations: educations.length > 0 ? educations : [{ id: "1", school: "", degree: "", course: "", startDate: "", endDate: "", city: "", current: false, description: "" }],
+        skills: skills.length > 0 ? skills : [{ id: "1", name: "", level: "Expert", type: "Technical" }],
+        summary,
+        documentTitle,
+        format: formatState
+      };
+      
+      setSelectedResume(formatState.template);
+      localStorage.setItem("resume_wizard_draft", JSON.stringify(draft));
+      
+      // Update active tab to builder to open the Wizard
+      setActiveTab("builder");
+    } catch (e) {
+      console.error(e);
+      triggerToast("Failed to load resume into Wizard.", "error");
+    }
   };
 
   const handleDeleteApps = async (ids: string[]) => {
@@ -492,6 +632,8 @@ function DashboardContent() {
       setSavingProfile(false);
     }
   };
+
+
 
   const handleParseCvPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1113,7 +1255,7 @@ function DashboardContent() {
       </nav>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-8">
+      <main className={`flex-1 ${activeTab === 'builder' ? 'max-w-[1700px]' : 'max-w-7xl'} w-full mx-auto p-6 md:p-8 space-y-8 transition-all duration-300`}>
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-4 md:gap-6">
           <div className="glass-panel p-6 rounded-xl text-center relative overflow-hidden group">
@@ -1174,6 +1316,10 @@ function DashboardContent() {
                   <option value="david_turner_resume.html">David Turner (Modern Classic)</option>
                   <option value="amy_stein_resume.html">Amy Stein (Elegant Design)</option>
                   <option value="ava_martinez_resume.html">Ava Martinez (Minimalist)</option>
+                  <option value="base_resume_template_black.html">Base Blueprint (Traditional)</option>
+                  <option value="noma_resume_template_black.html">Noma Clean (Modern)</option>
+                  <option value="note_resume_template_black.html">Note Serif (Classic)</option>
+                  <option value="page_resume_template_black.html">Page Minimalist (Modern Border)</option>
                 </select>
               </div>
 
@@ -1216,6 +1362,7 @@ function DashboardContent() {
             <div className="flex border-b border-brand-navy/15 gap-6">
               {[
                 { id: "profile", label: "My Profile & CV" },
+                { id: "builder", label: "Resume Builder" },
                 { id: "generate", label: "Tailor (Single Job)" },
                 { id: "batch", label: "Batch Autopilot" },
                 { id: "archive", label: "Saved Archives" },
@@ -1419,6 +1566,21 @@ function DashboardContent() {
                       <span className="text-[10px] text-brand-navy/60 mt-1">Upload PDF to overwrite text history</span>
                       {parsingCv && <span className="text-xs text-brand-indigo animate-pulse mt-2">Reading PDF text...</span>}
                     </div>
+
+                    <div className="flex items-center gap-4 text-xs font-semibold text-brand-navy/40">
+                      <hr className="flex-1 border-brand-navy/10" />
+                      <span>OR</span>
+                      <hr className="flex-1 border-brand-navy/10" />
+                    </div>
+
+                    <button
+                      onClick={() => { localStorage.removeItem("resume_wizard_draft"); setActiveTab("builder"); }}
+                      className="w-full py-3 border border-brand-indigo/30 rounded-xl bg-brand-indigo/[0.02] hover:bg-brand-indigo/[0.05] transition-colors flex flex-col items-center justify-center text-center group"
+                    >
+                      <Plus className="w-6 h-6 text-brand-indigo mb-1 group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-semibold text-brand-deep">Create from Scratch</span>
+                      <span className="text-[10px] text-brand-navy/60 mt-0.5">Use our interactive builder to write your resume</span>
+                    </button>
 
                     {/* Master CV File details preview/download */}
                     {masterCvUrl && (
@@ -1801,6 +1963,24 @@ function DashboardContent() {
               </div>
             )}
 
+            {/* TAB E: RESUME BUILDER WIZARD */}
+            {activeTab === "builder" && (
+              <ResumeBuilderWizard 
+                selectedTemplate={selectedResume}
+                onSave={(compiled) => {
+                  setProfileRaw(compiled);
+                }} 
+                onComplete={() => {
+                  if (user?.id) {
+                    loadUserData(user.id);
+                  }
+                  setActiveTab("archive");
+                  triggerToast("Resume compiled, downloaded, and archived successfully!", "success");
+                }}
+                onCancel={() => setActiveTab("profile")} 
+              />
+            )}
+
             {/* TAB D: SAVED ARCHIVES */}
             {activeTab === "archive" && (
               <div className="glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1863,7 +2043,7 @@ function DashboardContent() {
                         <div className="space-y-2">
                           <div className="flex justify-between items-start">
                             <div className="text-[10px] text-brand-navy/60 font-mono">
-                              Compiled on {app.created_at?.slice(0, 10)}
+                              Compiled on {app.created_at ? new Date(app.created_at).toLocaleDateString("en-US", { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Unknown date"}
                             </div>
                             <input 
                               type="checkbox" 
@@ -1876,10 +2056,14 @@ function DashboardContent() {
                             />
                           </div>
                           <div className="text-sm font-bold text-brand-deep">
-                            {app.job_title} at <span className="text-brand-indigo">{app.company_name}</span>
+                            {app.job_title === "General CV" ? (
+                              <span className="text-brand-indigo">{app.company_name}</span>
+                            ) : (
+                              <>{app.job_title} at <span className="text-brand-indigo">{app.company_name}</span></>
+                            )}
                           </div>
                           <div className="inline-flex items-center gap-1 bg-brand-navy/5 border border-brand-navy/10 px-2 py-0.5 rounded text-[10px] text-brand-navy">
-                            ATS score: {app.ats_score !== null ? `${app.ats_score}%` : "N/A"}
+                            {app.job_title === "General CV" ? "ATS score: Master CV" : `ATS score: ${app.ats_score !== null ? `${app.ats_score}%` : "Pending"}`}
                           </div>
                         </div>
 
@@ -2157,6 +2341,7 @@ function DashboardContent() {
           </div>
         </div>
       )}
+
 
     </div>
   );

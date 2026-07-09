@@ -191,3 +191,126 @@ def generate_document_name(extracted_text: str) -> str:
     except Exception as e:
         logger.error(f"Failed to generate document name: {e}")
         return "Uploaded Document"
+
+def improve_text(text: str, context: str = "") -> str:
+    """
+    Improves and ATS-optimizes the provided text (like a resume bullet point or summary).
+    """
+    api_client = get_client()
+    if not api_client:
+        return text
+
+    is_summary = "summary" in context.lower()
+    is_about = "about" in context.lower()
+    
+    if is_about:
+        system_prompt = (
+            "You are an expert resume writer and ATS optimization AI. "
+            "Your task is to write a highly professional, concise 'About Me' introduction about the user. "
+            "Keep it to exactly 2 sentences (or roughly 2 lines) in length. Make it engaging, professional, and personal. "
+            "Output ONLY the 2 sentences. No quotes, no markdown, no conversational filler."
+        )
+    elif is_summary:
+        system_prompt = (
+            "You are an expert resume writer and ATS optimization AI. "
+            "Your task is to rewrite the user's professional summary to make it sound professional, action-oriented, and impactful. "
+            "Keep it concise. Do not use filler words. "
+            "CRITICAL: The output must be exactly 3 sentences (or roughly 3 lines) in length. "
+            "Output ONLY the improved text. No quotes, no markdown, no conversational filler."
+        )
+    else:
+        system_prompt = (
+            "You are an expert resume writer and ATS optimization AI. "
+            "Your task is to rewrite the user's provided text to make it sound professional, action-oriented, and impactful. "
+            "Keep it concise. Do not use filler words. "
+            "CRITICAL: Do NOT append, prepend, or include the company name, employer name, or the phrase 'at [Company]' in your output. Focus solely on rewriting the duties, accomplishments, and achievements. "
+            "CRITICAL: The output must be exactly 2 sentences (or 2 short, high-impact lines/bullet points) in length. "
+            "Output ONLY the improved text. No quotes, no markdown, no conversational filler."
+        )
+    
+    if context:
+        system_prompt += f"\n\nContext about this text (Job Title/Employer etc.): {context}"
+
+    try:
+        response = api_client.chat.completions.create(
+            model=OPENAI_MODEL_NAME,
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': text}
+            ],
+            temperature=0.4
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error(f"Failed to improve text: {e}")
+        return text
+
+def generate_summary_options(resume_data: dict) -> list[str]:
+    """
+    Generates 3 distinct professional summary options based on the provided resume data (experiences, educations, skills).
+    """
+    api_client = get_client()
+    if not api_client:
+        return ["Failed to connect to AI generator."] * 3
+
+    system_prompt = (
+        "You are an expert resume writer and ATS optimization AI. "
+        "The user will provide their resume data (skills, education, experience) in JSON format. "
+        "Your task is to write exactly 3 distinct, highly professional, and impactful resume summary options. "
+        "CRITICAL RULE: Each summary option MUST be exactly 2 to 3 sentences (or roughly 2 to 3 lines) long. "
+        "Option 1: Concise and impactful. "
+        "Option 2: Detailed and achievements-focused. "
+        "Option 3: Modern and forward-looking. "
+        "Output the result strictly as a JSON object with a single key 'options' mapping to a list of 3 strings."
+    )
+
+    try:
+        response = api_client.chat.completions.create(
+            model=OPENAI_MODEL_NAME,
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': json.dumps(resume_data)}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.7
+        )
+        data = json.loads(response.choices[0].message.content)
+        return data.get("options", ["Could not generate option 1", "Could not generate option 2", "Could not generate option 3"])
+    except Exception as e:
+        logger.error(f"Failed to generate summary options: {e}")
+        return [f"Error: {str(e)}", "Please try again later.", "Failed to generate options."]
+
+def generate_skills_suggestions(resume_data: dict) -> list[str]:
+    """
+    Generates a list of suggested skills based on the user's resume data (experiences, educations, certificates, and about).
+    """
+    api_client = get_client()
+    if not api_client:
+        return ["Failed to connect to AI generator."]
+
+    system_prompt = (
+        "You are an expert resume writer and ATS optimization AI. "
+        "The user will provide their resume details (experience, education, certificates, about) in JSON format. "
+        "Your task is to analyze their background and extract/generate a list of exactly 8 highly relevant skills "
+        "that would optimize their resume for ATS matching. "
+        "CRITICAL RULE: You MUST provide exactly 4 hard/technical skills and exactly 4 soft skills (a 1:1 ratio). "
+        "Output the result strictly as a JSON object with a single key 'skills' mapping to a list of objects. "
+        "Each object must have a 'name' (string) and a 'type' (string, exactly either 'Technical' or 'Soft')."
+    )
+
+    try:
+        response = api_client.chat.completions.create(
+            model=OPENAI_MODEL_NAME,
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': json.dumps(resume_data)}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.4
+        )
+        data = json.loads(response.choices[0].message.content)
+        return data.get("skills", [])
+    except Exception as e:
+        logger.error(f"Failed to generate skills: {e}")
+        return []
+

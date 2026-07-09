@@ -1,6 +1,19 @@
 import { supabase } from './supabase';
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
+export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
+
+// Intercept all API calls in this file to handle expired tokens globally
+const originalFetch = typeof window !== 'undefined' ? window.fetch : globalThis.fetch;
+const fetchInterceptor = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const res = await originalFetch(input, init);
+  if (res.status === 401 && typeof window !== 'undefined') {
+    await supabase.auth.signOut().catch(() => {});
+    window.location.href = '/login?expired=true';
+    throw new Error('Session expired. Redirecting to login...');
+  }
+  return res;
+};
+const fetch = fetchInterceptor;
 
 export interface ScrapeResponse {
   job_description: string;
@@ -165,6 +178,45 @@ export const api = {
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: 'Failed to auto-name document' }));
       throw new Error(err.detail || 'Failed to auto-name document');
+    }
+    return res.json();
+  },
+
+  async improveText(text: string, context: string = "") {
+    const res = await fetch(`${API_BASE_URL}/api/improve-text`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify({ text, context }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to improve text' }));
+      throw new Error(err.detail || 'Failed to improve text');
+    }
+    return res.json();
+  },
+
+  async generateSummary(resumeData: any): Promise<{ options: string[] }> {
+    const res = await fetch(`${API_BASE_URL}/api/generate-summary`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify({ resume_data: resumeData }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to generate summary options' }));
+      throw new Error(err.detail || 'Failed to generate summary options');
+    }
+    return res.json();
+  },
+
+  async generateSkills(resumeData: any): Promise<{ skills: { name: string, type: "Technical" | "Soft" }[] }> {
+    const res = await fetch(`${API_BASE_URL}/api/generate-skills`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify({ resume_data: resumeData }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to generate skills' }));
+      throw new Error(err.detail || 'Failed to generate skills');
     }
     return res.json();
   },
