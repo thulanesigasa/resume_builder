@@ -164,10 +164,10 @@ function SortableSkillItem({ id, skill, index, onChangeName, onChangeLevel, onCh
   const activeLabelColor = ["text-sky-500", "text-teal-500", "text-brand-indigo", "text-violet-600"];
 
   return (
-    <div ref={setNodeRef} style={style} className={`flex items-center gap-4 glass-panel px-4 py-3 rounded-xl border border-brand-navy/10 group relative transition-colors ${isDragging ? 'shadow-2xl border-brand-indigo ring-2 ring-brand-indigo/50' : 'hover:border-brand-indigo/50'}`}>
+    <div ref={setNodeRef} style={style} className={`flex flex-col md:flex-row items-start md:items-center gap-4 glass-panel px-4 py-3 rounded-xl border border-brand-navy/10 group relative transition-colors ${isDragging ? 'shadow-2xl border-brand-indigo ring-2 ring-brand-indigo/50' : 'hover:border-brand-indigo/50'}`}>
       
       {/* Skill name — full width, no truncation */}
-      <div className="flex-1 min-w-0 relative">
+      <div className="w-full md:flex-1 md:min-w-0 relative">
         <label className="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider rounded-md">Skill</label>
         <input 
           type="text" 
@@ -178,8 +178,10 @@ function SortableSkillItem({ id, skill, index, onChangeName, onChangeLevel, onCh
         />
       </div>
 
-      {/* Skill type — compact vertical stack */}
-      <div className="flex flex-col gap-1.5 w-24 shrink-0">
+      {/* Type, Level, Actions - stack horizontally on mobile if possible, or wrap */}
+      <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-4 w-full md:w-auto">
+        {/* Skill type — compact vertical stack */}
+        <div className="flex flex-col gap-1.5 w-24 shrink-0">
         <span className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Type</span>
         <select 
           className="w-full text-xs font-semibold px-2 py-1.5 border border-brand-navy/10 rounded focus:outline-none glass-input text-brand-deep"
@@ -212,12 +214,13 @@ function SortableSkillItem({ id, skill, index, onChangeName, onChangeLevel, onCh
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-2 items-center text-brand-navy/40 shrink-0">
-        <div {...attributes} {...listeners} className="cursor-grab hover:text-brand-indigo touch-none">
-          <GripVertical className="w-5 h-5" />
+        {/* Actions */}
+        <div className="flex gap-2 items-center text-brand-navy/40 shrink-0 ml-auto md:ml-0">
+          <div {...attributes} {...listeners} className="cursor-grab hover:text-brand-indigo touch-none">
+            <GripVertical className="w-5 h-5" />
+          </div>
+          <button onClick={onDelete} className="hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
         </div>
-        <button onClick={onDelete} className="hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
       </div>
     </div>
   );

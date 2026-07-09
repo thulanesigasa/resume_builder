@@ -315,6 +315,7 @@ function DashboardContent() {
         format: formatState
       };
       
+      setSelectedResume(formatState.template);
       localStorage.setItem("resume_wizard_draft", JSON.stringify(draft));
       
       // Update active tab to builder to open the Wizard
