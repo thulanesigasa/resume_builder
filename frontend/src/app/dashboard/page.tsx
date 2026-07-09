@@ -274,11 +274,18 @@ function DashboardContent() {
 
       const skills = (r.skills || []).map((s: any, i: number) => {
         let name = s;
-        let type = "Technical";
         if (typeof s === 'object') {
            name = s.name;
-           if (s.type) type = s.type;
         }
+        
+        let type = "Technical";
+        // Deduce type from r.soft_skills if available (works for AI-tailored and older CVs)
+        if (r.soft_skills && Array.isArray(r.soft_skills) && r.soft_skills.includes(name)) {
+            type = "Soft";
+        } else if (typeof s === 'object' && s.type) {
+            type = s.type;
+        }
+        
         return {
           id: Date.now().toString() + i,
           name: name || "",
@@ -290,6 +297,14 @@ function DashboardContent() {
       const summary = r.professional_summary || "";
       const documentTitle = app.job_title === "General CV" ? app.company_name : `${app.job_title} at ${app.company_name}`;
       
+      const formatState = r._wizard_format || {
+        template: selectedResume || "ats_resume_template.html",
+        accentColor: r.accent_color || "#4f46e5",
+        titleFont: r.title_font || "BEBAS NEUE (DEFAULT)",
+        bodyFont: r.body_font || "Lato",
+        language: "English"
+      };
+      
       const draft = {
         contact,
         experiences: experiences.length > 0 ? experiences : [{ id: "1", title: "", employer: "", startDate: "", endDate: "", city: "", current: false, description: "" }],
@@ -297,7 +312,7 @@ function DashboardContent() {
         skills: skills.length > 0 ? skills : [{ id: "1", name: "", level: "Expert", type: "Technical" }],
         summary,
         documentTitle,
-        format: { template: "ats_resume_template.html", accentColor: "#4f46e5", titleFont: "BEBAS NEUE (DEFAULT)", bodyFont: "Lato (default)", language: "English" }
+        format: formatState
       };
       
       localStorage.setItem("resume_wizard_draft", JSON.stringify(draft));

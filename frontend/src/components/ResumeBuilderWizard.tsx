@@ -487,6 +487,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           professional_memberships: [],
           professional_development: [],
           languages: [],
+          _wizard_format: format,
         };
 
         const res = await api.previewHtml(format.template, dummyData);
@@ -1133,6 +1134,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         professional_memberships: [],
         professional_development: [],
         languages: [],
+        _wizard_format: format,
       };
 
       // 2. Get active user id from Supabase session
