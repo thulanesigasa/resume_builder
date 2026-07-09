@@ -141,7 +141,7 @@
                                 <li style="page-break-inside: avoid; margin-bottom: 2px;">{{ skill }}</li>
                                 {% endfor %}
                             </ul>
-                            {% elif skills %}
+                            {% elif skills and not technical_skills and not soft_skills %}
                             <ul style="font-size: 9pt; padding-left: 20px; margin: 5px 0 0 0;">
                                 {% set half = (skills|length / 2)|round(0, 'ceil')|int %}
                                 {% for skill in skills[:half] %}
@@ -158,7 +158,7 @@
                                 <li style="page-break-inside: avoid; margin-bottom: 2px;">{{ skill }}</li>
                                 {% endfor %}
                             </ul>
-                            {% elif skills %}
+                            {% elif skills and not technical_skills and not soft_skills %}
                             <ul style="font-size: 9pt; padding-left: 20px; margin: 5px 0 0 0;">
                                 {% set half = (skills|length / 2)|round(0, 'ceil')|int %}
                                 {% for skill in skills[half:] %}

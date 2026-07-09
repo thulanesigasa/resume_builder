@@ -461,7 +461,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             phone: contact.phone || "",
             location: `${contact.city} ${contact.postalCode}`.trim() || "",
             linkedin: "",
-            github: ""
+            github: "",
+            _wizard: { firstName: contact.firstName, lastName: contact.lastName, city: contact.city, postalCode: contact.postalCode }
           },
           professional_summary: summary || "",
           skills: skills.filter(s => s.name).map(s => s.name),
@@ -471,13 +472,15 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             company: e.employer || "Employer",
             title: e.title || "Job Title",
             dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`,
-            achievements: e.description ? e.description.split('\n').filter(l => l.trim()) : []
+            achievements: e.description ? e.description.split('\n').filter(l => l.trim()) : [],
+            _wizard: { startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
           })),
           education: educations.filter(e => e.school || e.degree).map(e => ({
             institution: e.school || "Institution Name",
             degree: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
             qualification: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
-            dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`
+            dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`,
+            _wizard: { degree: e.degree, course: e.course, startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
           })),
           // Provide empty arrays for optional template sections to prevent Jinja2 errors
           certifications: [],
@@ -1105,7 +1108,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           phone: contact.phone || "",
           location: `${contact.city} ${contact.postalCode}`.trim() || "",
           linkedin: "",
-          github: ""
+          github: "",
+          _wizard: { firstName: contact.firstName, lastName: contact.lastName, city: contact.city, postalCode: contact.postalCode }
         },
         professional_summary: summary || "",
         skills: skills.filter(s => s.name).map(s => s.name),
@@ -1115,13 +1119,15 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           company: e.employer || "Employer",
           title: e.title || "Job Title",
           dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`,
-          achievements: e.description ? e.description.split('\n').filter(l => l.trim()) : []
+          achievements: e.description ? e.description.split('\n').filter(l => l.trim()) : [],
+          _wizard: { startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
         })),
         education: educations.filter(e => e.school || e.degree).map(e => ({
           institution: e.school || "Institution Name",
           degree: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
           qualification: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
-          dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`
+          dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`,
+          _wizard: { degree: e.degree, course: e.course, startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
         })),
         certifications: [],
         professional_memberships: [],

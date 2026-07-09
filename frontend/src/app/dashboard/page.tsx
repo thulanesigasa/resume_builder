@@ -173,15 +173,27 @@ function DashboardContent() {
     try {
       const r = app.resume_json;
       const contact = {
-        firstName: r.contact_info?.name?.split(" ")[0] || "",
-        lastName: r.contact_info?.name?.split(" ").slice(1).join(" ") || "",
-        city: r.contact_info?.location || "",
-        postalCode: "",
+        firstName: r.contact_info?._wizard?.firstName || r.contact_info?.name?.split(" ")[0] || "",
+        lastName: r.contact_info?._wizard?.lastName || r.contact_info?.name?.split(" ").slice(1).join(" ") || "",
+        city: r.contact_info?._wizard?.city || r.contact_info?.location || "",
+        postalCode: r.contact_info?._wizard?.postalCode || "",
         phone: r.contact_info?.phone || "",
         email: r.contact_info?.email || ""
       };
       
       const experiences = (r.experience || []).map((e: any, i: number) => {
+         if (e._wizard) {
+           return {
+             id: Date.now().toString() + i,
+             title: e.title || "",
+             employer: e.company || "",
+             city: e._wizard.city || "",
+             startDate: e._wizard.startDate || "",
+             endDate: e._wizard.endDate || "",
+             current: e._wizard.current || false,
+             description: (e.achievements || []).join("\n")
+           };
+         }
          let startDate = "";
          let endDate = "";
          let current = false;
@@ -209,6 +221,19 @@ function DashboardContent() {
       });
 
       const educations = (r.education || []).map((e: any, i: number) => {
+         if (e._wizard) {
+           return {
+             id: Date.now().toString() + i,
+             school: e.institution || "",
+             degree: e._wizard.degree || "",
+             course: e._wizard.course || "",
+             city: e._wizard.city || "",
+             startDate: e._wizard.startDate || "",
+             endDate: e._wizard.endDate || "",
+             current: e._wizard.current || false,
+             description: ""
+           };
+         }
          let startDate = "";
          let endDate = "";
          let current = false;
