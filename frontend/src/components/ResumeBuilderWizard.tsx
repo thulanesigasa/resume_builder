@@ -154,7 +154,7 @@ function MonthYearPicker({ value, onChange, label, disabled = false }: { value: 
 
 // --- Sortable Components ---
 
-function SortableSkillItem({ id, skill, index, onChangeName, onChangeLevel, onDelete }: any) {
+function SortableSkillItem({ id, skill, index, onChangeName, onChangeLevel, onChangeType, onDelete }: any) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : 1 };
   
@@ -176,6 +176,19 @@ function SortableSkillItem({ id, skill, index, onChangeName, onChangeLevel, onDe
           onChange={(e) => onChangeName(e.target.value)} 
           placeholder="e.g. JavaScript" 
         />
+      </div>
+
+      {/* Skill type — compact vertical stack */}
+      <div className="flex flex-col gap-1.5 w-24 shrink-0">
+        <span className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Type</span>
+        <select 
+          className="w-full text-xs font-semibold px-2 py-1.5 border border-brand-navy/10 rounded focus:outline-none glass-input text-brand-deep"
+          value={skill.type || "Technical"}
+          onChange={(e) => onChangeType(e.target.value)}
+        >
+          <option value="Technical">Technical</option>
+          <option value="Soft">Soft</option>
+        </select>
       </div>
 
       {/* Skill level — compact vertical stack */}
@@ -244,7 +257,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const [contact, setContact] = useState({ firstName: "", lastName: "", city: "", postalCode: "", phone: "", email: "" });
   const [experiences, setExperiences] = useState([{ id: "1", title: "", employer: "", startDate: "", endDate: "", city: "", current: false, description: "" }]);
   const [educations, setEducations] = useState([{ id: "1", school: "", degree: "", startDate: "", endDate: "", city: "", current: false, description: "" }]);
-  const [skills, setSkills] = useState([{ id: "1", name: "", level: "Expert" }]);
+  const [skills, setSkills] = useState<{id: string, name: string, level: string, type: "Technical" | "Soft"}[]>([{ id: "1", name: "", level: "Expert", type: "Technical" }]);
   const [summary, setSummary] = useState("");
   const [documentTitle, setDocumentTitle] = useState("Untitled Resume");
   const [format, setFormat] = useState({ template: "ats_resume_template.html", accentColor: "#4f46e5", titleFont: "BEBAS NEUE (DEFAULT)", bodyFont: "Lato (default)", language: "English" });
@@ -309,7 +322,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
 
   // --- AI Skills State ---
   const [isGeneratingSkills, setIsGeneratingSkills] = useState(false);
-  const [skillsOptions, setSkillsOptions] = useState<string[]>([]);
+  const [skillsOptions, setSkillsOptions] = useState<{name: string, type: "Technical" | "Soft"}[]>([]);
 
   useEffect(() => {
     const fetchCerts = async () => {
@@ -387,7 +400,10 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         if (parsed.contact) setContact(parsed.contact);
         if (parsed.experiences) setExperiences(parsed.experiences);
         if (parsed.educations) setEducations(parsed.educations);
-        if (parsed.skills) setSkills(parsed.skills);
+        if (parsed.skills) {
+          const typedSkills = parsed.skills.map((s: any) => ({ ...s, type: s.type || "Technical" }));
+          setSkills(typedSkills);
+        }
         // Map old draft 'about' to summary if summary is empty
         if (parsed.summary) {
           setSummary(parsed.summary);
@@ -961,14 +977,14 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   };
 
-  const handleAddSuggestedSkill = (skillName: string) => {
-    const exists = skills.some(s => s.name.toLowerCase() === skillName.toLowerCase());
+  const handleAddSuggestedSkill = (skillData: { name: string; type: string }) => {
+    const exists = skills.some(s => s.name.toLowerCase() === skillData.name.toLowerCase());
     if (exists) return;
     
     if (skills.length === 1 && !skills[0].name.trim()) {
-      setSkills([{ id: skills[0].id, name: skillName, level: "Expert" }]);
+      setSkills([{ id: skills[0].id, name: skillData.name, level: "Expert", type: skillData.type as any }]);
     } else {
-      setSkills([...skills, { id: Date.now().toString(), name: skillName, level: "Expert" }]);
+      setSkills([...skills, { id: Date.now().toString(), name: skillData.name, level: "Expert", type: skillData.type as any }]);
     }
   };
 
@@ -1049,6 +1065,23 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       });
       return;
     }
+
+    if (currentStep === 4) {
+      const validSkills = skills.filter(s => s.name.trim());
+      const techCount = validSkills.filter(s => s.type === "Technical").length;
+      const softCount = validSkills.filter(s => s.type === "Soft").length;
+      if ((techCount > 0 || softCount > 0) && techCount !== softCount) {
+        setConfirmSkipModal({
+          message: `You have an uneven ratio of Technical (${techCount}) to Soft (${softCount}) skills. For best ATS results, we recommend a 1:1 ratio. Do you want to continue anyway?`,
+          onConfirm: () => {
+            setConfirmSkipModal(null);
+            if (currentStep < STEPS.length - 1) setCurrentStep(currentStep + 1);
+          }
+        });
+        return;
+      }
+    }
+
     if (currentStep < STEPS.length - 1) setCurrentStep(currentStep + 1);
   };
 
@@ -1286,6 +1319,20 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                       } else {
                         for (let i = currentStep; i < idx; i++) {
                           if (!validateStep(i)) { setCurrentStep(i); return; }
+                          
+                          if (i === 4) {
+                            const validSkills = skills.filter(s => s.name.trim());
+                            const techCount = validSkills.filter(s => s.type === "Technical").length;
+                            const softCount = validSkills.filter(s => s.type === "Soft").length;
+                            if ((techCount > 0 || softCount > 0) && techCount !== softCount) {
+                              setConfirmSkipModal({
+                                message: `You have an uneven ratio of Technical (${techCount}) to Soft (${softCount}) skills. For best ATS results, we recommend a 1:1 ratio. Do you want to continue anyway?`,
+                                onConfirm: () => { setConfirmSkipModal(null); setCurrentStep(idx); }
+                              });
+                              return;
+                            }
+                          }
+
                           if ([1, 2, 4].includes(i) && !stepHasData(i)) {
                             setConfirmSkipModal({
                               message: STEP_EMPTY_MESSAGES[i],
@@ -2009,7 +2056,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                     <p className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Suggested Skills</p>
                     <div className="flex flex-wrap gap-2">
                       {skillsOptions.map((opt, i) => {
-                        const exists = skills.some(s => s.name.toLowerCase() === opt.toLowerCase());
+                        const exists = skills.some(s => s.name.toLowerCase() === opt.name.toLowerCase());
                         return (
                           <button
                             key={i}
@@ -2022,7 +2069,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                                 : 'bg-white border-brand-indigo/20 text-brand-indigo hover:bg-brand-indigo hover:text-white hover:border-brand-indigo hover:scale-105 shadow-sm'
                             }`}
                           >
-                            {opt}
+                            {opt.name} <span className="text-[9px] opacity-70 ml-1">({opt.type})</span>
                           </button>
                         );
                       })}
@@ -2042,6 +2089,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                         index={index} 
                         onChangeName={(val: string) => { const newArr = [...skills]; newArr[index].name = val; setSkills(newArr); }}
                         onChangeLevel={(val: string) => { const newArr = [...skills]; newArr[index].level = val; setSkills(newArr); }}
+                        onChangeType={(val: string) => { const newArr = [...skills]; newArr[index].type = val as any; setSkills(newArr); }}
                         onDelete={() => setSkills(skills.filter(s => s.id !== skill.id))}
                       />
                     ))}
@@ -2050,7 +2098,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
               </div>
 
               <button 
-                onClick={() => setSkills([...skills, { id: Date.now().toString(), name: "", level: "Expert" }])}
+                onClick={() => setSkills([...skills, { id: Date.now().toString(), name: "", level: "Expert", type: "Technical" }])}
                 className="flex items-center gap-2 text-brand-indigo font-bold text-sm hover:underline"
               >
                 <Plus className="w-4 h-4" /> Add Skill

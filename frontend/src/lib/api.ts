@@ -208,7 +208,7 @@ export const api = {
     return res.json();
   },
 
-  async generateSkills(resumeData: any): Promise<{ skills: string[] }> {
+  async generateSkills(resumeData: any): Promise<{ skills: { name: string, type: "Technical" | "Soft" }[] }> {
     const res = await fetch(`${API_BASE_URL}/api/generate-skills`, {
       method: 'POST',
       headers: await getHeaders(),

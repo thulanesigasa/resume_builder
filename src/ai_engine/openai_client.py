@@ -294,7 +294,8 @@ def generate_skills_suggestions(resume_data: dict) -> list[str]:
         "Your task is to analyze their background and extract/generate a list of exactly 8 highly relevant skills "
         "that would optimize their resume for ATS matching. "
         "CRITICAL RULE: You MUST provide exactly 4 hard/technical skills and exactly 4 soft skills (a 1:1 ratio). "
-        "Output the result strictly as a JSON object with a single key 'skills' mapping to a flat list of 8 strings."
+        "Output the result strictly as a JSON object with a single key 'skills' mapping to a list of objects. "
+        "Each object must have a 'name' (string) and a 'type' (string, exactly either 'Technical' or 'Soft')."
     )
 
     try:
