@@ -5,14 +5,10 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
-    :root {
-        --accent: {{ accent_color or '#0891B2' }};
-        --title-font: '{{ title_font or "Inter" }}', sans-serif;
-        --body-font: '{{ body_font or "Inter" }}', sans-serif;
-    }
+    
     
     body {
-        font-family: var(--body-font);
+        font-family: '{{ body_font or "Inter" }}', sans-serif;
         font-size: 10pt;
         line-height: 1.3; /* Tighter line height */
         color: #164E63; /* Deep Cyan Text */
@@ -30,12 +26,12 @@
     }
     
     .header-container h1 {
-        color: var(--accent); /* Primary Cyan */
+        color: {{ accent_color or '#0891B2' }}; /* Primary Cyan */
         font-size: 32pt; /* Reduced from 42pt */
         font-weight: 700;
         margin: 0 0 5px 0;
         letter-spacing: -1px;
-        font-family: var(--title-font);
+        font-family: '{{ title_font or "Inter" }}', sans-serif;
     }
     
     .header-container h1 span.last-name {
@@ -43,7 +39,7 @@
     }
     
     .contact {
-        color: var(--accent);
+        color: {{ accent_color or '#0891B2' }};
         font-size: 9pt; /* Reduced from 10pt */
         font-weight: 500;
         display: flex;
@@ -61,7 +57,7 @@
     
     .divider {
         height: 2px;
-        background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        background: linear-gradient(90deg, transparent, {{ accent_color or '#0891B2' }}, transparent);
         margin: 15px 0; /* Reduced from 25px */
     }
     
@@ -70,16 +66,16 @@
     }
     
     .section-header {
-        color: var(--accent);
+        color: {{ accent_color or '#0891B2' }};
         font-size: 13pt; /* Reduced from 16pt */
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 1px;
         margin-bottom: 8px; /* Reduced from 15px */
         display: inline-block;
-        border-bottom: 3px solid var(--accent); /* Accent color instead of green */
+        border-bottom: 3px solid {{ accent_color or '#0891B2' }}; /* Accent color instead of green */
         padding-bottom: 2px;
-        font-family: var(--title-font);
+        font-family: '{{ title_font or "Inter" }}', sans-serif;
     }
     
     p {
@@ -96,7 +92,7 @@
     .job-top { 
         display: block; 
         font-weight: 700; 
-        color: var(--accent);
+        color: {{ accent_color or '#0891B2' }};
         font-size: 11pt; /* Reduced from 12pt */
     }
     
@@ -109,7 +105,7 @@
     .job-date { 
         float: right; 
         font-weight: 400;
-        color: var(--accent);
+        color: {{ accent_color or '#0891B2' }};
         background: white;
         padding: 1px 8px;
         border-radius: 10px;
@@ -128,7 +124,7 @@
     }
     
     .skill-badge {
-        background-color: var(--accent);
+        background-color: {{ accent_color or '#0891B2' }};
         color: white;
         padding: 3px 10px;
         border-radius: 5px;

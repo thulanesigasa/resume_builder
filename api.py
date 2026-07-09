@@ -242,6 +242,7 @@ async def get_ats_score(payload: AtsScoreRequest, request: Request, user: dict =
 @limiter.limit("20/minute")
 async def compile_document(payload: CompileRequest, request: Request, user: dict = Depends(verify_token)):
     logger.info(f"API Compile request received for: {payload.doc_type}")
+    logger.info(f"[DEBUG] template_name received: {payload.template_name}")
     try:
         # Create folder name
         folder_name = create_application_folder_name(payload.company_name, payload.job_title)

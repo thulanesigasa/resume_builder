@@ -19,6 +19,7 @@ def inject_json_to_html(data: dict, template_filename: str) -> str:
             autoescape=select_autoescape(['html', 'xml'])
         )
         template = env.get_template(template_filename)
+        logger.info(f"[DEBUG] Template loaded: {template.filename}")
         
         # We pass the data dictionary directly into the template context
         rendered_html = template.render(**data)

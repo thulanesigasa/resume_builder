@@ -3,13 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <style>
-    :root {
-        --accent: {{ accent_color or '#d2b48c' }};
-        --title-font: '{{ title_font or "Arial" }}', sans-serif;
-        --body-font: '{{ body_font or "Arial" }}', sans-serif;
-    }
+    
     body {
-        font-family: var(--body-font);
+        font-family: '{{ body_font or "Arial" }}', sans-serif;
         font-size: 9.5pt;
         line-height: 1.3; /* Tighter line height */
         color: #000;
@@ -25,12 +21,12 @@
         bottom: 0;
         left: 0;
         width: 25px;
-        background-color: var(--accent); /* Tan/Beige */
+        background-color: {{ accent_color or '#d2b48c' }}; /* Tan/Beige */
     }
     .header h1 {
         font-size: 38pt;
         margin: 0 0 5px 0;
-        font-family: var(--title-font);
+        font-family: '{{ title_font or "Arial" }}', sans-serif;
     }
     .header h1 .first-name { font-weight: bold; }
     .header h1 .last-name { font-weight: normal; }
@@ -39,18 +35,18 @@
         margin-bottom: 10px;
     }
     .divider {
-        border-top: 1px solid var(--accent);
+        border-top: 1px solid {{ accent_color or '#d2b48c' }};
         margin-bottom: 10px;
     }
     .section-header {
         font-size: 14pt;
         font-weight: bold;
-        border-bottom: 1px solid var(--accent);
-        color: var(--accent);
+        border-bottom: 1px solid {{ accent_color or '#d2b48c' }};
+        color: {{ accent_color or '#d2b48c' }};
         margin-top: 20px;
         margin-bottom: 10px;
         padding-bottom: 2px;
-        font-family: var(--title-font);
+        font-family: '{{ title_font or "Arial" }}', sans-serif;
     }
     .job { margin-bottom: 15px; }
     .job-top { display: block; }

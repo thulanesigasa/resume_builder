@@ -420,11 +420,16 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           if (!validTemplates.includes(parsed.format.template)) {
             parsed.format.template = 'ats_resume_template.html';
           }
+          console.log("[DEBUG DRAFT LOAD] Setting format from draft:", JSON.stringify(parsed.format));
           setFormat(parsed.format);
+        } else {
+          console.log("[DEBUG DRAFT LOAD] No format in draft, keeping default");
         }
       } catch (e) {
         console.error("Failed to parse draft");
       }
+    } else {
+      console.log("[DEBUG DRAFT LOAD] No draft found in localStorage");
     }
     setIsLoaded(true);
   }, []);
@@ -432,19 +437,23 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   // --- Save Draft on Change ---
   useEffect(() => {
     if (isLoaded) {
+      console.log("[DEBUG DRAFT SAVE] Saving draft with format.template =", format.template);
       localStorage.setItem("resume_wizard_draft", JSON.stringify({ contact, experiences, educations, skills, summary, documentTitle, format }));
     }
   }, [contact, experiences, educations, skills, summary, documentTitle, format, isLoaded]);
 
   const hasAppliedInitialTemplate = useRef(false);
   useEffect(() => {
+    console.log("[DEBUG selectedTemplate effect] selectedTemplate =", selectedTemplate, "| isLoaded =", isLoaded, "| hasAppliedInitial =", hasAppliedInitialTemplate.current);
     if (!isLoaded) return; // Wait until draft has been loaded first
     if (!hasAppliedInitialTemplate.current) {
       // Skip the first run after load — the draft already set the correct template
       hasAppliedInitialTemplate.current = true;
+      console.log("[DEBUG selectedTemplate effect] SKIPPING first run after load");
       return;
     }
     if (selectedTemplate) {
+      console.log("[DEBUG selectedTemplate effect] OVERRIDING format.template to:", selectedTemplate);
       setFormat(prev => ({ ...prev, template: selectedTemplate }));
     }
   }, [selectedTemplate, isLoaded]);
@@ -1107,6 +1116,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
 
   const handleDownload = async () => {
     setIsCompiling(true);
+    console.log("[DEBUG handleDownload] format.template =", format.template, "| full format =", JSON.stringify(format));
     try {
       // 1. Build the dummyData JSON object (same as preview mapping)
       const dummyData = {
