@@ -256,7 +256,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   // --- State ---
   const [contact, setContact] = useState({ firstName: "", lastName: "", city: "", postalCode: "", phone: "", email: "" });
   const [experiences, setExperiences] = useState([{ id: "1", title: "", employer: "", startDate: "", endDate: "", city: "", current: false, description: "" }]);
-  const [educations, setEducations] = useState([{ id: "1", school: "", degree: "", startDate: "", endDate: "", city: "", current: false, description: "" }]);
+  const [educations, setEducations] = useState([{ id: "1", school: "", degree: "", course: "", startDate: "", endDate: "", city: "", current: false, description: "" }]);
   const [skills, setSkills] = useState<{id: string, name: string, level: string, type: "Technical" | "Soft"}[]>([{ id: "1", name: "", level: "Expert", type: "Technical" }]);
   const [summary, setSummary] = useState("");
   const [documentTitle, setDocumentTitle] = useState("Untitled Resume");
@@ -475,8 +475,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           })),
           education: educations.filter(e => e.school || e.degree).map(e => ({
             institution: e.school || "Institution Name",
-            degree: e.degree || "Degree",
-            qualification: e.degree || "Degree",
+            degree: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
+            qualification: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
             dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`
           })),
           // Provide empty arrays for optional template sections to prevent Jinja2 errors
@@ -530,7 +530,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         context += `Education:\n`;
         educations.forEach(e => {
           if (e.school || e.degree) {
-            context += `- ${e.degree} at ${e.school} (${e.startDate} - ${e.current ? 'Present' : e.endDate})\n`;
+            context += `- ${e.course ? e.degree + ' in ' + e.course : e.degree} at ${e.school} (${e.startDate} - ${e.current ? 'Present' : e.endDate})\n`;
           }
         });
       }
@@ -1119,8 +1119,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         })),
         education: educations.filter(e => e.school || e.degree).map(e => ({
           institution: e.school || "Institution Name",
-          degree: e.degree || "Degree",
-          qualification: e.degree || "Degree",
+          degree: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
+          qualification: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
           dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`
         })),
         certifications: [],
@@ -1199,7 +1199,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       compiled += `--- EDUCATION ---\n`;
       educations.forEach(edu => {
         if (edu.degree || edu.school) {
-          compiled += `**${edu.degree}** - ${edu.school} (${edu.city})\n`;
+          compiled += `**${edu.course ? edu.degree + ' - ' + edu.course : edu.degree}** - ${edu.school} (${edu.city})\n`;
           compiled += `${edu.startDate} - ${edu.current ? 'Present' : edu.endDate}\n`;
           if (edu.description) compiled += `${edu.description}\n`;
           compiled += `\n`;
@@ -1584,6 +1584,14 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                     </div>
                   </div>
 
+                  {/* Row 1.5: Course (Conditional) */}
+                  {edu.degree && !["Grade 12 / Matric", "Grade 11", "Grade 10", "Grade 9"].includes(edu.degree) && (
+                    <div className="relative">
+                      <label className="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider rounded-md">Course / Field of Study</label>
+                      <input type="text" className="w-full px-4 py-3 glass-input text-brand-deep font-medium focus:outline-none focus:ring-2 focus:ring-brand-indigo/50" value={edu.course || ""} onChange={e => { const newArr = [...educations]; newArr[index].course = e.target.value; setEducations(newArr); }} placeholder="e.g. BSc Computer Science" />
+                    </div>
+                  )}
+
                   {/* Row 2: Start Date + End Date (custom picker) */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <MonthYearPicker
@@ -1615,7 +1623,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
               ))}
 
               <button 
-                onClick={() => setEducations([...educations, { id: Date.now().toString(), school: "", degree: "", startDate: "", endDate: "", city: "", current: false, description: "" }])}
+                onClick={() => setEducations([...educations, { id: Date.now().toString(), school: "", degree: "", course: "", startDate: "", endDate: "", city: "", current: false, description: "" }])}
                 className="flex items-center gap-2 text-brand-indigo font-bold text-sm hover:underline"
               >
                 <Plus className="w-4 h-4" /> Add Education
