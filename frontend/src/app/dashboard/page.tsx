@@ -1570,7 +1570,7 @@ function DashboardContent() {
                     </div>
 
                     <button
-                      onClick={() => setActiveTab("builder")}
+                      onClick={() => { localStorage.removeItem("resume_wizard_draft"); setActiveTab("builder"); }}
                       className="w-full py-3 border border-brand-indigo/30 rounded-xl bg-brand-indigo/[0.02] hover:bg-brand-indigo/[0.05] transition-colors flex flex-col items-center justify-center text-center group"
                     >
                       <Plus className="w-6 h-6 text-brand-indigo mb-1 group-hover:scale-110 transition-transform" />
