@@ -165,27 +165,47 @@
     </div>
     {% endif %}
 
-    {% if skills or technical_skills %}
-    <div class="section">
-        <div class="section-header">Technical Skills</div>
-        <div class="skills-container">
-            {% set skill_list = (skills or technical_skills)[:10] %}
-            {% set half = (skill_list|length / 2)|round(0, 'ceil')|int %}
-            <div style="display: table; width: 100%;">
-                <div style="display: table-cell; width: 50%; vertical-align: top; padding-right: 5px;">
-                    {% for skill in skill_list[:half] %}
-                    <div class="skill-badge" style="margin-bottom: 5px;">{{ skill }}</div>
-                    {% endfor %}
-                </div>
-                <div style="display: table-cell; width: 50%; vertical-align: top; padding-left: 5px;">
-                    {% for skill in skill_list[half:] %}
-                    <div class="skill-badge" style="margin-bottom: 5px;">{{ skill }}</div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
+    {% if skills or technical_skills or soft_skills %}
+      <div class="section">
+          <div class="section-header">Key Skills</div>
+          <div style="display: table; width: 100%;">
+              <div style="display: table-cell; width: 50%; vertical-align: top; padding-right: 10px;">
+                  {% if technical_skills %}
+                  <h3 style="font-size: 10pt; margin: 0 0 5px 0;">Technical</h3>
+                  <ul>
+                      {% for skill in technical_skills %}
+                      <li style="page-break-inside: avoid; margin-bottom: 4px;">{{ skill }}</li>
+                      {% endfor %}
+                  </ul>
+                  {% elif skills %}
+                  <ul>
+                      {% set half = (skills|length / 2)|round(0, 'ceil')|int %}
+                      {% for skill in skills[:half] %}
+                      <li style="page-break-inside: avoid; margin-bottom: 4px;">{{ skill }}</li>
+                      {% endfor %}
+                  </ul>
+                  {% endif %}
+              </div>
+              <div style="display: table-cell; width: 50%; vertical-align: top;">
+                  {% if soft_skills %}
+                  <h3 style="font-size: 10pt; margin: 0 0 5px 0;">Soft Skills</h3>
+                  <ul>
+                      {% for skill in soft_skills %}
+                      <li style="page-break-inside: avoid; margin-bottom: 4px;">{{ skill }}</li>
+                      {% endfor %}
+                  </ul>
+                  {% elif skills %}
+                  <ul>
+                      {% set half = (skills|length / 2)|round(0, 'ceil')|int %}
+                      {% for skill in skills[half:] %}
+                      <li style="page-break-inside: avoid; margin-bottom: 4px;">{{ skill }}</li>
+                      {% endfor %}
+                  </ul>
+                  {% endif %}
+              </div>
+          </div>
+      </div>
+      {% endif %}
 
     {% if experience %}
     <div class="section">
