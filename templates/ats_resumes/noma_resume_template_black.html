@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+    body {
+        font-family: '{{ body_font or "Helvetica" }}', sans-serif;
+        font-size: 9.5pt;
+        line-height: 1.4;
+        color: #222;
+        margin: 0;
+        padding: 20mm;
+        box-sizing: border-box;
+        background-color: #fff;
+    }
+    .header {
+        text-align: left;
+        margin-bottom: 25px;
+    }
+    .header h1 {
+        font-family: '{{ title_font or "Helvetica" }}', sans-serif;
+        font-size: 28pt;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        letter-spacing: -0.5px;
+        color: {{ accent_color or '#111' }};
+    }
+    .header h2 {
+        font-family: '{{ title_font or "Helvetica" }}', sans-serif;
+        font-size: 12pt;
+        font-weight: 600;
+        margin: 0 0 15px 0;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+    }
+    .contact-bar {
+        font-size: 8.5pt;
+        color: #666;
+        border-top: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+        padding: 8px 0;
+        margin-bottom: 5px;
+    }
+    .contact-bar span {
+        margin-right: 15px;
+    }
+    .section {
+        margin-bottom: 20px;
+    }
+    .section-header {
+        font-family: '{{ title_font or "Helvetica" }}', sans-serif;
+        font-size: 12pt;
+        font-weight: 700;
+        color: {{ accent_color or '#111' }};
+        text-transform: uppercase;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        border-bottom: 2px solid {{ accent_color or '#111' }};
+        padding-bottom: 2px;
+        letter-spacing: 0.5px;
+    }
+    .summary-text {
+        margin-bottom: 15px;
+        text-align: justify;
+    }
+    .job {
+        margin-bottom: 15px;
+        page-break-inside: avoid;
+    }
+    .job-top {
+        display: table;
+        width: 100%;
+        font-weight: 700;
+        font-size: 10pt;
+        margin-bottom: 3px;
+    }
+    .job-title-company {
+        display: table-cell;
+        text-align: left;
+    }
+    .job-title {
+        color: {{ accent_color or '#111' }};
+    }
+    .job-date-loc {
+        display: table-cell;
+        text-align: right;
+        font-weight: normal;
+        font-style: italic;
+        color: #666;
+    }
+    ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+    li {
+        margin-bottom: 3px;
+    }
+    .skills-grid {
+        display: table;
+        width: 100%;
+    }
+    .skills-col {
+        display: table-cell;
+        width: 50%;
+        vertical-align: top;
+    }
+    .skills-col:first-child {
+        padding-right: 15px;
+    }
+    .skills-col h3 {
+        font-size: 10pt;
+        margin: 0 0 6px 0;
+        color: {{ accent_color or '#111' }};
+        text-transform: uppercase;
+    }
+</style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ contact_info.name }}</h1>
+        <h2>Master CV</h2>
+        <div class="contact-bar">
+            {% if contact_info.phone %}<span>Phone: {{ contact_info.phone }}</span>{% endif %}
+            {% if contact_info.email %}<span>Email: {{ contact_info.email }}</span>{% endif %}
+            {% if contact_info.location %}<span>Address: {{ contact_info.location }}</span>{% endif %}
+            {% if contact_info.linkedin %}<span>LinkedIn: {{ contact_info.linkedin }}</span>{% endif %}
+            {% if contact_info.github %}<span>GitHub: {{ contact_info.github }}</span>{% endif %}
+        </div>
+    </div>
+
+    {% if professional_summary %}
+    <div class="section">
+        <div class="section-header">Professional Summary</div>
+        <p class="summary-text">{{ professional_summary }}</p>
+    </div>
+    {% endif %}
+
+    {% if experience %}
+    <div class="section">
+        <div class="section-header">Work Experience</div>
+        {% for job in experience %}
+        <div class="job">
+            <div class="job-top">
+                <div class="job-title-company">
+                    <span class="job-title">{{ job.title }}</span>, {{ job.company }}
+                </div>
+                <div class="job-date-loc">
+                    {{ job.dates }}
+                </div>
+            </div>
+            <ul>
+                {% for achievement in job.achievements %}
+                <li>{{ achievement }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if education %}
+    <div class="section">
+        <div class="section-header">Education</div>
+        {% for edu in education %}
+        <div class="job">
+            <div class="job-top">
+                <div class="job-title-company">
+                    <span class="job-title">{{ edu.degree }}</span>, {{ edu.institution }}
+                </div>
+                <div class="job-date-loc">
+                    {{ edu.dates }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if skills or technical_skills or soft_skills %}
+    <div class="section">
+        <div class="section-header">Key Skills</div>
+        <div class="skills-grid">
+            <div class="skills-col">
+                {% if technical_skills %}
+                <h3>Technical Skills</h3>
+                <ul>
+                    {% for skill in technical_skills %}
+                    <li>{{ skill }}</li>
+                    {% endfor %}
+                </ul>
+                {% elif skills and not technical_skills and not soft_skills %}
+                <ul>
+                    {% set half = (skills|length / 2)|round(0, 'ceil')|int %}
+                    {% for skill in skills[:half] %}
+                    <li>{{ skill }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            <div class="skills-col">
+                {% if soft_skills %}
+                <h3>Soft Skills</h3>
+                <ul>
+                    {% for skill in soft_skills %}
+                    <li>{{ skill }}</li>
+                    {% endfor %}
+                </ul>
+                {% elif skills and not technical_skills and not soft_skills %}
+                <ul>
+                    {% set half = (skills|length / 2)|round(0, 'ceil')|int %}
+                    {% for skill in skills[half:] %}
+                    <li>{{ skill }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if certifications %}
+    <div class="section">
+        <div class="section-header">Certifications</div>
+        <ul>
+            {% for cert in certifications %}
+            <li>{{ cert.name }} - {{ cert.issuer }} ({{ cert.date }})</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</body>
+</html>

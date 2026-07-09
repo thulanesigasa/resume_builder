@@ -416,7 +416,17 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         if (parsed.documentTitle) setDocumentTitle(parsed.documentTitle);
         if (parsed.format) {
           // Backward compatibility check for old template names
-          const validTemplates = ['ats_resume_template.html', 'ui_ux_pro_max_resume.html', 'amy_stein_resume.html', 'ava_martinez_resume.html', 'david_turner_resume.html'];
+          const validTemplates = [
+            'ats_resume_template.html', 
+            'ui_ux_pro_max_resume.html', 
+            'amy_stein_resume.html', 
+            'ava_martinez_resume.html', 
+            'david_turner_resume.html',
+            'base_resume_template_black.html',
+            'noma_resume_template_black.html',
+            'note_resume_template_black.html',
+            'page_resume_template_black.html'
+          ];
           if (!validTemplates.includes(parsed.format.template)) {
             parsed.format.template = 'ats_resume_template.html';
           }
@@ -2175,6 +2185,10 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                       <option value="amy_stein_resume.html">Amy Stein (Modern)</option>
                       <option value="ava_martinez_resume.html">Ava Martinez (Creative)</option>
                       <option value="david_turner_resume.html">David Turner (Classic)</option>
+                      <option value="base_resume_template_black.html">Base Blueprint</option>
+                      <option value="noma_resume_template_black.html">Noma Clean</option>
+                      <option value="note_resume_template_black.html">Note Serif</option>
+                      <option value="page_resume_template_black.html">Page Minimalist</option>
                     </select>
                     <ChevronRight className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-brand-navy/40 rotate-90 pointer-events-none" />
                   </div>
