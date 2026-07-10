@@ -2031,7 +2031,7 @@ function DashboardContent() {
                                   f.status === 'error' 
                                     ? 'border-red-200 bg-red-50/10' 
                                     : f.status === 'success' 
-                                      ? 'border-green-200' 
+                                      ? 'border-brand-indigo/35 bg-brand-indigo/[0.01]' 
                                       : 'border-brand-navy/10 hover:border-brand-indigo/20'
                                 }`}
                               >
@@ -2042,7 +2042,7 @@ function DashboardContent() {
                                       f.status === 'error' 
                                         ? 'bg-red-100 text-red-500' 
                                         : f.status === 'success' 
-                                          ? 'bg-green-100 text-green-500' 
+                                          ? 'bg-brand-indigo/15 text-brand-indigo' 
                                           : 'bg-brand-indigo/10 text-brand-indigo animate-pulse'
                                     }`}>
                                       <FileText className="w-5 h-5" />
@@ -2077,7 +2077,7 @@ function DashboardContent() {
                                         >
                                           {f.isEditing ? "Close" : "Edit Details"}
                                         </button>
-                                        <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                        <span className="text-[10px] font-bold text-brand-indigo bg-brand-indigo/15 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                                           <Check className="w-3 h-3" /> Done
                                         </span>
                                         <button
