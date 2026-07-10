@@ -84,6 +84,7 @@ function DashboardContent() {
   // States for advanced upload queue
   const [uploadingFiles, setUploadingFiles] = useState<any[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const certificatesRef = useRef(certificates);
 
   useEffect(() => {
@@ -996,6 +997,20 @@ function DashboardContent() {
       }
     } catch (err: any) {
       triggerToast("Failed to update certificate: " + err.message, "error");
+    }
+  };
+  
+  const handleCompleteUploads = async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    try {
+      await loadUserData(user.id);
+      setUploadingFiles(prev => prev.filter(f => f.status !== "success"));
+      triggerToast("Credentials synced and updated successfully!", "success");
+    } catch (err: any) {
+      triggerToast("Sync failed: " + err.message, "error");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -2173,6 +2188,27 @@ function DashboardContent() {
                               </div>
                             ))}
                           </div>
+
+                          {uploadingFiles.some(f => f.status === "success") && (
+                            <button
+                              type="button"
+                              onClick={handleCompleteUploads}
+                              disabled={isSyncing}
+                              className="w-full mt-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_4px_12px_rgba(22,163,74,0.15)] hover:shadow-[0_4px_20px_rgba(22,163,74,0.25)] cursor-pointer"
+                            >
+                              {isSyncing ? (
+                                <>
+                                  <RefreshCw className="w-4 h-4 animate-spin" />
+                                  Syncing Credentials...
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="w-4 h-4" />
+                                  Complete & Sync to Credentials
+                                </>
+                              )}
+                            </button>
+                          )}
                         </div>
                       )}
 
