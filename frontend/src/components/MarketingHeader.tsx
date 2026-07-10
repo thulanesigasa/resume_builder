@@ -42,7 +42,12 @@ export default function MarketingHeader() {
       }`}
     >
       <div className="max-w-6xl mx-auto px-4 md:px-6 flex justify-between items-center">
-        <div></div> {/* Empty div to keep flex-between layout working properly for the nav */}
+        <Link href="/" className="flex items-center gap-2 text-brand-deep hover:opacity-85 transition-opacity cursor-pointer">
+          <div className="w-6 h-6 rounded-lg bg-brand-indigo flex items-center justify-center text-white font-bold text-xs shadow-sm">
+            r
+          </div>
+          <span className="font-extrabold text-sm tracking-tight">rbptech</span>
+        </Link>
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
