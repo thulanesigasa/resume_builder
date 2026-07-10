@@ -354,7 +354,7 @@ export default function EditorPage() {
             className="p-2 btn-secondary hover:text-brand-indigo flex items-center gap-1 text-xs cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            Back to Dashboard
           </button>
           <div className="h-6 w-[1px] bg-brand-navy/15"></div>
           <div>
