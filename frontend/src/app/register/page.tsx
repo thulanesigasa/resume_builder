@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { UserPlus, Mail, Key, Phone, User, Briefcase, MapPin, Globe, ChevronDown, Eye, EyeOff } from "lucide-react";
+import MarketingFooter from "@/components/MarketingFooter";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -91,7 +92,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-12">
+    <div className="min-h-screen flex flex-col">
+    <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Branding header */}
         <div className="text-center mb-8">
@@ -379,6 +381,8 @@ export default function RegisterPage() {
           )}
         </div>
       </div>
+    </div>
+    <MarketingFooter />
     </div>
   );
 }

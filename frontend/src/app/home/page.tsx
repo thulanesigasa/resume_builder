@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
 import ResumeBuilderWizard from "@/components/ResumeBuilderWizard";
+import MarketingFooter from "@/components/MarketingFooter";
 import {
   User,
   LogOut,
@@ -2379,6 +2380,8 @@ function DashboardContent() {
       )}
 
 
+
+      <MarketingFooter />
     </div>
   );
 }

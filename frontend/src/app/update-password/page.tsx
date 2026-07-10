@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Lock, CheckCircle2, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import MarketingHeader from "@/components/MarketingHeader";
+import MarketingFooter from "@/components/MarketingFooter";
 import Link from "next/link";
 
 export default function UpdatePassword() {
@@ -169,6 +170,7 @@ export default function UpdatePassword() {
           </div>
         </div>
       </main>
+      <MarketingFooter />
     </div>
   );
 }

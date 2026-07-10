@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { LogIn, Key, Mail, Briefcase, Eye, EyeOff } from "lucide-react";
+import MarketingFooter from "@/components/MarketingFooter";
 
 function LoginContent() {
   const router = useRouter();
@@ -47,7 +48,8 @@ function LoginContent() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-12">
+    <div className="min-h-screen flex flex-col">
+    <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Branding header */}
         <div className="text-center mb-8">
@@ -162,6 +164,8 @@ function LoginContent() {
           </div>
         </div>
       </div>
+    </div>
+    <MarketingFooter />
     </div>
   );
 }

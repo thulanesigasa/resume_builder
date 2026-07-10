@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Mail, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import MarketingHeader from "@/components/MarketingHeader";
+import MarketingFooter from "@/components/MarketingFooter";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -120,6 +121,7 @@ export default function ForgotPassword() {
           </div>
         </div>
       </main>
+      <MarketingFooter />
     </div>
   );
 }
