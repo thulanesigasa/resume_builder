@@ -41,7 +41,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
             {user ? (
               <button
-                onClick={() => router.push("/dashboard")}
+                onClick={() => router.push("/home")}
                 className="px-8 py-3.5 btn-primary text-sm flex items-center justify-center gap-2"
               >
                 Configure Workspace

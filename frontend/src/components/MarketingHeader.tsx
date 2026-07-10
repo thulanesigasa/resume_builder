@@ -67,10 +67,10 @@ export default function MarketingHeader() {
 
           {user ? (
             <button
-              onClick={() => router.push("/dashboard")}
-              className="px-5 py-2 btn-secondary text-xs"
+              onClick={() => router.push("/home")}
+              className="px-5 py-2 btn-secondary text-xs cursor-pointer"
             >
-              Go to Dashboard
+              Go to Home
             </button>
           ) : (
             <div className="flex items-center gap-2">
@@ -134,11 +134,11 @@ export default function MarketingHeader() {
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
-                router.push("/dashboard");
+                router.push("/home");
               }}
-              className="w-full py-3 btn-primary text-sm"
+              className="w-full py-3 btn-primary text-sm cursor-pointer"
             >
-              Go to Dashboard
+              Go to Home
             </button>
           ) : (
             <div className="grid grid-cols-2 gap-2 mt-4">

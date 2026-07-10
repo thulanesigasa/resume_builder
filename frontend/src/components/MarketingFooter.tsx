@@ -37,7 +37,7 @@ export default function MarketingFooter() {
             <ul className="space-y-2">
               <li><Link href="/features" className="text-xs text-brand-navy/60 hover:text-brand-indigo transition-colors">Features</Link></li>
               <li><Link href="/pricing" className="text-xs text-brand-navy/60 hover:text-brand-indigo transition-colors">Pricing</Link></li>
-              <li><Link href="/dashboard" className="text-xs text-brand-navy/60 hover:text-brand-indigo transition-colors">Dashboard</Link></li>
+              <li><Link href="/" className="text-xs text-brand-navy/60 hover:text-brand-indigo transition-colors">Dashboard</Link></li>
             </ul>
           </div>
 
