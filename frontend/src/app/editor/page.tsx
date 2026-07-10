@@ -350,11 +350,11 @@ export default function EditorPage() {
       <nav className="glass-panel sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-t-0 border-x-0">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => router.push("/dashboard")}
-            className="p-2 btn-secondary hover:text-brand-indigo flex items-center gap-1 text-xs"
+            onClick={() => router.push("/home")}
+            className="p-2 btn-secondary hover:text-brand-indigo flex items-center gap-1 text-xs cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            Back to Home
           </button>
           <div className="h-6 w-[1px] bg-brand-navy/15"></div>
           <div>

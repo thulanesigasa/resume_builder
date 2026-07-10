@@ -63,7 +63,7 @@ export default function UpdatePassword() {
 
       setSuccess(true);
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push("/home");
       }, 3000);
     } catch (err: any) {
       setError(err.message || "Failed to update password.");
@@ -96,13 +96,13 @@ export default function UpdatePassword() {
                 </div>
                 <h3 className="text-xl font-bold text-brand-deep">Password Updated!</h3>
                 <p className="text-sm text-brand-navy/70">
-                  Your password has been successfully saved. Redirecting you to your dashboard...
+                  Your password has been successfully saved. Redirecting you to your workspace...
                 </p>
                 <button
-                  onClick={() => router.push("/dashboard")}
-                  className="mt-6 inline-flex items-center justify-center w-full py-2.5 text-sm font-semibold text-white bg-brand-indigo hover:bg-brand-deep rounded-xl transition-colors"
+                  onClick={() => router.push("/home")}
+                  className="mt-6 inline-flex items-center justify-center w-full py-2.5 text-sm font-semibold text-white bg-brand-indigo hover:bg-brand-deep rounded-xl transition-colors cursor-pointer"
                 >
-                  Go to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+                  Go to Home <ArrowRight className="w-4 h-4 ml-2" />
                 </button>
               </div>
             ) : (
