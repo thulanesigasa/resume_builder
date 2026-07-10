@@ -10,6 +10,11 @@ ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS target_job_title 
 ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS experience_level text;
 ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS location text;
 ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS linkedin_url text;
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS role text DEFAULT 'standard';
+ALTER TABLE IF EXISTS public.profiles ADD COLUMN IF NOT EXISTS last_credit_reset text;
+
+-- To grant admin privileges to kairosounds.01@gmail.com, run the following statement:
+-- UPDATE public.profiles SET role = 'admin', credits = 50, last_credit_reset = CURRENT_DATE::text WHERE id IN (SELECT id FROM auth.users WHERE email = 'kairosounds.01@gmail.com');
 
 CREATE TABLE IF NOT EXISTS public.payfast_orders (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
