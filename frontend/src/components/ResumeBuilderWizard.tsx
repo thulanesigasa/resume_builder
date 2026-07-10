@@ -1801,7 +1801,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                             f.status === 'error' 
                               ? 'border-red-200 bg-red-50/10' 
                               : f.status === 'success' 
-                                ? 'border-green-200' 
+                                ? 'border-brand-indigo/35 bg-brand-indigo/[0.01]' 
                                 : 'border-brand-navy/10 hover:border-brand-indigo/20'
                           }`}
                         >
@@ -1812,7 +1812,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                                 f.status === 'error' 
                                   ? 'bg-red-100 text-red-500' 
                                   : f.status === 'success' 
-                                    ? 'bg-green-100 text-green-500' 
+                                    ? 'bg-brand-indigo/15 text-brand-indigo' 
                                     : 'bg-brand-indigo/10 text-brand-indigo animate-pulse'
                               }`}>
                                 <FileText className="w-5 h-5" />
@@ -1847,7 +1847,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                                   >
                                     {f.isEditing ? "Close" : "Edit Details"}
                                   </button>
-                                  <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                  <span className="text-[10px] font-bold text-brand-indigo bg-brand-indigo/15 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                                     <Check className="w-3 h-3" /> Done
                                   </span>
                                   <button
@@ -1988,9 +1988,9 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
 
                 {/* Manual save success toast */}
                 {manualSaveSuccess && (
-                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl animate-in fade-in slide-in-from-bottom-2">
-                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span className="text-sm font-semibold text-green-700">Certificate saved to your Credentials & Certificates!</span>
+                  <div className="flex items-center gap-2 p-3 bg-brand-indigo/5 border border-brand-indigo/20 rounded-xl animate-in fade-in slide-in-from-bottom-2">
+                    <Check className="w-4 h-4 text-brand-indigo flex-shrink-0" />
+                    <span className="text-sm font-semibold text-brand-deep">Certificate saved to your Credentials & Certificates!</span>
                   </div>
                 )}
 
@@ -1998,7 +1998,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                   type="button"
                   onClick={handleSaveManualCertificate}
                   disabled={uploadingCert || (!newCertName.trim() || !manualCertText.trim())}
-                  className={`w-full py-3 text-sm flex items-center justify-center gap-2 disabled:opacity-50 rounded-xl font-bold transition-all duration-300 ${manualSaveSuccess ? 'bg-green-500 text-white shadow-green-500/20 shadow-lg' : 'btn-primary'}`}
+                  className={`w-full py-3 text-sm flex items-center justify-center gap-2 disabled:opacity-50 rounded-xl font-bold transition-all duration-300 ${manualSaveSuccess ? 'bg-brand-indigo text-white shadow-brand-indigo/20 shadow-lg' : 'btn-primary'}`}
                 >
                   {uploadingCert ? (
                     <>
