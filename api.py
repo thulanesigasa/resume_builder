@@ -192,9 +192,34 @@ async def generate_doc(payload: GenerateRequest, request: Request, user: dict = 
 
     # 1. Check if user has enough credits
     try:
-        profile_res = supabase.table("profiles").select("credits").eq("id", user.id).execute()
-        current_credits = profile_res.data[0].get("credits", 0) if profile_res.data else 0
-        
+        is_admin = False
+        if hasattr(user, "email") and user.email == "kairosounds.01@gmail.com":
+            is_admin = True
+
+        try:
+            profile_res = supabase.table("profiles").select("credits, role, last_credit_reset").eq("id", user.id).execute()
+            profile_data = profile_res.data[0] if profile_res.data else {}
+            current_credits = profile_data.get("credits", 0)
+            if profile_data.get("role") == "admin":
+                is_admin = True
+
+            # Daily credits reset for admins (50 credits a day)
+            if is_admin:
+                import datetime
+                today_str = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+                last_reset = profile_data.get("last_credit_reset")
+                if not last_reset or last_reset != today_str:
+                    current_credits = 50
+                    supabase.table("profiles").update({
+                        "credits": 50,
+                        "last_credit_reset": today_str
+                    }).eq("id", user.id).execute()
+                    logger.info(f"Reset admin user {user.id} credits to 50 for the new day ({today_str})")
+        except Exception as schema_err:
+            logger.warning(f"Failed to query role/last_credit_reset (may not exist in DB yet): {schema_err}")
+            profile_res = supabase.table("profiles").select("credits").eq("id", user.id).execute()
+            current_credits = profile_res.data[0].get("credits", 0) if profile_res.data else 0
+
         if current_credits <= 0:
             raise HTTPException(status_code=402, detail="INSUFFICIENT_CREDITS")
             
@@ -219,7 +244,6 @@ async def generate_doc(payload: GenerateRequest, request: Request, user: dict = 
         supabase.table("profiles").update({
             "credits": current_credits - 1
         }).eq("id", user.id).execute()
-        
         logger.info(f"Successfully deducted 1 credit from user {user.id}. Remaining: {current_credits - 1}")
         
         return data_dict

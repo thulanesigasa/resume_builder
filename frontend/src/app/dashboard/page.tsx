@@ -81,6 +81,7 @@ function DashboardContent() {
   // Stats
   const [stats, setStats] = useState({ appsCount: 0, certsCount: 0, avgAts: 0 });
   const [userCredits, setUserCredits] = useState<number>(0);
+  const [userRole, setUserRole] = useState<string>("standard");
 
   // Job Scraper & Gen state
   const [inputMethod, setInputMethod] = useState<"scrape" | "paste">("scrape");
@@ -404,12 +405,29 @@ function DashboardContent() {
 
   const loadUserData = async (userId: string) => {
     try {
-      // 1. Fetch Profile
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("raw_info, username, first_name, last_name, phone, credits, target_job_title, experience_level, location, linkedin_url")
-        .eq("id", userId)
-        .single();
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser?.email && !emailInput) {
+        setEmailInput(currentUser.email);
+      }
+
+      // 1. Fetch Profile (with safe schema fallback)
+      let profile: any = null;
+      try {
+        const res = await supabase
+          .from("profiles")
+          .select("raw_info, username, first_name, last_name, phone, credits, target_job_title, experience_level, location, linkedin_url, role, last_credit_reset")
+          .eq("id", userId)
+          .single();
+        profile = res.data;
+      } catch (err) {
+        console.warn("Failed to select role/last_credit_reset (schema may not exist yet), falling back:", err);
+        const res = await supabase
+          .from("profiles")
+          .select("raw_info, username, first_name, last_name, phone, credits, target_job_title, experience_level, location, linkedin_url")
+          .eq("id", userId)
+          .single();
+        profile = res.data;
+      }
 
       let activeRawInfo = profile?.raw_info || "";
 
@@ -418,15 +436,33 @@ function DashboardContent() {
         setFirstName(profile.first_name || "");
         setLastName(profile.last_name || "");
         setPhone(profile.phone || "");
-        setUserCredits(profile.credits || 0);
         setTargetJobTitle(profile.target_job_title || "");
         if (profile.experience_level) setExperienceLevel(profile.experience_level);
         setLinkedinUrl(profile.linkedin_url || "");
-      }
-      
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (currentUser?.email && !emailInput) {
-        setEmailInput(currentUser.email);
+
+        // Determine if admin (by role column or email)
+        const isAdmin = profile.role === "admin" || currentUser?.email === "kairosounds.01@gmail.com";
+        
+        if (isAdmin) {
+          setUserRole("admin");
+          // Check if daily reset is needed (50 credits a day)
+          const todayStr = new Date().toISOString().split("T")[0];
+          const lastReset = profile.last_credit_reset;
+          
+          if (!lastReset || lastReset !== todayStr) {
+            await supabase
+              .from("profiles")
+              .update({ credits: 50, last_credit_reset: todayStr })
+              .eq("id", userId);
+            setUserCredits(50);
+            console.log(`[Admin Reset] Reset credits to 50 for today: ${todayStr}`);
+          } else {
+            setUserCredits(profile.credits ?? 0);
+          }
+        } else {
+          setUserRole(profile.role || "standard");
+          setUserCredits(profile.credits ?? 0);
+        }
       }
 
       // Fallback/Sync: If raw_info is empty, check if Master_CV.txt exists in storage
