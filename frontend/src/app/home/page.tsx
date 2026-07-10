@@ -795,12 +795,6 @@ function DashboardContent() {
       for (const item of newItems) {
         await uploadSingleFile(item.id, item.file);
       }
-      // After all uploads complete, wait 1.5 seconds for DB index propagation, then refresh data
-      if (user?.id) {
-        setTimeout(() => {
-          loadUserData(user.id).catch(err => console.error("Final refresh error:", err));
-        }, 1500);
-      }
     })();
   };
 
@@ -899,56 +893,14 @@ function DashboardContent() {
             const nameRes = await api.autoNameDocument(extractedText);
             const aiName = nameRes.name || "Untitled Document";
 
-            const { data: certRecord, error: insertError } = await supabase
-              .from("certificates")
-              .insert({
-                user_id: userId,
-                name: aiName,
-                extracted_text: extractedText,
-              })
-              .select("id")
-              .single();
-
-            if (insertError) throw insertError;
-
-            if (certRecord) {
-              await supabase.storage
-                .from("resumes")
-                .upload(`${userId}/certificates/${certRecord.id}.pdf`, file, { upsert: true });
-            }
-
             setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { 
               ...f, 
               status: "success", 
               progress: 100,
-              dbRecordId: certRecord?.id,
               aiName: aiName,
               aiDescription: extractedText,
               isEditing: false
             } : f));
-
-            // Immediately add the new cert to the Credentials & Certificates list
-            if (certRecord) {
-              const newCert = {
-                id: certRecord.id,
-                user_id: userId,
-                name: aiName,
-                extracted_text: extractedText,
-                created_at: new Date().toISOString(),
-              };
-              setCertificates(prev => [...prev, newCert]);
-
-              // Fetch & inject signed URL immediately so PDF button appears
-              supabase.storage
-                .from("resumes")
-                .createSignedUrl(`${userId}/certificates/${certRecord.id}.pdf`, 7200)
-                .then(({ data }) => {
-                  if (data?.signedUrl) {
-                    setCertUrls(prev => ({ ...prev, [certRecord.id]: data.signedUrl }));
-                  }
-                });
-
-            }
           } catch (err: any) {
             setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: err.message || "Parse failed" } : f));
           }
@@ -1004,9 +956,45 @@ function DashboardContent() {
     if (!user) return;
     setIsSyncing(true);
     try {
-      await loadUserData(user.id);
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) throw new Error("Session expired");
+
+      const successItems = uploadingFiles.filter(f => f.status === "success");
+      if (successItems.length === 0) {
+        triggerToast("No successful uploads to sync.", "info");
+        return;
+      }
+
+      for (const item of successItems) {
+        // 1. Insert into database
+        const { data: certRecord, error: insertError } = await supabase
+          .from("certificates")
+          .insert({
+            user_id: userId,
+            name: item.aiName || item.name,
+            extracted_text: item.aiDescription || "",
+          })
+          .select("id")
+          .single();
+
+        if (insertError) throw insertError;
+
+        // 2. Upload file to Supabase storage using the new DB ID
+        if (certRecord) {
+          await supabase.storage
+            .from("resumes")
+            .upload(`${userId}/certificates/${certRecord.id}.pdf`, item.file, { upsert: true });
+        }
+      }
+
+      // 3. Filter out successfully synced files from the queue
       setUploadingFiles(prev => prev.filter(f => f.status !== "success"));
-      triggerToast("Credentials synced and updated successfully!", "success");
+
+      // 4. Force a fresh load of user certificates and signed URLs
+      await loadUserData(user.id);
+      
+      triggerToast(`${successItems.length} certificate(s) synced and saved successfully!`, "success");
     } catch (err: any) {
       triggerToast("Sync failed: " + err.message, "error");
     } finally {
@@ -2083,12 +2071,10 @@ function DashboardContent() {
                                         <button
                                           type="button"
                                           onClick={() => {
-                                            if (f.dbRecordId) {
-                                              handleDeleteCert(f.dbRecordId);
-                                            }
+                                            setUploadingFiles(prev => prev.filter(item => item.id !== f.id));
                                           }}
                                           className="text-brand-navy/40 hover:text-red-500 transition-colors p-1"
-                                          title="Delete certificate"
+                                          title="Remove from queue"
                                         >
                                           <Trash2 className="w-3.5 h-3.5" />
                                         </button>
@@ -2170,7 +2156,13 @@ function DashboardContent() {
                                       </button>
                                       <button
                                         type="button"
-                                        onClick={() => f.dbRecordId && handleUpdateQueueCert(f.id, f.dbRecordId, f.aiName || "", f.aiDescription || "")}
+                                        onClick={() => {
+                                          if (f.dbRecordId) {
+                                            handleUpdateQueueCert(f.id, f.dbRecordId, f.aiName || "", f.aiDescription || "");
+                                          } else {
+                                            setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, isEditing: false } : item));
+                                          }
+                                        }}
                                         className="px-4 py-1.5 bg-brand-indigo text-white font-bold text-[10px] rounded-lg transition-colors hover:bg-brand-indigo/90"
                                       >
                                         Save Changes
