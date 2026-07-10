@@ -25,7 +25,8 @@ import {
   Download,
   Eye,
   ChevronDown,
-  Key
+  Key,
+  Construction
 } from "lucide-react";
 
 function DashboardContent() {
@@ -1398,7 +1399,7 @@ function DashboardContent() {
             <div className="flex border-b border-brand-navy/15 gap-6">
               {[
                 { id: "profile", label: "My Profile & CV" },
-                { id: "builder", label: "Resume Builder" },
+                { id: "builder", label: "Resume Builder (Coming Soon)" },
                 { id: "generate", label: "Tailor (Single Job)" },
                 { id: "batch", label: "Batch Autopilot" },
                 { id: "archive", label: "Saved Archives" },
@@ -1999,22 +2000,39 @@ function DashboardContent() {
               </div>
             )}
 
-            {/* TAB E: RESUME BUILDER WIZARD */}
+            {/* TAB E: RESUME BUILDER WIZARD (COMING SOON) */}
             {activeTab === "builder" && (
-              <ResumeBuilderWizard 
-                selectedTemplate={selectedResume}
-                onSave={(compiled) => {
-                  setProfileRaw(compiled);
-                }} 
-                onComplete={() => {
-                  if (user?.id) {
-                    loadUserData(user.id);
-                  }
-                  setActiveTab("archive");
-                  triggerToast("Resume compiled, downloaded, and archived successfully!", "success");
-                }}
-                onCancel={() => setActiveTab("profile")} 
-              />
+              <div className="glass-panel p-12 rounded-xl flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
+                <div className="w-16 h-16 rounded-full bg-brand-indigo/10 border border-brand-indigo/20 flex items-center justify-center text-brand-indigo animate-bounce">
+                  <Construction className="w-8 h-8" />
+                </div>
+                <div className="space-y-2 max-w-md">
+                  <span className="px-2.5 py-1 bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/25 text-[10px] uppercase font-bold rounded-full tracking-wider">
+                    Coming Soon
+                  </span>
+                  <h3 className="text-2xl font-black text-brand-deep">Interactive Resume Builder</h3>
+                  <p className="text-sm text-brand-navy/70 leading-relaxed pt-2">
+                    We are currently perfecting the step-by-step wizard to give you the most flawless and beautiful CV builder experience possible.
+                  </p>
+                  <p className="text-xs text-brand-navy/50 leading-relaxed italic">
+                    In the meantime, you can upload your master CV in the <strong>My Profile & CV</strong> tab, then use our <strong>Tailor</strong> and <strong>Batch Autopilot</strong> tools to generate tailored applications instantly!
+                  </p>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setActiveTab("profile")}
+                    className="px-5 py-2.5 btn-primary text-xs cursor-pointer"
+                  >
+                    Go to My Profile
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("generate")}
+                    className="px-5 py-2.5 btn-secondary text-xs cursor-pointer"
+                  >
+                    Try Single-Job Tailoring
+                  </button>
+                </div>
+              </div>
             )}
 
             {/* TAB D: SAVED ARCHIVES */}
