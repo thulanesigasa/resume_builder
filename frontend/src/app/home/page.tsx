@@ -794,9 +794,11 @@ function DashboardContent() {
       for (const item of newItems) {
         await uploadSingleFile(item.id, item.file);
       }
-      // After all uploads complete, refresh all user data to ensure the UI is fully updated
+      // After all uploads complete, wait 1.5 seconds for DB index propagation, then refresh data
       if (user?.id) {
-        loadUserData(user.id).catch(err => console.error("Final refresh error:", err));
+        setTimeout(() => {
+          loadUserData(user.id).catch(err => console.error("Final refresh error:", err));
+        }, 1500);
       }
     })();
   };
@@ -945,8 +947,6 @@ function DashboardContent() {
                   }
                 });
 
-              // Trigger a background data refresh
-              loadUserData(userId).catch(err => console.error("Background refresh error:", err));
             }
           } catch (err: any) {
             setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: err.message || "Parse failed" } : f));
