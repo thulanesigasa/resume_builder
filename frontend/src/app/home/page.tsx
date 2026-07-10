@@ -367,7 +367,7 @@ function DashboardContent() {
           if (jobs) redirectUrl += `%26jobs=${jobs}`;
           if (bType) redirectUrl += `%26batchType=${bType}`;
         }
-        router.push(redirectUrl);
+        router.replace(redirectUrl);
       } else {
         setUser(user);
         await loadUserData(user.id);
