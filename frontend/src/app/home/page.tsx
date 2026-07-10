@@ -789,12 +789,15 @@ function DashboardContent() {
 
     setUploadingFiles(prev => [...prev, ...newItems]);
     
-    newItems.forEach(item => {
-      uploadSingleFile(item.id, item.file);
-    });
+    // Sequential uploads — process one at a time to avoid overwhelming the backend
+    (async () => {
+      for (const item of newItems) {
+        await uploadSingleFile(item.id, item.file);
+      }
+    })();
   };
 
-  const uploadSingleFile = async (uploadId: string, file: File) => {
+  const uploadSingleFile = async (uploadId: string, file: File): Promise<void> => {
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
     if (!userId) {
@@ -820,119 +823,129 @@ function DashboardContent() {
     formData.append("file", file);
     formData.append("user_id", userId);
 
-    const xhr = new XMLHttpRequest();
-    
-    let lastLoaded = 0;
-    let lastTime = Date.now();
+    return new Promise<void>((resolve) => {
+      const xhr = new XMLHttpRequest();
+      
+      let lastLoaded = 0;
+      let lastTime = Date.now();
 
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const progress = Math.round((event.loaded / event.total) * 100);
-        
-        const now = Date.now();
-        const timeDiff = (now - lastTime) / 1000;
-        let speedStr = "";
-        let etaStr = "";
-
-        if (timeDiff >= 0.5) {
-          const loadedDiff = event.loaded - lastLoaded;
-          const speed = loadedDiff / timeDiff;
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 100);
           
-          if (speed > 1024 * 1024) {
-            speedStr = `${(speed / (1024 * 1024)).toFixed(1)} MB/s`;
-          } else if (speed > 1024) {
-            speedStr = `${(speed / 1024).toFixed(0)} KB/s`;
-          } else {
-            speedStr = `${speed.toFixed(0)} B/s`;
-          }
+          const now = Date.now();
+          const timeDiff = (now - lastTime) / 1000;
+          let speedStr = "";
+          let etaStr = "";
 
-          const remainingBytes = event.total - event.loaded;
-          if (speed > 0) {
-            const eta = Math.round(remainingBytes / speed);
-            etaStr = eta === 0 ? "finishing..." : `${eta}s left`;
-          }
+          if (timeDiff >= 0.5) {
+            const loadedDiff = event.loaded - lastLoaded;
+            const speed = loadedDiff / timeDiff;
+            
+            if (speed > 1024 * 1024) {
+              speedStr = `${(speed / (1024 * 1024)).toFixed(1)} MB/s`;
+            } else if (speed > 1024) {
+              speedStr = `${(speed / 1024).toFixed(0)} KB/s`;
+            } else {
+              speedStr = `${speed.toFixed(0)} B/s`;
+            }
 
-          lastLoaded = event.loaded;
-          lastTime = now;
-        }
+            const remainingBytes = event.total - event.loaded;
+            if (speed > 0) {
+              const eta = Math.round(remainingBytes / speed);
+              etaStr = eta === 0 ? "finishing..." : `${eta}s left`;
+            }
 
-        setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { 
-          ...f, 
-          progress, 
-          speed: speedStr || f.speed, 
-          eta: etaStr || f.eta 
-        } : f));
-      }
-    };
-
-    xhr.onload = async () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          const parseRes = JSON.parse(xhr.responseText);
-          const extractedText = parseRes.extracted_text;
-
-          if (!extractedText || !extractedText.trim()) {
-            throw new Error("Could not extract any text.");
-          }
-
-          // Check text duplicate using ref (always fresh, no stale closure)
-          const freshCertsNow = certificatesRef.current;
-          const normText = extractedText.trim().toLowerCase();
-          const isTextDuplicate = freshCertsNow.some(cert => 
-            (cert.extracted_text || "").trim().toLowerCase() === normText
-          );
-          if (isTextDuplicate) {
-            throw new Error("This certificate is already saved in your Credentials & Certificates.");
-          }
-
-          const nameRes = await api.autoNameDocument(extractedText);
-          const aiName = nameRes.name || "Untitled Document";
-
-          const { data: certRecord, error: insertError } = await supabase
-            .from("certificates")
-            .insert({
-              user_id: userId,
-              name: aiName,
-              extracted_text: extractedText,
-            })
-            .select("id")
-            .single();
-
-          if (insertError) throw insertError;
-
-          if (certRecord) {
-            await supabase.storage
-              .from("resumes")
-              .upload(`${userId}/certificates/${certRecord.id}.pdf`, file, { upsert: true });
+            lastLoaded = event.loaded;
+            lastTime = now;
           }
 
           setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { 
             ...f, 
-            status: "success", 
-            progress: 100,
-            dbRecordId: certRecord?.id,
-            aiName: aiName,
-            aiDescription: extractedText,
-            isEditing: false
+            progress, 
+            speed: speedStr || f.speed, 
+            eta: etaStr || f.eta 
           } : f));
-
-          // Refresh everything using loadUserData
-          await loadUserData(userId);
-        } catch (err: any) {
-          setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: err.message || "Parse failed" } : f));
         }
-      } else {
-        setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: `Upload failed (${xhr.status})` } : f));
-      }
-    };
+      };
 
-    xhr.onerror = () => {
-      setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: "Connection failed" } : f));
-    };
+      xhr.onload = async () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const parseRes = JSON.parse(xhr.responseText);
+            const extractedText = parseRes.extracted_text;
 
-    xhr.open("POST", `${API_BASE_URL}/api/parse-cv`);
-    xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
-    xhr.send(formData);
+            if (!extractedText || !extractedText.trim()) {
+              throw new Error("Could not extract any text.");
+            }
+
+            // Check text duplicate using ref (always fresh, no stale closure)
+            const freshCertsNow = certificatesRef.current;
+            const normText = extractedText.trim().toLowerCase();
+            const isTextDuplicate = freshCertsNow.some(cert => 
+              (cert.extracted_text || "").trim().toLowerCase() === normText
+            );
+            if (isTextDuplicate) {
+              throw new Error("This certificate is already saved in your Credentials & Certificates.");
+            }
+
+            const nameRes = await api.autoNameDocument(extractedText);
+            const aiName = nameRes.name || "Untitled Document";
+
+            const { data: certRecord, error: insertError } = await supabase
+              .from("certificates")
+              .insert({
+                user_id: userId,
+                name: aiName,
+                extracted_text: extractedText,
+              })
+              .select("id")
+              .single();
+
+            if (insertError) throw insertError;
+
+            if (certRecord) {
+              await supabase.storage
+                .from("resumes")
+                .upload(`${userId}/certificates/${certRecord.id}.pdf`, file, { upsert: true });
+            }
+
+            setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { 
+              ...f, 
+              status: "success", 
+              progress: 100,
+              dbRecordId: certRecord?.id,
+              aiName: aiName,
+              aiDescription: extractedText,
+              isEditing: false
+            } : f));
+
+            // Refresh everything using loadUserData
+            await loadUserData(userId);
+          } catch (err: any) {
+            setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: err.message || "Parse failed" } : f));
+          }
+        } else {
+          setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: `Upload failed (${xhr.status})` } : f));
+        }
+        resolve();
+      };
+
+      xhr.onerror = () => {
+        setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: "Connection failed — please retry" } : f));
+        resolve();
+      };
+
+      xhr.ontimeout = () => {
+        setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: "Request timed out — please retry" } : f));
+        resolve();
+      };
+
+      xhr.timeout = 60000; // 60 second timeout per file
+      xhr.open("POST", `${API_BASE_URL}/api/parse-cv`);
+      xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
+      xhr.send(formData);
+    });
   };
 
   const handleUpdateQueueCert = async (fId: string, dbId: string, newName: string, newDesc: string) => {
