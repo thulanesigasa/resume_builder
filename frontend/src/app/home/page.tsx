@@ -3,8 +3,9 @@
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { api } from "@/lib/api";
+import { api, API_BASE_URL } from "@/lib/api";
 import ResumeBuilderWizard from "@/components/ResumeBuilderWizard";
+import MarketingFooter from "@/components/MarketingFooter";
 import {
   User,
   LogOut,
@@ -13,6 +14,7 @@ import {
   BarChart3,
   Save,
   FileText,
+  Check,
   Upload,
   Plus,
   Trash2,
@@ -78,6 +80,24 @@ function DashboardContent() {
   const [uploadingCert, setUploadingCert] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const [previewCert, setPreviewCert] = useState<any | null>(null);
+
+  // States for advanced upload queue
+  const [uploadingFiles, setUploadingFiles] = useState<any[]>([]);
+  const [isDragActive, setIsDragActive] = useState(false);
+  const certificatesRef = useRef(certificates);
+
+  useEffect(() => {
+    certificatesRef.current = certificates;
+  }, [certificates]);
+
+  const formatBytes = (bytes: number, decimals = 2) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+  };
 
   // Stats
   const [stats, setStats] = useState({ appsCount: 0, certsCount: 0, avgAts: 0 });
@@ -711,6 +731,235 @@ function DashboardContent() {
     }
   };
 
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true);
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type === "application/pdf");
+      if (files.length > 0) {
+        addFilesToUploadQueue(files);
+      } else {
+        triggerToast("Only PDF files are supported for certificates.", "error");
+      }
+    }
+  };
+
+  const addFilesToUploadQueue = (files: File[]) => {
+    const freshCerts = certificatesRef.current;
+    const validFiles = files.filter(file => {
+      const fileBaseName = file.name.replace(/\.[^/.]+$/, "").toLowerCase();
+      const isDuplicate = freshCerts.some(cert => {
+        const certName = (cert.name || "").toLowerCase();
+        return certName === file.name.toLowerCase() || certName === fileBaseName;
+      });
+      if (isDuplicate) {
+        setUploadingFiles(prev => [
+          ...prev,
+          { id: Math.random().toString(36).substr(2, 9), file, name: file.name, size: file.size, progress: 0, speed: "", eta: "", status: "error" as const, errorMsg: `"${file.name}" already exists in your saved certificates.` }
+        ]);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    const newItems = validFiles.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      name: file.name,
+      size: file.size,
+      progress: 0,
+      speed: "",
+      eta: "",
+      status: "idle" as const,
+    }));
+
+    setUploadingFiles(prev => [...prev, ...newItems]);
+    
+    newItems.forEach(item => {
+      uploadSingleFile(item.id, item.file);
+    });
+  };
+
+  const uploadSingleFile = async (uploadId: string, file: File) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) {
+      setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: "Session expired" } : f));
+      return;
+    }
+
+    // Check pre-upload duplicate name using ref (always fresh, no stale closure)
+    const freshCerts = certificatesRef.current;
+    const fileBaseName = file.name.replace(/\.[^/.]+$/, "").toLowerCase();
+    const isDuplicate = freshCerts.some(cert => {
+      const certName = (cert.name || "").toLowerCase();
+      return certName === file.name.toLowerCase() || certName === fileBaseName;
+    });
+    if (isDuplicate) {
+      setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: "A certificate with this name already exists in your saved credentials." } : f));
+      return;
+    }
+
+    setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "uploading", progress: 0, speed: "", eta: "", errorMsg: undefined } : f));
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("user_id", userId);
+
+    const xhr = new XMLHttpRequest();
+    
+    let lastLoaded = 0;
+    let lastTime = Date.now();
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const progress = Math.round((event.loaded / event.total) * 100);
+        
+        const now = Date.now();
+        const timeDiff = (now - lastTime) / 1000;
+        let speedStr = "";
+        let etaStr = "";
+
+        if (timeDiff >= 0.5) {
+          const loadedDiff = event.loaded - lastLoaded;
+          const speed = loadedDiff / timeDiff;
+          
+          if (speed > 1024 * 1024) {
+            speedStr = `${(speed / (1024 * 1024)).toFixed(1)} MB/s`;
+          } else if (speed > 1024) {
+            speedStr = `${(speed / 1024).toFixed(0)} KB/s`;
+          } else {
+            speedStr = `${speed.toFixed(0)} B/s`;
+          }
+
+          const remainingBytes = event.total - event.loaded;
+          if (speed > 0) {
+            const eta = Math.round(remainingBytes / speed);
+            etaStr = eta === 0 ? "finishing..." : `${eta}s left`;
+          }
+
+          lastLoaded = event.loaded;
+          lastTime = now;
+        }
+
+        setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { 
+          ...f, 
+          progress, 
+          speed: speedStr || f.speed, 
+          eta: etaStr || f.eta 
+        } : f));
+      }
+    };
+
+    xhr.onload = async () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const parseRes = JSON.parse(xhr.responseText);
+          const extractedText = parseRes.extracted_text;
+
+          if (!extractedText || !extractedText.trim()) {
+            throw new Error("Could not extract any text.");
+          }
+
+          // Check text duplicate using ref (always fresh, no stale closure)
+          const freshCertsNow = certificatesRef.current;
+          const normText = extractedText.trim().toLowerCase();
+          const isTextDuplicate = freshCertsNow.some(cert => 
+            (cert.extracted_text || "").trim().toLowerCase() === normText
+          );
+          if (isTextDuplicate) {
+            throw new Error("This certificate is already saved in your Credentials & Certificates.");
+          }
+
+          const nameRes = await api.autoNameDocument(extractedText);
+          const aiName = nameRes.name || "Untitled Document";
+
+          const { data: certRecord, error: insertError } = await supabase
+            .from("certificates")
+            .insert({
+              user_id: userId,
+              name: aiName,
+              extracted_text: extractedText,
+            })
+            .select("id")
+            .single();
+
+          if (insertError) throw insertError;
+
+          if (certRecord) {
+            await supabase.storage
+              .from("resumes")
+              .upload(`${userId}/certificates/${certRecord.id}.pdf`, file, { upsert: true });
+          }
+
+          setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { 
+            ...f, 
+            status: "success", 
+            progress: 100,
+            dbRecordId: certRecord?.id,
+            aiName: aiName,
+            aiDescription: extractedText,
+            isEditing: false
+          } : f));
+
+          // Refresh everything using loadUserData
+          await loadUserData(userId);
+        } catch (err: any) {
+          setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: err.message || "Parse failed" } : f));
+        }
+      } else {
+        setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: `Upload failed (${xhr.status})` } : f));
+      }
+    };
+
+    xhr.onerror = () => {
+      setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: "Connection failed" } : f));
+    };
+
+    xhr.open("POST", `${API_BASE_URL}/api/parse-cv`);
+    xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
+    xhr.send(formData);
+  };
+
+  const handleUpdateQueueCert = async (fId: string, dbId: string, newName: string, newDesc: string) => {
+    if (!newName.trim() || !newDesc.trim()) return;
+    try {
+      const { error } = await supabase
+        .from("certificates")
+        .update({
+          name: newName,
+          extracted_text: newDesc
+        })
+        .eq("id", dbId);
+
+      if (error) throw error;
+
+      // Update uploadingFiles state
+      setUploadingFiles(prev => prev.map(f => f.id === fId ? { ...f, aiName: newName, aiDescription: newDesc, isEditing: false } : f));
+
+      // Refresh data
+      if (user?.id) {
+        await loadUserData(user.id);
+      }
+    } catch (err: any) {
+      triggerToast("Failed to update certificate: " + err.message, "error");
+    }
+  };
+
   const handleUploadCertificate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -836,6 +1085,7 @@ function DashboardContent() {
       }
 
       await loadUserData(user!.id);
+      setUploadingFiles(prev => prev.filter(f => f.dbRecordId !== certId));
       triggerToast("Credential deleted successfully!", "success");
     } catch (err: any) {
       triggerToast("Failed to delete certificate: " + err.message, "error");
@@ -1256,6 +1506,7 @@ function DashboardContent() {
   }
 
   return (
+    <>
     <div className="flex-1 flex flex-col min-h-screen">
 
 
@@ -1684,28 +1935,215 @@ function DashboardContent() {
                         </div>
                       )}
 
-                      <form onSubmit={handleUploadCertificate} className="space-y-3 pt-2">
-                        <div className="flex flex-col gap-2 p-3 border border-dashed border-brand-navy/20 rounded-xl bg-brand-navy/[0.01]">
-                          <label className="text-xs font-semibold text-brand-navy/70 uppercase">Bulk Upload Documents</label>
-                          <input
-                            type="file"
-                            accept=".pdf"
-                            multiple
-                            ref={certFileInputRef}
-                            onChange={(e) => setCertPdfFiles(Array.from(e.target.files || []))}
-                            className="text-xs text-brand-navy/70 w-full"
-                          />
-                          <p className="text-[10px] text-brand-navy/60">
-                            Select multiple PDFs (transcripts, certificates, past resumes). The AI will extract text and automatically name them!
-                          </p>
-                        </div>
-                        
-                        <div className="flex items-center gap-4 text-xs font-semibold text-brand-navy/40">
-                          <hr className="flex-1 border-brand-navy/10" />
-                          <span>OR MANUAL ENTRY</span>
-                          <hr className="flex-1 border-brand-navy/10" />
-                        </div>
+                      {/* Drag-and-drop zone */}
+                      <div 
+                        onDragEnter={handleDrag}
+                        onDragOver={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDrop={handleDrop}
+                        className={`flex flex-col gap-2 p-6 border-2 border-dashed rounded-xl relative items-center justify-center text-center transition-all duration-300 ${
+                          isDragActive 
+                            ? 'border-brand-indigo bg-brand-indigo/[0.04] shadow-[0_0_20px_rgba(79,70,229,0.15)] scale-[1.01]' 
+                            : 'border-brand-navy/20 bg-brand-navy/[0.01] hover:bg-brand-navy/[0.02]'
+                        }`}
+                      >
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          multiple
+                          ref={certFileInputRef}
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            if (files.length > 0) addFilesToUploadQueue(files);
+                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <Plus className={`w-10 h-10 mb-2 transition-transform duration-300 ${isDragActive ? 'text-brand-indigo scale-110' : 'text-brand-indigo/60'}`} />
+                        <span className="text-xs font-bold text-brand-deep">
+                          {isDragActive ? "Drop files here!" : "Drag & Drop PDF Documents"}
+                        </span>
+                        <span className="text-[10px] text-brand-navy/60 mt-1">Or click to select files (PDF transcripts, certificates, past resumes)</span>
+                      </div>
 
+                      {/* Queue Card Indicators */}
+                      {uploadingFiles.length > 0 && (
+                        <div className="space-y-3 pt-2 border-t border-brand-navy/5">
+                          <p className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Upload Queue</p>
+                          <div className="grid gap-3">
+                            {uploadingFiles.map((f) => (
+                              <div 
+                                key={f.id}
+                                className={`p-4 rounded-xl border bg-white shadow-sm flex flex-col gap-3 transition-all duration-300 w-full overflow-hidden ${
+                                  f.status === 'error' 
+                                    ? 'border-red-200 bg-red-50/10' 
+                                    : f.status === 'success' 
+                                      ? 'border-green-200' 
+                                      : 'border-brand-navy/10 hover:border-brand-indigo/20'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-4 w-full">
+                                  {/* File Info */}
+                                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                      f.status === 'error' 
+                                        ? 'bg-red-100 text-red-500' 
+                                        : f.status === 'success' 
+                                          ? 'bg-green-100 text-green-500' 
+                                          : 'bg-brand-indigo/10 text-brand-indigo animate-pulse'
+                                    }`}>
+                                      <FileText className="w-5 h-5" />
+                                    </div>
+                                    <div className="truncate flex-1 min-w-0">
+                                      <h5 className="text-xs font-bold text-brand-deep truncate mb-0.5">
+                                        {f.status === 'success' && f.aiName ? f.aiName : f.name}
+                                      </h5>
+                                      <p className="text-[10px] text-brand-navy/50 font-semibold uppercase flex items-center gap-2">
+                                        <span>PDF</span>
+                                        <span>•</span>
+                                        <span>{formatBytes(f.size)}</span>
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Status or Controls */}
+                                  <div className="flex items-center gap-2">
+                                    {f.status === "uploading" && (
+                                      <span className="text-[10px] font-bold text-brand-indigo bg-brand-indigo/10 px-2 py-0.5 rounded-full">
+                                        {f.progress}%
+                                      </span>
+                                    )}
+                                    {f.status === "success" && (
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, isEditing: !item.isEditing } : item));
+                                          }}
+                                          className="text-[10px] font-bold text-brand-indigo hover:underline px-2 py-1"
+                                        >
+                                          {f.isEditing ? "Close" : "Edit Details"}
+                                        </button>
+                                        <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                          <Check className="w-3 h-3" /> Done
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            if (f.dbRecordId) {
+                                              handleDeleteCert(f.dbRecordId);
+                                            }
+                                          }}
+                                          className="text-brand-navy/40 hover:text-red-500 transition-colors p-1"
+                                          title="Delete certificate"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    )}
+                                    {f.status === "error" && (
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => uploadSingleFile(f.id, f.file)}
+                                          className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-600 font-bold text-[10px] rounded-full flex items-center gap-1 transition-colors"
+                                        >
+                                          <RefreshCw className="w-3 h-3" /> Retry
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setUploadingFiles(prev => prev.filter(item => item.id !== f.id))}
+                                          className="text-brand-navy/40 hover:text-red-500 transition-colors p-1"
+                                          title="Dismiss"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Progress bar and upload details */}
+                                {f.status === "uploading" && (
+                                  <div className="space-y-1.5">
+                                    <div className="w-full h-1.5 bg-brand-navy/5 rounded-full overflow-hidden">
+                                      <div 
+                                        className="h-full bg-brand-indigo transition-all duration-300"
+                                        style={{ width: `${f.progress}%` }}
+                                      ></div>
+                                    </div>
+                                    <div className="flex justify-between text-[9px] font-bold text-brand-navy/60">
+                                      <span>{f.speed}</span>
+                                      <span>{f.eta}</span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Inline Edit Panel */}
+                                {f.status === "success" && f.isEditing && (
+                                  <div className="space-y-3 pt-2 border-t border-brand-navy/5 animate-in fade-in">
+                                    <div className="relative">
+                                      <label className="absolute -top-2 left-2.5 bg-white px-1 text-[9px] font-bold text-brand-navy/50 uppercase">Certificate Name</label>
+                                      <input
+                                        type="text"
+                                        className="w-full px-3 py-2 border border-brand-navy/10 rounded-lg text-xs font-medium text-brand-deep focus:outline-none focus:border-brand-indigo"
+                                        value={f.aiName || ""}
+                                        onChange={(e) => {
+                                          const val = e.target.value;
+                                          setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, aiName: val } : item));
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="relative">
+                                      <label className="absolute -top-2 left-2.5 bg-white px-1 text-[9px] font-bold text-brand-navy/50 uppercase">Credential Description</label>
+                                      <textarea
+                                        className="w-full h-20 px-3 py-2 border border-brand-navy/10 rounded-lg text-[11px] font-medium text-brand-deep focus:outline-none focus:border-brand-indigo resize-none"
+                                        value={f.aiDescription || ""}
+                                        onChange={(e) => {
+                                          const val = e.target.value;
+                                          setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, aiDescription: val } : item));
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="flex justify-end gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, isEditing: false } : item));
+                                        }}
+                                        className="px-3 py-1.5 text-xs text-brand-navy/60 hover:text-brand-deep font-bold"
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => f.dbRecordId && handleUpdateQueueCert(f.id, f.dbRecordId, f.aiName || "", f.aiDescription || "")}
+                                        className="px-4 py-1.5 bg-brand-indigo text-white font-bold text-[10px] rounded-lg transition-colors hover:bg-brand-indigo/90"
+                                      >
+                                        Save Changes
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Error message */}
+                                {f.status === "error" && f.errorMsg && (
+                                  <p className="text-[10px] font-bold text-red-500/80 bg-red-50 p-2 rounded-lg leading-snug">
+                                    Error: {f.errorMsg}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-4 text-xs font-semibold text-brand-navy/40 py-2">
+                        <hr className="flex-1 border-brand-navy/10" />
+                        <span>OR MANUAL ENTRY</span>
+                        <hr className="flex-1 border-brand-navy/10" />
+                      </div>
+
+                      <div className="space-y-3">
                         <input
                           type="text"
                           placeholder="Manual Name (e.g. AWS Solutions Architect)"
@@ -1720,14 +2158,15 @@ function DashboardContent() {
                           onChange={(e) => setManualCertText(e.target.value)}
                         />
                         <button
-                          type="submit"
-                          disabled={uploadingCert}
-                          className="w-full py-2 btn-primary text-xs flex items-center justify-center gap-2 mt-2 relative overflow-hidden"
+                          type="button"
+                          onClick={handleUploadCertificate}
+                          disabled={uploadingCert || (!newCertName.trim() || !manualCertText.trim())}
+                          className="w-full py-2.5 btn-primary text-xs flex items-center justify-center gap-2 mt-2 relative overflow-hidden cursor-pointer"
                         >
                           <Upload className="w-3.5 h-3.5" />
-                          {uploadingCert ? uploadProgress || "Processing Documents (AI)..." : "Save Document(s)"}
+                          {uploadingCert ? uploadProgress || "Saving..." : "Save Manual Document"}
                         </button>
-                      </form>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2397,7 +2836,10 @@ function DashboardContent() {
       )}
 
 
+
     </div>
+    <MarketingFooter />
+    </>
   );
 }
 
