@@ -185,7 +185,7 @@ export default function RegisterPage() {
                       step === item.s
                         ? "bg-brand-indigo text-white ring-4 ring-brand-indigo/20"
                         : step > item.s
-                          ? "bg-green-500 text-white"
+                          ? "bg-brand-indigo text-white"
                           : "bg-brand-navy/15 text-brand-navy/50"
                     }`}>
                       {step > item.s ? "✓" : item.s}
@@ -196,7 +196,7 @@ export default function RegisterPage() {
                   </div>
                   {idx < 2 && (
                     <div className={`h-0.5 flex-1 mx-2 mb-4 rounded transition-all duration-300 ${
-                      step > item.s ? "bg-green-500" : "bg-brand-navy/10"
+                      step > item.s ? "bg-brand-indigo" : "bg-brand-navy/10"
                     }`} />
                   )}
                 </div>
