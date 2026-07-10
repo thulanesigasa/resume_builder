@@ -106,7 +106,7 @@ function LoginContent() {
               </svg>
               <span className="font-semibold">Sign in with Google</span>
             </div>
-            <span className="px-2 py-0.5 bg-brand-indigo/10 text-brand-indigo text-[10px] font-bold rounded-md uppercase tracking-wider">Coming Soon</span>
+            <span className="px-3 py-1 bg-brand-indigo/15 text-brand-indigo text-[11px] font-bold rounded-md uppercase tracking-wider">Coming Soon</span>
           </div>
 
           <div className="flex items-center gap-4 text-xs font-semibold text-brand-navy/40 mb-6">

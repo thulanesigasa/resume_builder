@@ -2485,7 +2485,7 @@ function DashboardContent() {
                   <Construction className="w-8 h-8" />
                 </div>
                 <div className="space-y-2 max-w-md">
-                  <span className="px-2.5 py-1 bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/25 text-[10px] uppercase font-bold rounded-md tracking-wider">
+                  <span className="px-3.5 py-1.5 bg-brand-indigo/15 text-brand-indigo border border-brand-indigo/25 text-[11px] uppercase font-bold rounded-md tracking-wider">
                     Coming Soon
                   </span>
                   <h3 className="text-2xl font-black text-brand-deep">Interactive Resume Builder</h3>
