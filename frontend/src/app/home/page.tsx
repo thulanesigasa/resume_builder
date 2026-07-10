@@ -1256,6 +1256,7 @@ function DashboardContent() {
   }
 
   return (
+    <>
     <div className="flex-1 flex flex-col min-h-screen">
 
 
@@ -2381,8 +2382,9 @@ function DashboardContent() {
 
 
 
-      <MarketingFooter />
     </div>
+    <MarketingFooter />
+    </>
   );
 }
 
