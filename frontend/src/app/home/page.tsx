@@ -920,8 +920,27 @@ function DashboardContent() {
               isEditing: false
             } : f));
 
-            // Refresh everything using loadUserData
-            await loadUserData(userId);
+            // Immediately add the new cert to the Credentials & Certificates list
+            if (certRecord) {
+              const newCert = {
+                id: certRecord.id,
+                user_id: userId,
+                name: aiName,
+                extracted_text: extractedText,
+                created_at: new Date().toISOString(),
+              };
+              setCertificates(prev => [...prev, newCert]);
+
+              // Fetch & inject signed URL immediately so PDF button appears
+              supabase.storage
+                .from("resumes")
+                .createSignedUrl(`${userId}/certificates/${certRecord.id}.pdf`, 7200)
+                .then(({ data }) => {
+                  if (data?.signedUrl) {
+                    setCertUrls(prev => ({ ...prev, [certRecord.id]: data.signedUrl }));
+                  }
+                });
+            }
           } catch (err: any) {
             setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: err.message || "Parse failed" } : f));
           }
