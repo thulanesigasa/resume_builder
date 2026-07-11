@@ -39,7 +39,7 @@ export default function PricingTiers() {
       return;
     }
 
-    triggerToast(`Initializing secure Payfast checkout for ${planName}...`, "info");
+    triggerToast("connecting to your bank", "info");
     
     try {
       const amount = parseFloat(amountStr.replace(/[^0-9.]/g, ""));
@@ -111,10 +111,10 @@ export default function PricingTiers() {
             </button>
           </div>
 
-          {/* Resume Creating */}
+          {/* Resume Building */}
           <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between space-y-6 relative overflow-hidden border-brand-indigo/25 group">
             <div className="space-y-4">
-              <div className="text-xs uppercase font-bold text-brand-navy/50">Resume Creating</div>
+              <div className="text-xs uppercase font-bold text-brand-navy/50">Resume Building</div>
               <div className="flex items-baseline text-brand-deep">
                 <span className="text-4xl font-extrabold">R25</span>
                 <span className="text-xs text-brand-navy/60 ml-1">/ generation</span>
@@ -137,10 +137,10 @@ export default function PricingTiers() {
               </ul>
             </div>
             <button
-              onClick={() => handleSelectPlan("Resume Creating Plan", "R25")}
+              onClick={() => handleSelectPlan("Resume Building Plan", "R25")}
               className="w-full py-2.5 btn-secondary text-xs cursor-pointer"
             >
-              Get Resume Creating
+              Get Resume Building
             </button>
           </div>
 

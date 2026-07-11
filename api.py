@@ -568,38 +568,118 @@ async def payfast_redirect(checkout_id: str, request: Request):
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Redirecting to PayFast...</title>
+  <title>Connecting to Secure Checkout...</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     body {{
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: #0f172a;
-      color: #e2e8f0;
+      background: radial-gradient(circle at center, #120e2e 0%, #060414 100%);
+      color: #f1f5f9;
+      overflow: hidden;
     }}
-    .spinner {{
-      width: 48px; height: 48px;
-      border: 4px solid #334155;
+    .logo-container {{
+      position: relative;
+      width: 120px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }}
+    .ring-outer {{
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border: 3px solid transparent;
       border-top-color: #6366f1;
+      border-bottom-color: #6366f1;
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 20px;
+      animation: spin-clockwise 2s linear infinite;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
     }}
-    @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
-    p {{ font-size: 15px; color: #94a3b8; }}
+    .ring-inner {{
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border: 3px solid transparent;
+      border-left-color: #a855f7;
+      border-right-color: #a855f7;
+      border-radius: 50%;
+      animation: spin-counter-clockwise 1.5s linear infinite;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+    }}
+    .core {{
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #f8fafc 30%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: pulse 2s ease-in-out infinite;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+    }}
+    .core span {{
+      color: #6366f1;
+      -webkit-text-fill-color: #6366f1;
+    }}
+    p {{
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin: 0;
+      animation: text-pulse 1.5s ease-in-out infinite alternate;
+    }}
+    .subtext {{
+      font-size: 11px;
+      font-weight: 500;
+      color: #475569;
+      margin-top: 8px;
+    }}
+    @keyframes spin-clockwise {{
+      0% {{ transform: rotate(0deg); }}
+      100% {{ transform: rotate(360deg); }}
+    }}
+    @keyframes spin-counter-clockwise {{
+      0% {{ transform: rotate(0deg); }}
+      100% {{ transform: rotate(-360deg); }}
+    }}
+    @keyframes pulse {{
+      0%, 100% {{ transform: scale(0.96); opacity: 0.8; }}
+      50% {{ transform: scale(1.04); opacity: 1; }}
+    }}
+    @keyframes text-pulse {{
+      0% {{ opacity: 0.6; }}
+      100% {{ opacity: 1; }}
+    }}
   </style>
 </head>
 <body>
-  <div class="spinner"></div>
-  <p>Redirecting you securely to PayFast...</p>
+  <div class="logo-container">
+    <div class="ring-outer"></div>
+    <div class="ring-inner"></div>
+    <div class="core">rbp<span>tech</span></div>
+  </div>
+  <p>Connecting to secure checkout...</p>
+  <span class="subtext">Transferring connection to merchant bank</span>
+  
   <form id="pf" action="{payfast_url}" method="POST">
     {hidden_inputs}
   </form>
-  <script>document.getElementById('pf').submit();</script>
+  <script>
+    setTimeout(function() {{
+      document.getElementById('pf').submit();
+    }}, 900);
+  </script>
 </body>
 </html>"""
 
