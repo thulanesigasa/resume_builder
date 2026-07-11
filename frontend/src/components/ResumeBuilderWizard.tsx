@@ -2304,7 +2304,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         {previewHtml ? (
           <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
             <div 
-              className="origin-center transition-transform duration-200"
+              className="origin-center transition-transform duration-200 relative"
               style={{
                 width: '800px',
                 height: '1131px',
@@ -2315,8 +2315,25 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
               <iframe 
                 srcDoc={previewHtml || undefined}
                 className="w-full h-full border-none bg-white shadow-2xl"
+                style={{
+                  filter: 'blur(3px)',
+                }}
                 title="Live Resume Preview"
               />
+              
+              {/* Diagonal Watermark Overlay */}
+              <div className="absolute inset-0 pointer-events-none flex flex-col justify-around overflow-hidden select-none z-10">
+                {[...Array(6)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="w-[150%] -ml-[25%] flex justify-around text-brand-navy/15 text-5xl font-black uppercase tracking-wider transform -rotate-30 select-none whitespace-nowrap"
+                  >
+                    <span>rbptech</span>
+                    <span>rbptech</span>
+                    <span>rbptech</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ) : (

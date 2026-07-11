@@ -398,6 +398,7 @@ function DashboardContent() {
         
         if (checkoutSuccess) {
           triggerToast("Payment successful! Credits have been added to your account. You can now generate documents.", "success");
+          setActiveTab("builder");
           router.replace("/home");
         } else if (checkoutCancel) {
           triggerToast("Payment was cancelled or unsuccessful. Please verify your payment details.", "error");
@@ -2679,14 +2680,25 @@ function DashboardContent() {
               )}
               {previewHtml && (
                 <>
-                  <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                    <div className="transform -rotate-45 text-brand-navy/20 font-black text-6xl tracking-widest whitespace-nowrap">
-                      PREVIEW ONLY
-                    </div>
+                  {/* Diagonal Watermark Overlay */}
+                  <div className="absolute inset-0 pointer-events-none flex flex-col justify-around overflow-hidden select-none z-10">
+                    {[...Array(6)].map((_, i) => (
+                      <div 
+                        key={i} 
+                        className="w-[150%] -ml-[25%] flex justify-around text-brand-navy/15 text-5xl font-black uppercase tracking-wider transform -rotate-30 select-none whitespace-nowrap"
+                      >
+                        <span>rbptech</span>
+                        <span>rbptech</span>
+                        <span>rbptech</span>
+                      </div>
+                    ))}
                   </div>
                   <iframe 
                     srcDoc={previewHtml}
-                    className="w-full h-full border-none blur-[4px] select-none pointer-events-none"
+                    className="w-full h-full border-none select-none pointer-events-none"
+                    style={{
+                      filter: 'blur(3px)',
+                    }}
                     title="Template Preview"
                   />
                 </>
