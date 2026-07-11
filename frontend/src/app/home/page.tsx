@@ -398,9 +398,24 @@ function DashboardContent() {
         
         if (checkoutSuccess) {
           triggerToast("Payment successful! Credits have been added to your account. You can now generate documents.", "success");
-          setActiveTab("builder");
-          router.replace("/home");
+          
+          const redirectTab = localStorage.getItem("checkout_redirect_tab");
+          localStorage.removeItem("checkout_redirect_tab");
+          
+          if (redirectTab === "editor") {
+            router.replace("/editor");
+          } else if (redirectTab === "builder") {
+            setActiveTab("builder");
+            router.replace("/home");
+          } else if (redirectTab === "generate") {
+            setActiveTab("generate");
+            router.replace("/home");
+          } else {
+            setActiveTab("builder");
+            router.replace("/home");
+          }
         } else if (checkoutCancel) {
+          localStorage.removeItem("checkout_redirect_tab");
           triggerToast("Payment was cancelled or unsuccessful. Please verify your payment details.", "error");
           router.replace("/home");
         }
@@ -1134,6 +1149,7 @@ function DashboardContent() {
 
     // Not enough credits – redirect to Payfast
     console.log("[Generate] Insufficient credits, redirecting to Payfast...");
+    localStorage.setItem("checkout_redirect_tab", "generate");
     setIsRedirectingToPayfast(true);
     try {
       console.log("[Generate] Insufficient credits, redirecting to Payfast...");

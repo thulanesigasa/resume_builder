@@ -1296,7 +1296,18 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       }
     } catch (e: any) {
       console.error(e);
-      alert(e.message || "Failed to compile and save your resume.");
+      if (e.message && (e.message.includes("INSUFFICIENT_CREDITS") || e.message.includes("402"))) {
+        localStorage.setItem("checkout_redirect_tab", "builder");
+        // Update user feedback directly in compiling loader text
+        alert("You need to purchase a plan to compile and download this resume. Redirecting you to secure checkout...");
+        try {
+          await api.createPayfastCheckout(25, "Resume Building Plan");
+        } catch (checkoutErr: any) {
+          alert("Error connecting to secure checkout: " + checkoutErr.message);
+        }
+      } else {
+        alert(e.message || "Failed to compile and save your resume.");
+      }
     } finally {
       setIsCompiling(false);
     }

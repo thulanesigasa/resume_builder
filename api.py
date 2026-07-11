@@ -267,6 +267,55 @@ async def get_ats_score(payload: AtsScoreRequest, request: Request, user: dict =
 async def compile_document(payload: CompileRequest, request: Request, user: dict = Depends(verify_token)):
     logger.info(f"API Compile request received for: {payload.doc_type}")
     logger.info(f"[DEBUG] template_name received: {payload.template_name}")
+    
+    supabase = get_supabase_client()
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Database not configured")
+
+    # 1. Check if user has enough credits
+    try:
+        is_admin = False
+        if hasattr(user, "email") and user.email == "kairosounds.01@gmail.com":
+            is_admin = True
+
+        try:
+            profile_res = supabase.table("profiles").select("credits, role, last_credit_reset").eq("id", user.id).execute()
+            profile_data = profile_res.data[0] if profile_res.data else {}
+            current_credits = profile_data.get("credits", 0)
+            if profile_data.get("role") == "admin":
+                is_admin = True
+
+            # Daily credits reset for admins (50 credits a day)
+            if is_admin:
+                import datetime
+                today_str = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+                last_reset = profile_data.get("last_credit_reset")
+                if not last_reset or last_reset != today_str:
+                    current_credits = 50
+                    supabase.table("profiles").update({
+                        "credits": 50,
+                        "last_credit_reset": today_str
+                    }).eq("id", user.id).execute()
+                    logger.info(f"Reset admin user {user.id} credits to 50 for the new day ({today_str})")
+            
+            if not is_admin and current_credits <= 0:
+                raise HTTPException(status_code=402, detail="INSUFFICIENT_CREDITS")
+                
+        except HTTPException as he:
+            raise he
+        except Exception as schema_err:
+            logger.warning(f"Failed to query role/last_credit_reset (may not exist in DB yet): {schema_err}")
+            profile_res = supabase.table("profiles").select("credits").eq("id", user.id).execute()
+            current_credits = profile_res.data[0].get("credits", 0) if profile_res.data else 0
+            if current_credits <= 0:
+                raise HTTPException(status_code=402, detail="INSUFFICIENT_CREDITS")
+            
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Error checking user credits: {e}")
+        raise HTTPException(status_code=500, detail="Failed to verify account balance")
+
     try:
         # Create folder name
         folder_name = create_application_folder_name(payload.company_name, payload.job_title)
@@ -291,6 +340,13 @@ async def compile_document(payload: CompileRequest, request: Request, user: dict
         download_url = compile_to_pdf(html_content, folder_name, filename, user_id=payload.user_id)
         if not download_url:
             raise HTTPException(status_code=500, detail="Failed to compile or upload PDF")
+            
+        # Deduct credit after successful compile
+        if not is_admin:
+            supabase.table("profiles").update({
+                "credits": current_credits - 1
+            }).eq("id", user.id).execute()
+            logger.info(f"Successfully deducted 1 credit from user {user.id}. Remaining: {current_credits - 1}")
             
         return {"download_url": download_url}
     except Exception as e:

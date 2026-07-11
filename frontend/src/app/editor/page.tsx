@@ -204,7 +204,19 @@ export default function EditorPage() {
 
       triggerToast("PDF compiled successfully! Signed download link is ready.", "success");
     } catch (err: any) {
-      triggerToast("Compilation failed: " + err.message, "error");
+      if (err.message && (err.message.includes("INSUFFICIENT_CREDITS") || err.message.includes("402"))) {
+        localStorage.setItem("checkout_redirect_tab", "editor");
+        triggerToast("Insufficient credits! Redirecting to secure checkout...", "info");
+        try {
+          const price = activeTab === "resume" ? 18 : 25;
+          const desc = activeTab === "resume" ? "Tailored Resume Only" : "Tailored Resume & Cover Letter Combo";
+          await api.createPayfastCheckout(price, desc);
+        } catch (checkoutErr: any) {
+          triggerToast("Error connecting to Payfast: " + checkoutErr.message, "error");
+        }
+      } else {
+        triggerToast("Compilation failed: " + err.message, "error");
+      }
     } finally {
       setCompiling(false);
     }
