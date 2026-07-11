@@ -15,6 +15,7 @@ import {
   Settings,
   Flame,
   Eye,
+  Lock,
 } from "lucide-react";
 
 export default function EditorPage() {
@@ -39,6 +40,7 @@ export default function EditorPage() {
   const [previewTemplate, setPreviewTemplate] = useState<{name: string, type: string} | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [checkoutModal, setCheckoutModal] = useState<{ price: number; planName: string } | null>(null);
 
   // App-specific compile tracking
   const [appId, setAppId] = useState<string | null>(null);
@@ -206,14 +208,9 @@ export default function EditorPage() {
     } catch (err: any) {
       if (err.message && (err.message.includes("INSUFFICIENT_CREDITS") || err.message.includes("402"))) {
         localStorage.setItem("checkout_redirect_tab", "editor");
-        triggerToast("Insufficient credits! Redirecting to secure checkout...", "info");
-        try {
-          const price = activeTab === "resume" ? 18 : 25;
-          const desc = activeTab === "resume" ? "Tailored Resume Only" : "Tailored Resume & Cover Letter Combo";
-          await api.createPayfastCheckout(price, desc);
-        } catch (checkoutErr: any) {
-          triggerToast("Error connecting to Payfast: " + checkoutErr.message, "error");
-        }
+        const price = activeTab === "resume" ? 18 : 25;
+        const desc = activeTab === "resume" ? "Tailored Resume Only" : "Tailored Resume & Cover Letter Combo";
+        setCheckoutModal({ price, planName: desc });
       } else {
         triggerToast("Compilation failed: " + err.message, "error");
       }
@@ -918,6 +915,43 @@ export default function EditorPage() {
           }`}>
             <span className="text-xs font-semibold">{toast.message}</span>
             <button onClick={() => setToast(null)} className="text-xs ml-auto opacity-75 hover:opacity-100 font-bold px-1.5 py-0.5">×</button>
+          </div>
+        </div>
+      )}
+      {/* Styled Checkout Confirmation Modal */}
+      {checkoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl border border-brand-navy/10 max-w-sm w-full p-8 animate-in zoom-in-95 duration-200 text-center">
+            <div className="w-12 h-12 rounded-full bg-brand-indigo/10 border-2 border-brand-indigo/20 flex items-center justify-center mb-4 mx-auto">
+              <Lock className="w-6 h-6 text-brand-indigo" />
+            </div>
+            <h3 className="text-lg font-bold text-brand-deep mb-2">Unlock Print-Ready PDF</h3>
+            <p className="text-sm text-brand-navy/70 mb-6 leading-relaxed">
+              You need to purchase a plan to compile and download this tailored {activeTab === "resume" ? "resume" : "cover letter"} without watermarks and blur. Redirecting you to our secure PayFast checkout portal.
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={async () => {
+                  setCompiling(true);
+                  setCheckoutModal(null);
+                  try {
+                    await api.createPayfastCheckout(checkoutModal.price, checkoutModal.planName);
+                  } catch (checkoutErr: any) {
+                    setCompiling(false);
+                    triggerToast("Error connecting to secure checkout: " + checkoutErr.message, "error");
+                  }
+                }}
+                className="w-full py-3 rounded-xl bg-brand-indigo text-white font-bold text-sm hover:bg-brand-indigo/90 transition-all shadow-md shadow-brand-indigo/20 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                Proceed to Checkout
+              </button>
+              <button
+                onClick={() => setCheckoutModal(null)}
+                className="w-full py-2.5 rounded-xl border border-brand-navy/15 text-brand-navy/70 font-semibold text-sm hover:bg-brand-navy/5 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

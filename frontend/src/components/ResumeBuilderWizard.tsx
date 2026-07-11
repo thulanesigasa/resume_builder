@@ -19,7 +19,8 @@ import {
   Loader2,
   AlertCircle,
   FileText,
-  RefreshCw
+  RefreshCw,
+  Lock
 } from "lucide-react";
 import { api, API_BASE_URL } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
@@ -247,14 +248,22 @@ interface ResumeBuilderWizardProps {
   onSave: (compiledMarkdown: string) => void;
   onCancel: () => void;
   onComplete?: () => void;
+  initialStep?: number;
 }
 
 const STEPS = ["CONTACT", "EXPERIENCE", "EDUCATION", "CERTIFICATES", "SKILLS", "PROFESSIONAL SUMMARY", "FINISH IT", "DOWNLOAD"];
 
-export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel, onComplete }: ResumeBuilderWizardProps) {
+export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel, onComplete, initialStep = 0 }: ResumeBuilderWizardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [checkoutModal, setCheckoutModal] = useState<{ price: number; planName: string } | null>(null);
+
+  useEffect(() => {
+    if (initialStep !== undefined && isLoaded) {
+      setCurrentStep(initialStep);
+    }
+  }, [initialStep, isLoaded]);
 
   // --- State ---
   const [contact, setContact] = useState({ firstName: "", lastName: "", city: "", postalCode: "", phone: "", email: "" });
@@ -1119,6 +1128,52 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     if (currentStep < STEPS.length - 1) setCurrentStep(currentStep + 1);
   };
 
+  const handleSaveDraft = async () => {
+    setIsCompiling(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) {
+        throw new Error("Your session has expired. Please reload and log in again.");
+      }
+
+      const draftData = {
+        is_wizard_draft: true,
+        contact,
+        experiences,
+        educations,
+        skills,
+        summary,
+        documentTitle,
+        format
+      };
+
+      const dbApp = {
+        user_id: userId,
+        company_name: documentTitle || "Master Resume Draft",
+        job_title: "General CV",
+        resume_url: null,
+        resume_json: draftData
+      };
+
+      const { error: dbError } = await supabase.from("applications").insert(dbApp);
+      if (dbError) {
+        throw dbError;
+      }
+
+      localStorage.removeItem("resume_wizard_draft");
+
+      if (onComplete) {
+        onComplete();
+      }
+    } catch (e: any) {
+      console.error(e);
+      setValidationError("Failed to save draft: " + e.message);
+    } finally {
+      setIsCompiling(false);
+    }
+  };
+
   const handleBack = () => {
     setValidationError(null);
     if (currentStep > 0) setCurrentStep(currentStep - 1);
@@ -1295,18 +1350,12 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         onComplete();
       }
     } catch (e: any) {
-      console.error(e);
       if (e.message && (e.message.includes("INSUFFICIENT_CREDITS") || e.message.includes("402"))) {
         localStorage.setItem("checkout_redirect_tab", "builder");
-        // Update user feedback directly in compiling loader text
-        alert("You need to purchase a plan to compile and download this resume. Redirecting you to secure checkout...");
-        try {
-          await api.createPayfastCheckout(25, "Resume Building Plan");
-        } catch (checkoutErr: any) {
-          alert("Error connecting to secure checkout: " + checkoutErr.message);
-        }
+        setCheckoutModal({ price: 25, planName: "Resume Building Plan" });
       } else {
-        alert(e.message || "Failed to compile and save your resume.");
+        console.error(e);
+        setValidationError(e.message || "Failed to compile and save your resume.");
       }
     } finally {
       setIsCompiling(false);
@@ -2291,9 +2340,20 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
               Next to {STEPS[currentStep + 1] === 'FINISH IT' ? 'Finish it' : STEPS[currentStep + 1] === 'PROFESSIONAL SUMMARY' ? 'Professional Summary' : STEPS[currentStep + 1].charAt(0) + STEPS[currentStep + 1].slice(1).toLowerCase()} <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
-            <button onClick={handleDownload} className="btn-primary text-sm shadow-lg shadow-brand-indigo/20 flex items-center gap-2 px-10 py-3.5">
-              Compile & Save <Check className="w-4 h-4" />
-            </button>
+            <div className="flex gap-4">
+              <button 
+                onClick={handleSaveDraft} 
+                className="btn-secondary text-sm border-brand-navy/15 flex items-center gap-2 px-6 py-3.5 cursor-pointer"
+              >
+                Save as Draft
+              </button>
+              <button 
+                onClick={handleDownload} 
+                className="btn-primary text-sm shadow-lg shadow-brand-indigo/20 flex items-center gap-2 px-10 py-3.5 cursor-pointer"
+              >
+                Compile & Save <Check className="w-4 h-4" />
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -2435,6 +2495,44 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                 className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-all shadow-md shadow-red-500/20"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Styled Checkout Confirmation Modal */}
+      {checkoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl border border-brand-navy/10 max-w-sm w-full p-8 animate-in zoom-in-95 duration-200 text-center">
+            <div className="w-12 h-12 rounded-full bg-brand-indigo/10 border-2 border-brand-indigo/20 flex items-center justify-center mb-4 mx-auto">
+              <Lock className="w-6 h-6 text-brand-indigo" />
+            </div>
+            <h3 className="text-lg font-bold text-brand-deep mb-2">Unlock Print-Ready Resume</h3>
+            <p className="text-sm text-brand-navy/70 mb-6 leading-relaxed">
+              You need to purchase a plan to compile and download this resume without watermarks and blur. Redirecting you to our secure PayFast checkout portal.
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={async () => {
+                  setIsCompiling(true);
+                  setCheckoutModal(null);
+                  try {
+                    await api.createPayfastCheckout(checkoutModal.price, checkoutModal.planName);
+                  } catch (checkoutErr: any) {
+                    setIsCompiling(false);
+                    alert("Error connecting to secure checkout: " + checkoutErr.message);
+                  }
+                }}
+                className="w-full py-3 rounded-xl bg-brand-indigo text-white font-bold text-sm hover:bg-brand-indigo/90 transition-all shadow-md shadow-brand-indigo/20 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                Proceed to Checkout
+              </button>
+              <button
+                onClick={() => setCheckoutModal(null)}
+                className="w-full py-2.5 rounded-xl border border-brand-navy/15 text-brand-navy/70 font-semibold text-sm hover:bg-brand-navy/5 transition-all cursor-pointer"
+              >
+                Cancel
               </button>
             </div>
           </div>

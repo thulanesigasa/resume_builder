@@ -36,6 +36,7 @@ function DashboardContent() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"profile" | "generate" | "batch" | "archive" | "builder">("profile");
+  const [builderInitialStep, setBuilderInitialStep] = useState<number>(0);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [deleteCertId, setDeleteCertId] = useState<string | null>(null);
 
@@ -405,19 +406,31 @@ function DashboardContent() {
           if (redirectTab === "editor") {
             router.replace("/editor");
           } else if (redirectTab === "builder") {
+            setBuilderInitialStep(7);
             setActiveTab("builder");
             router.replace("/home");
           } else if (redirectTab === "generate") {
             setActiveTab("generate");
             router.replace("/home");
           } else {
+            setBuilderInitialStep(7);
             setActiveTab("builder");
             router.replace("/home");
           }
         } else if (checkoutCancel) {
+          const redirectTab = localStorage.getItem("checkout_redirect_tab");
           localStorage.removeItem("checkout_redirect_tab");
-          triggerToast("Payment was cancelled or unsuccessful. Please verify your payment details.", "error");
-          router.replace("/home");
+          triggerToast("Payment was cancelled. Your draft has been saved.", "info");
+          
+          if (redirectTab === "builder") {
+            setBuilderInitialStep(7);
+            setActiveTab("builder");
+            router.replace("/home");
+          } else if (redirectTab === "editor") {
+            router.replace("/editor");
+          } else {
+            router.replace("/home");
+          }
         }
       }
       setLoading(false);
@@ -438,6 +451,11 @@ function DashboardContent() {
     };
   }, [router, searchParams]);
 
+  useEffect(() => {
+    if (activeTab !== "builder") {
+      setBuilderInitialStep(0);
+    }
+  }, [activeTab]);
 
   const loadUserData = async (userId: string) => {
     try {
@@ -2459,6 +2477,7 @@ function DashboardContent() {
             {activeTab === "builder" && (
               <ResumeBuilderWizard 
                 selectedTemplate={selectedResume}
+                initialStep={builderInitialStep}
                 onSave={(compiled) => {
                   setProfileRaw(compiled);
                 }} 
@@ -2554,48 +2573,71 @@ function DashboardContent() {
                               <>{app.job_title} at <span className="text-brand-indigo">{app.company_name}</span></>
                             )}
                           </div>
-                          <div className="inline-flex items-center gap-1 bg-brand-navy/5 border border-brand-navy/10 px-2 py-0.5 rounded text-[10px] text-brand-navy">
-                            {app.job_title === "General CV" ? "ATS score: Master CV" : `ATS score: ${app.ats_score !== null ? `${app.ats_score}%` : "Pending"}`}
-                          </div>
+                          {app.resume_json?.is_wizard_draft ? (
+                            <span className="inline-flex items-center gap-1 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded text-[10px] text-amber-700 font-bold w-fit">
+                              Wizard Draft
+                            </span>
+                          ) : (
+                            <div className="inline-flex items-center gap-1 bg-brand-navy/5 border border-brand-navy/10 px-2 py-0.5 rounded text-[10px] text-brand-navy">
+                              {app.job_title === "General CV" ? "ATS score: Master CV" : `ATS score: ${app.ats_score !== null ? `${app.ats_score}%` : "Pending"}`}
+                            </div>
+                          )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-brand-navy/10">
-                          {app.resume_url ? (
-                            <a
-                              href={app.resume_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="py-1.5 btn-secondary text-xs text-center flex items-center justify-center gap-1"
-                            >
-                              <FileCheck className="w-3.5 h-3.5 text-brand-indigo" />
-                              Download CV
-                            </a>
-                          ) : (
-                            <span className="text-xs text-brand-navy/40 italic text-center self-center">No CV compiled</span>
-                          )}
-
-                          {app.cover_letter_url ? (
-                            <a
-                              href={app.cover_letter_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="py-1.5 btn-secondary text-xs text-center flex items-center justify-center gap-1"
-                            >
-                              <FileCheck className="w-3.5 h-3.5 text-brand-indigo" />
-                              Download Letter
-                            </a>
-                          ) : (
-                            <span className="text-xs text-brand-navy/40 italic text-center self-center">No CL compiled</span>
-                          )}
-                          
-                          {(app.resume_json || app.cl_json) && (
+                        <div className="mt-4 pt-4 border-t border-brand-navy/10 w-full">
+                          {app.resume_json?.is_wizard_draft ? (
                             <button
-                              onClick={() => handleOpenInEditor(app)}
-                              className="col-span-2 py-1.5 btn-secondary text-xs text-center flex items-center justify-center gap-1 mt-1 border-brand-indigo/30 hover:border-brand-indigo text-brand-indigo"
+                              onClick={() => {
+                                localStorage.setItem("resume_wizard_draft", JSON.stringify(app.resume_json));
+                                setBuilderInitialStep(7);
+                                setActiveTab("builder");
+                                triggerToast("Draft loaded! Welcome back to your resume builder.", "success");
+                              }}
+                              className="w-full py-2 btn-primary text-xs text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-brand-indigo/15"
                             >
                               <Zap className="w-3.5 h-3.5" />
-                              Open in Editor
+                              Continue Editing & Pay
                             </button>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-2 w-full">
+                              {app.resume_url ? (
+                                <a
+                                  href={app.resume_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="py-1.5 btn-secondary text-xs text-center flex items-center justify-center gap-1"
+                                >
+                                  <FileCheck className="w-3.5 h-3.5 text-brand-indigo" />
+                                  Download CV
+                                </a>
+                              ) : (
+                                <span className="text-xs text-brand-navy/40 italic text-center self-center">No CV compiled</span>
+                              )}
+
+                              {app.cover_letter_url ? (
+                                <a
+                                  href={app.cover_letter_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="py-1.5 btn-secondary text-xs text-center flex items-center justify-center gap-1"
+                                >
+                                  <FileCheck className="w-3.5 h-3.5 text-brand-indigo" />
+                                  Download Letter
+                                </a>
+                              ) : (
+                                <span className="text-xs text-brand-navy/40 italic text-center self-center">No CL compiled</span>
+                              )}
+                              
+                              {(app.resume_json || app.cl_json) && (
+                                <button
+                                  onClick={() => handleOpenInEditor(app)}
+                                  className="col-span-2 py-1.5 btn-secondary text-xs text-center flex items-center justify-center gap-1 mt-1 border-brand-indigo/30 hover:border-brand-indigo text-brand-indigo"
+                                >
+                                  <Zap className="w-3.5 h-3.5" />
+                                  Open in Editor
+                                </button>
+                              )}
+                            </div>
                           )}
                           
                           <button
