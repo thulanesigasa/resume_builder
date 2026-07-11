@@ -2681,12 +2681,15 @@ function DashboardContent() {
               {previewHtml && (
                 <>
                   {/* Diagonal Watermark Overlay */}
-                  <div className="absolute inset-0 pointer-events-none flex flex-col justify-around overflow-hidden select-none z-10">
-                    {[...Array(6)].map((_, i) => (
+                  <div className="absolute inset-0 pointer-events-none flex flex-col justify-around overflow-hidden select-none z-10 opacity-40">
+                    {[...Array(16)].map((_, i) => (
                       <div 
                         key={i} 
-                        className="w-[150%] -ml-[25%] flex justify-around text-brand-navy/15 text-5xl font-black uppercase tracking-wider transform -rotate-30 select-none whitespace-nowrap"
+                        className="w-[180%] -ml-[40%] flex justify-around text-brand-navy/15 text-[10px] font-bold lowercase tracking-widest transform -rotate-30 select-none whitespace-nowrap"
                       >
+                        <span>rbptech</span>
+                        <span>rbptech</span>
+                        <span>rbptech</span>
                         <span>rbptech</span>
                         <span>rbptech</span>
                         <span>rbptech</span>
@@ -2697,7 +2700,7 @@ function DashboardContent() {
                     srcDoc={previewHtml}
                     className="w-full h-full border-none select-none pointer-events-none"
                     style={{
-                      filter: 'blur(3px)',
+                      filter: 'blur(4.35px)',
                     }}
                     title="Template Preview"
                   />
