@@ -1852,7 +1852,12 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                 {/* Queue Card Indicators */}
                 {uploadingFiles.length > 0 && (
                   <div className="space-y-3 pt-2 border-t border-brand-navy/5">
-                    <p className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Upload Queue</p>
+                    <div className="flex justify-between items-center w-full">
+                      <p className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Upload Queue</p>
+                      <span className="text-[9px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-md animate-pulse">
+                        Auto-saving to Library
+                      </span>
+                    </div>
                     <div className="grid gap-3">
                       {uploadingFiles.map((f) => (
                         <div 
