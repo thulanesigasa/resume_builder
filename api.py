@@ -581,8 +581,8 @@ async def payfast_redirect(checkout_id: str, request: Request):
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: radial-gradient(circle at center, #120e2e 0%, #060414 100%);
-      color: #f1f5f9;
+      background: radial-gradient(circle at center, #ffffff 0%, #f8fafc 100%);
+      color: #0f172a;
       overflow: hidden;
     }}
     .logo-container {{
@@ -599,42 +599,36 @@ async def payfast_redirect(checkout_id: str, request: Request):
       width: 100px;
       height: 100px;
       border: 3px solid transparent;
-      border-top-color: #6366f1;
-      border-bottom-color: #6366f1;
+      border-top-color: #4f46e5;
+      border-bottom-color: #4f46e5;
       border-radius: 50%;
       animation: spin-clockwise 2s linear infinite;
-      box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+      box-shadow: 0 0 15px rgba(79, 70, 229, 0.1);
     }}
     .ring-inner {{
       position: absolute;
       width: 80px;
       height: 80px;
       border: 3px solid transparent;
-      border-left-color: #a855f7;
-      border-right-color: #a855f7;
+      border-left-color: #818cf8;
+      border-right-color: #818cf8;
       border-radius: 50%;
       animation: spin-counter-clockwise 1.5s linear infinite;
-      box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+      box-shadow: 0 0 10px rgba(129, 140, 248, 0.08);
     }}
     .core {{
       font-size: 16px;
       font-weight: 800;
       letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #f8fafc 30%, #cbd5e1 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #4f46e5;
       animation: pulse 2s ease-in-out infinite;
-      text-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
-    }}
-    .core span {{
-      color: #6366f1;
-      -webkit-text-fill-color: #6366f1;
+      text-shadow: 0 2px 4px rgba(79, 70, 229, 0.1);
     }}
     p {{
       font-size: 14px;
       font-weight: 600;
       letter-spacing: 0.5px;
-      color: #94a3b8;
+      color: #1e293b;
       text-transform: uppercase;
       margin: 0;
       animation: text-pulse 1.5s ease-in-out infinite alternate;
@@ -642,7 +636,7 @@ async def payfast_redirect(checkout_id: str, request: Request):
     .subtext {{
       font-size: 11px;
       font-weight: 500;
-      color: #475569;
+      color: #64748b;
       margin-top: 8px;
     }}
     @keyframes spin-clockwise {{
@@ -667,7 +661,7 @@ async def payfast_redirect(checkout_id: str, request: Request):
   <div class="logo-container">
     <div class="ring-outer"></div>
     <div class="ring-inner"></div>
-    <div class="core">rbp<span>tech</span></div>
+    <div class="core">rbptech</div>
   </div>
   <p>Connecting to secure checkout...</p>
   <span class="subtext">Transferring connection to merchant bank</span>
