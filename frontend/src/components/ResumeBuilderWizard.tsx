@@ -295,6 +295,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   // --- New Advanced Upload States ---
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // --- Step Bar ref for accurate centering ---
   const stepBarRef = useRef<HTMLDivElement>(null);
@@ -770,52 +771,14 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           const nameRes = await api.autoNameDocument(extractedText);
           const aiName = nameRes.name || "Untitled Document";
 
-          const { data: certRecord, error: insertError } = await supabase
-            .from("certificates")
-            .insert({
-              user_id: userId,
-              name: aiName,
-              extracted_text: extractedText,
-            })
-            .select("id")
-            .single();
-
-          if (insertError) throw insertError;
-
-          if (certRecord) {
-            await supabase.storage
-              .from("resumes")
-              .upload(`${userId}/certificates/${certRecord.id}.pdf`, file, { upsert: true });
-          }
-
           setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { 
             ...f, 
             status: "success", 
             progress: 100,
-            dbRecordId: certRecord?.id,
             aiName: aiName,
             aiDescription: extractedText,
             isEditing: false
           } : f));
-
-          // Refresh certificates list
-          const { data } = await supabase
-            .from("certificates")
-            .select("*")
-            .eq("user_id", userId);
-          if (data) {
-            setCertificates(data);
-            const urls: Record<string, string> = {};
-            for (const cert of data) {
-              const { data: signData } = await supabase.storage
-                .from("resumes")
-                .createSignedUrl(`${userId}/certificates/${cert.id}.pdf`, 7200);
-              if (signData?.signedUrl) {
-                urls[cert.id] = signData.signedUrl;
-              }
-            }
-            setCertUrls(urls);
-          }
         } catch (err: any) {
           setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: err.message || "Parse failed" } : f));
         }
@@ -875,24 +838,28 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const handleUpdateQueueCert = async (fId: string, dbId: string, newName: string, newDesc: string) => {
     if (!newName.trim() || !newDesc.trim()) return;
     try {
-      const { error } = await supabase
-        .from("certificates")
-        .update({
-          name: newName,
-          extracted_text: newDesc
-        })
-        .eq("id", dbId);
+      if (dbId) {
+        const { error } = await supabase
+          .from("certificates")
+          .update({
+            name: newName,
+            extracted_text: newDesc
+          })
+          .eq("id", dbId);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       // Update uploadingFiles state
       setUploadingFiles(prev => prev.map(f => f.id === fId ? { ...f, aiName: newName, aiDescription: newDesc, isEditing: false } : f));
 
-      // Refresh certificates list
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) {
-        const { data } = await supabase.from("certificates").select("*").eq("user_id", session.user.id);
-        if (data) setCertificates(data);
+      // Refresh certificates list if dbId was updated
+      if (dbId) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          const { data } = await supabase.from("certificates").select("*").eq("user_id", session.user.id);
+          if (data) setCertificates(data);
+        }
       }
     } catch (err: any) {
       alert("Failed to update certificate: " + err.message);
@@ -933,6 +900,73 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       }
     });
     setDeleteConfirmOpen(true);
+  };
+
+  const handleCompleteUploads = async () => {
+    setIsSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) throw new Error("Session expired");
+
+      const successItems = uploadingFiles.filter(f => f.status === "success" && !f.dbRecordId);
+      if (successItems.length === 0) {
+        return;
+      }
+
+      const newCerts: any[] = [];
+      for (const item of successItems) {
+        // 1. Insert into database
+        const { data: certRecord, error: insertError } = await supabase
+          .from("certificates")
+          .insert({
+            user_id: userId,
+            name: item.aiName || item.name,
+            extracted_text: item.aiDescription || "",
+          })
+          .select("id")
+          .single();
+
+        if (insertError) throw insertError;
+
+        // 2. Upload file to Supabase storage
+        if (certRecord) {
+          await supabase.storage
+            .from("resumes")
+            .upload(`${userId}/certificates/${certRecord.id}.pdf`, item.file, { upsert: true });
+
+          // Mark queue item as having a dbRecordId
+          setUploadingFiles(prev => prev.map(f =>
+            f.id === item.id ? { ...f, dbRecordId: certRecord.id } : f
+          ));
+          newCerts.push(certRecord);
+        }
+      }
+
+      // 3. Refresh certificates list
+      const { data } = await supabase.from("certificates").select("*").eq("user_id", userId);
+      if (data) {
+        setCertificates(data);
+        const urls: Record<string, string> = {};
+        for (const cert of data) {
+          const { data: signData } = await supabase.storage
+            .from("resumes")
+            .createSignedUrl(`${userId}/certificates/${cert.id}.pdf`, 7200);
+          if (signData?.signedUrl) {
+            urls[cert.id] = signData.signedUrl;
+          }
+        }
+        setCertUrls(urls);
+      }
+
+      // 4. Clear synced items from queue
+      setUploadingFiles(prev => prev.filter(f => f.status !== "success"));
+
+    } catch (err: any) {
+      alert("Sync failed: " + err.message);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -1912,7 +1946,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                                   >
                                     {f.isEditing ? "Close" : "Edit Details"}
                                   </button>
-                                  <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                  <span className="text-[10px] font-bold text-brand-indigo bg-brand-indigo/10 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                                     <Check className="w-3 h-3" /> Done
                                   </span>
                                   <button
@@ -2001,7 +2035,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => f.dbRecordId && handleUpdateQueueCert(f.id, f.dbRecordId, f.aiName || "", f.aiDescription || "")}
+                                  onClick={() => handleUpdateQueueCert(f.id, f.dbRecordId || "", f.aiName || "", f.aiDescription || "")}
                                   className="px-4 py-1.5 bg-brand-indigo text-white font-bold text-[10px] rounded-lg transition-colors hover:bg-brand-indigo/90"
                                 >
                                   Save Changes
@@ -2019,6 +2053,27 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                         </div>
                       ))}
                     </div>
+
+                    {uploadingFiles.some(f => f.status === "success") && (
+                      <button
+                        type="button"
+                        onClick={handleCompleteUploads}
+                        disabled={isSyncing}
+                        className="w-full mt-4 py-2.5 bg-brand-indigo hover:bg-brand-indigo/90 disabled:bg-brand-indigo/50 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_4px_12px_rgba(79,70,229,0.15)] hover:shadow-[0_4px_20px_rgba(79,70,229,0.25)] cursor-pointer"
+                      >
+                        {isSyncing ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Syncing Credentials...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4" />
+                            Complete &amp; Sync to Credentials
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 )}
                 

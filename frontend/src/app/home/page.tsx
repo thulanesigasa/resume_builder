@@ -27,7 +27,8 @@ import {
   Download,
   Eye,
   ChevronDown,
-  Key
+  Key,
+  Loader2
 } from "lucide-react";
 
 function DashboardContent() {
@@ -84,6 +85,7 @@ function DashboardContent() {
   // States for advanced upload queue
   const [uploadingFiles, setUploadingFiles] = useState<any[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const certificatesRef = useRef(certificates);
 
   useEffect(() => {
@@ -921,36 +923,14 @@ function DashboardContent() {
           const nameRes = await api.autoNameDocument(extractedText);
           const aiName = nameRes.name || "Untitled Document";
 
-          const { data: certRecord, error: insertError } = await supabase
-            .from("certificates")
-            .insert({
-              user_id: userId,
-              name: aiName,
-              extracted_text: extractedText,
-            })
-            .select("id")
-            .single();
-
-          if (insertError) throw insertError;
-
-          if (certRecord) {
-            await supabase.storage
-              .from("resumes")
-              .upload(`${userId}/certificates/${certRecord.id}.pdf`, file, { upsert: true });
-          }
-
           setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { 
-            ...f, 
-            status: "success", 
-            progress: 100,
-            dbRecordId: certRecord?.id,
-            aiName: aiName,
-            aiDescription: extractedText,
-            isEditing: false
-          } : f));
-
-          // Refresh everything using loadUserData
-          await loadUserData(userId);
+             ...f, 
+             status: "success", 
+             progress: 100,
+             aiName: aiName,
+             aiDescription: extractedText,
+             isEditing: false
+           } : f));
         } catch (err: any) {
           setUploadingFiles(prev => prev.map(f => f.id === uploadId ? { ...f, status: "error", errorMsg: err.message || "Parse failed" } : f));
         }
@@ -968,24 +948,75 @@ function DashboardContent() {
     xhr.send(formData);
   };
 
+  const handleCompleteUploads = async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) throw new Error("Session expired");
+
+      const successItems = uploadingFiles.filter(f => f.status === "success");
+      if (successItems.length === 0) {
+        triggerToast("No successful uploads to sync.", "info");
+        return;
+      }
+
+      for (const item of successItems) {
+        // 1. Insert into database
+        const { data: certRecord, error: insertError } = await supabase
+          .from("certificates")
+          .insert({
+            user_id: userId,
+            name: item.aiName || item.name,
+            extracted_text: item.aiDescription || "",
+          })
+          .select("id")
+          .single();
+
+        if (insertError) throw insertError;
+
+        // 2. Upload file to Supabase storage using the new DB ID
+        if (certRecord) {
+          await supabase.storage
+            .from("resumes")
+            .upload(`${userId}/certificates/${certRecord.id}.pdf`, item.file, { upsert: true });
+        }
+      }
+
+      // 3. Filter out successfully synced files from the queue
+      setUploadingFiles(prev => prev.filter(f => f.status !== "success"));
+
+      // 4. Force a fresh load of user certificates and signed URLs
+      await loadUserData(user.id);
+      triggerToast("All certificates synchronized successfully!", "success");
+    } catch (err: any) {
+      triggerToast("Sync failed: " + err.message, "error");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleUpdateQueueCert = async (fId: string, dbId: string, newName: string, newDesc: string) => {
     if (!newName.trim() || !newDesc.trim()) return;
     try {
-      const { error } = await supabase
-        .from("certificates")
-        .update({
-          name: newName,
-          extracted_text: newDesc
-        })
-        .eq("id", dbId);
+      if (dbId) {
+        const { error } = await supabase
+          .from("certificates")
+          .update({
+            name: newName,
+            extracted_text: newDesc
+          })
+          .eq("id", dbId);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       // Update uploadingFiles state
       setUploadingFiles(prev => prev.map(f => f.id === fId ? { ...f, aiName: newName, aiDescription: newDesc, isEditing: false } : f));
 
-      // Refresh data
-      if (user?.id) {
+      // Refresh data if dbId was updated
+      if (dbId && user?.id) {
         await loadUserData(user.id);
       }
     } catch (err: any) {
@@ -2002,12 +2033,7 @@ function DashboardContent() {
                       {/* Queue Card Indicators */}
                       {uploadingFiles.length > 0 && (
                         <div className="space-y-3 pt-2 border-t border-brand-navy/5">
-                          <div className="flex justify-between items-center w-full">
-                            <p className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Upload Queue</p>
-                            <span className="text-[9px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-md animate-pulse">
-                              Auto-saving to Library
-                            </span>
-                          </div>
+                          <p className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Upload Queue</p>
                           <div className="grid gap-3">
                             {uploadingFiles.map((f) => (
                               <div 
@@ -2062,7 +2088,7 @@ function DashboardContent() {
                                         >
                                           {f.isEditing ? "Close" : "Edit Details"}
                                         </button>
-                                        <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                        <span className="text-[10px] font-bold text-brand-indigo bg-brand-indigo/10 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                                           <Check className="w-3 h-3" /> Done
                                         </span>
                                         <button
@@ -2155,7 +2181,7 @@ function DashboardContent() {
                                       </button>
                                       <button
                                         type="button"
-                                        onClick={() => f.dbRecordId && handleUpdateQueueCert(f.id, f.dbRecordId, f.aiName || "", f.aiDescription || "")}
+                                        onClick={() => handleUpdateQueueCert(f.id, f.dbRecordId || "", f.aiName || "", f.aiDescription || "")}
                                         className="px-4 py-1.5 bg-brand-indigo text-white font-bold text-[10px] rounded-lg transition-colors hover:bg-brand-indigo/90"
                                       >
                                         Save Changes
@@ -2173,6 +2199,27 @@ function DashboardContent() {
                               </div>
                             ))}
                           </div>
+
+                          {uploadingFiles.some(f => f.status === "success") && (
+                            <button
+                              type="button"
+                              onClick={handleCompleteUploads}
+                              disabled={isSyncing}
+                              className="w-full mt-4 py-2.5 bg-brand-indigo hover:bg-brand-indigo/90 disabled:bg-brand-indigo/50 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_4px_12px_rgba(79,70,229,0.15)] hover:shadow-[0_4px_20px_rgba(79,70,229,0.25)] cursor-pointer"
+                            >
+                              {isSyncing ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Syncing Credentials...
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="w-4 h-4" />
+                                  Complete & Sync to Credentials
+                                </>
+                              )}
+                            </button>
+                          )}
                         </div>
                       )}
 
