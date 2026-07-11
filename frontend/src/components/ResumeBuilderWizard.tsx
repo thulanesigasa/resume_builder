@@ -2326,14 +2326,11 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                 {[...Array(16)].map((_, i) => (
                   <div 
                     key={i} 
-                    className="w-[180%] -ml-[40%] flex justify-around text-brand-navy/15 text-[10px] font-bold lowercase tracking-widest transform -rotate-30 select-none whitespace-nowrap"
+                    className="w-[200%] -ml-[50%] flex justify-center gap-6 text-brand-navy/15 text-[10px] font-bold lowercase tracking-widest transform -rotate-30 select-none whitespace-nowrap"
                   >
-                    <span>rbptech</span>
-                    <span>rbptech</span>
-                    <span>rbptech</span>
-                    <span>rbptech</span>
-                    <span>rbptech</span>
-                    <span>rbptech</span>
+                    {[...Array(12)].map((_, idx) => (
+                      <span key={idx}>rbptech</span>
+                    ))}
                   </div>
                 ))}
               </div>
