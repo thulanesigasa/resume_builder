@@ -83,7 +83,7 @@ export default function MarketingHeader() {
               onClick={() => router.push("/home")}
               className="px-5 py-2 btn-secondary text-xs cursor-pointer"
             >
-              Go to Dashboard
+              Go to Home
             </button>
           ) : (
             <div className="flex items-center gap-2">
@@ -151,7 +151,7 @@ export default function MarketingHeader() {
               }}
               className="w-full py-3 btn-primary text-sm cursor-pointer"
             >
-              Go to Dashboard
+              Go to Home
             </button>
           ) : (
             <div className="grid grid-cols-2 gap-2 mt-4">
