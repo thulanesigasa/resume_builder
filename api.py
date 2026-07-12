@@ -57,12 +57,22 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 app.add_middleware(LoggingMiddleware)
 
 # Configure CORS for decoupled frontend communication
+# Only allow known trusted origins — no wildcard (*) to achieve A+ security rating
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "ALLOWED_ORIGINS",
+        "https://rbptech.co.za,https://www.rbptech.co.za,http://localhost:3000,http://localhost:3001",
+    ).split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Safe to use * since allow_credentials is False
-    allow_credentials=False, # We use Authorization headers, not cookies
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=False,  # We use Authorization headers, not cookies
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
 )
 
 # Pydantic request models

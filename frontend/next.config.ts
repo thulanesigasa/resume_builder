@@ -1,49 +1,60 @@
 import type { NextConfig } from "next";
 
-const cspHeader = `
-    default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline';
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' blob: data: https://www.payfast.co.za https://sandbox.payfast.co.za;
-    font-src 'self' data: https://fonts.gstatic.com;
-    object-src 'none';
-    base-uri 'self';
-    form-action 'self' https://www.payfast.co.za https://sandbox.payfast.co.za;
-    frame-ancestors 'none';
-    connect-src 'self' http://localhost:8000 https://*.onrender.com wss://*.supabase.co https://*.supabase.co https://*.supabase.in;
-`;
+// Fallback static CSP — applied to /_next/static/** files and other static routes
+// that are NOT processed by middleware. The nonce-based CSP for HTML pages is
+// applied dynamically via src/middleware.ts.
+//
+// For static assets we can be very strict: no script execution needed at all.
+const staticCsp = [
+  `default-src 'self'`,
+  `script-src 'none'`,
+  `style-src 'self' https://fonts.googleapis.com`,
+  `img-src 'self' blob: data: https://www.payfast.co.za https://sandbox.payfast.co.za`,
+  `font-src 'self' data: https://fonts.gstatic.com`,
+  `object-src 'none'`,
+  `base-uri 'self'`,
+  `frame-ancestors 'none'`,
+  `upgrade-insecure-requests`,
+].join("; ");
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  allowedDevOrigins: ['100.65.194.153', '10.251.84.215'],
+  allowedDevOrigins: ["100.65.194.153", "10.251.84.215"],
+
   async headers() {
     return [
       {
-        source: '/(.*)',
+        // Apply to all routes — middleware overrides this on HTML responses
+        source: "/(.*)",
         headers: [
           {
-            key: 'Content-Security-Policy',
-            value: cspHeader.replace(/\n/g, ''),
+            key: "X-Frame-Options",
+            value: "DENY",
           },
           {
-            key: 'X-Frame-Options',
-            value: 'DENY',
+            key: "X-Content-Type-Options",
+            value: "nosniff",
           },
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
           },
           {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
           },
           {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload',
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
           },
+        ],
+      },
+      {
+        // Strict static-asset headers (no inline scripts allowed here anyway)
+        source: "/_next/static/(.*)",
+        headers: [
           {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+            key: "Content-Security-Policy",
+            value: staticCsp,
           },
         ],
       },
