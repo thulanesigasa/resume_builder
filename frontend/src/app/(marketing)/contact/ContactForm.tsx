@@ -95,7 +95,7 @@ export default function ContactForm() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-3 bg-white border border-brand-navy/15 rounded-lg text-sm text-brand-deep focus:outline-none focus:border-brand-indigo/50 focus:ring-1 focus:ring-brand-indigo/50 transition-all shadow-sm"
-                  placeholder="John Doe"
+                  placeholder="Thabo Nkosi"
                 />
               </div>
               <div className="space-y-1.5">
@@ -106,7 +106,7 @@ export default function ContactForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 bg-white border border-brand-navy/15 rounded-lg text-sm text-brand-deep focus:outline-none focus:border-brand-indigo/50 focus:ring-1 focus:ring-brand-indigo/50 transition-all shadow-sm"
-                  placeholder="john@example.com"
+                  placeholder="thabo.nkosi@gmail.com"
                 />
               </div>
               <div className="space-y-1.5">
