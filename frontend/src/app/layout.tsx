@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SessionTimeout from "@/components/SessionTimeout";
+import { headers } from "next/headers";
 
 const geistSans = {
   variable: "geist-sans",
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
     siteName: 'rbptech',
     images: [
       {
-        url: '/favicon.png', // We will need to add this image
+        url: '/favicon.png',
         width: 1200,
         height: 630,
         alt: 'rbptech Resume Builder Preview',
@@ -41,11 +42,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Read the nonce injected by proxy.ts so the JSON-LD inline script is
+  // allowed by the Content-Security-Policy without needing 'unsafe-inline'.
+  const nonce = (await headers()).get("x-nonce") ?? "";
+
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -62,8 +67,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* Nonce passed here so the CSP allows this inline script */}
         <script
           type="application/ld+json"
+          nonce={nonce}
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
         <SessionTimeout />
