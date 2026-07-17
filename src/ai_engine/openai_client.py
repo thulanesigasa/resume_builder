@@ -55,7 +55,17 @@ def generate_document(job_description: str, personal_data: str, doc_type: str, c
         """
     
     if custom_instructions:
-        user_prompt += f"\n\n--- CUSTOM INSTRUCTIONS FROM USER ---\n{custom_instructions}\n"
+        user_prompt += f"""
+
+=== MANDATORY USER INSTRUCTIONS — HIGHEST PRIORITY — MUST FOLLOW EXACTLY ===
+The user has provided the following specific instructions. These are NON-NEGOTIABLE RULES.
+You MUST override any default behaviour and strictly apply every instruction below.
+Failure to follow any of these instructions is NOT acceptable.
+
+{custom_instructions}
+
+=== END OF MANDATORY INSTRUCTIONS ===
+"""
 
     logger.info(f"Sending request to OpenAI ({OPENAI_MODEL_NAME}) for {doc_type} generation.")
     

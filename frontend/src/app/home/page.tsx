@@ -115,6 +115,10 @@ function DashboardContent() {
   const [selectedResume, setSelectedResume] = useState("ui_ux_pro_max_resume.html");
   const [selectedCl, setSelectedCl] = useState("caleb_foster_cover_letter.html");
   const [customInstructions, setCustomInstructions] = useState("");
+  const [technicalSkills, setTechnicalSkills] = useState<string[]>([]);
+  const [softSkills, setSoftSkills] = useState<string[]>([]);
+  const [newTechSkill, setNewTechSkill] = useState("");
+  const [newSoftSkill, setNewSoftSkill] = useState("");
   const [generating, setGenerating] = useState(false);
   const [genSteps, setGenSteps] = useState<string[]>([]);
 
@@ -1266,6 +1270,14 @@ function DashboardContent() {
         });
       }
 
+      // Inject explicitly listed skills so the AI always uses them
+      if (technicalSkills.length > 0) {
+        personalDataCombined += `\n\n--- TECHNICAL SKILLS (MUST include ALL of these in the resume) ---\n${technicalSkills.join(", ")}\n`;
+      }
+      if (softSkills.length > 0) {
+        personalDataCombined += `\n\n--- SOFT SKILLS (MUST include ALL of these in the resume) ---\n${softSkills.join(", ")}\n`;
+      }
+
       let generatedResumeJson = null;
       let generatedClJson = null;
 
@@ -1679,9 +1691,106 @@ function DashboardContent() {
                 <textarea
                   value={customInstructions}
                   onChange={(e) => setCustomInstructions(e.target.value)}
-                  placeholder="e.g. Focus heavily on my cloud engineering, keep the tone aggressive..."
+                  placeholder="e.g. Emphasise my cloud engineering background, keep tone assertive, prioritise AWS and Python skills..."
                   className="w-full h-24 px-3 py-2 bg-white border border-brand-navy/15 rounded-lg text-xs text-brand-deep placeholder-brand-navy/30 focus:outline-none focus:border-brand-indigo resize-none"
                 />
+                <p className="text-[9px] text-brand-indigo/70 mt-1">⚡ The AI strictly follows these instructions — be specific for best results.</p>
+              </div>
+
+              {/* Technical Skills */}
+              <div>
+                <label className="block text-[10px] font-semibold text-brand-navy/70 uppercase mb-2">
+                  Technical Skills
+                </label>
+                <div className="flex gap-1.5 flex-wrap mb-2">
+                  {technicalSkills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="flex items-center gap-1 bg-brand-indigo/10 text-brand-indigo text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                    >
+                      {skill}
+                      <button
+                        type="button"
+                        onClick={() => setTechnicalSkills(prev => prev.filter(s => s !== skill))}
+                        className="hover:text-red-500 transition-colors leading-none"
+                      >×</button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={newTechSkill}
+                    onChange={(e) => setNewTechSkill(e.target.value)}
+                    onKeyDown={(e) => {
+                      if ((e.key === "Enter" || e.key === ",") && newTechSkill.trim()) {
+                        e.preventDefault();
+                        const val = newTechSkill.trim().replace(/,$/, "");
+                        if (val && !technicalSkills.includes(val)) setTechnicalSkills(prev => [...prev, val]);
+                        setNewTechSkill("");
+                      }
+                    }}
+                    placeholder="Type skill + Enter"
+                    className="flex-1 px-2.5 py-1.5 bg-white border border-brand-navy/15 rounded-lg text-xs text-brand-deep focus:outline-none focus:border-brand-indigo"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const val = newTechSkill.trim().replace(/,$/, "");
+                      if (val && !technicalSkills.includes(val)) setTechnicalSkills(prev => [...prev, val]);
+                      setNewTechSkill("");
+                    }}
+                    className="px-2.5 py-1.5 bg-brand-indigo text-white text-xs font-bold rounded-lg hover:bg-brand-indigo/90 transition-colors"
+                  >Add</button>
+                </div>
+              </div>
+
+              {/* Soft Skills */}
+              <div>
+                <label className="block text-[10px] font-semibold text-brand-navy/70 uppercase mb-2">
+                  Soft Skills
+                </label>
+                <div className="flex gap-1.5 flex-wrap mb-2">
+                  {softSkills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                    >
+                      {skill}
+                      <button
+                        type="button"
+                        onClick={() => setSoftSkills(prev => prev.filter(s => s !== skill))}
+                        className="hover:text-red-500 transition-colors leading-none"
+                      >×</button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={newSoftSkill}
+                    onChange={(e) => setNewSoftSkill(e.target.value)}
+                    onKeyDown={(e) => {
+                      if ((e.key === "Enter" || e.key === ",") && newSoftSkill.trim()) {
+                        e.preventDefault();
+                        const val = newSoftSkill.trim().replace(/,$/, "");
+                        if (val && !softSkills.includes(val)) setSoftSkills(prev => [...prev, val]);
+                        setNewSoftSkill("");
+                      }
+                    }}
+                    placeholder="Type skill + Enter"
+                    className="flex-1 px-2.5 py-1.5 bg-white border border-brand-navy/15 rounded-lg text-xs text-brand-deep focus:outline-none focus:border-brand-indigo"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const val = newSoftSkill.trim().replace(/,$/, "");
+                      if (val && !softSkills.includes(val)) setSoftSkills(prev => [...prev, val]);
+                      setNewSoftSkill("");
+                    }}
+                    className="px-2.5 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors"
+                  >Add</button>
+                </div>
               </div>
             </div>
           </div>
