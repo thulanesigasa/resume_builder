@@ -26,7 +26,7 @@ const THREE_CANDIDATE_TEMPLATES = [
     skills: ["React", "TypeScript", "Node.js", "AWS Cloud", "PostgreSQL", "Microservices", "Docker", "CI/CD"],
     education: "BSc Computer Science & Info Systems — Wits University",
     layoutType: "modern-cyan",
-    ctaText: "Customize Modern Tech Layout",
+    ctaText: "Build Resume Now",
   },
   {
     id: "ats_resume_template.html",
@@ -49,7 +49,7 @@ const THREE_CANDIDATE_TEMPLATES = [
     skills: ["Business Analysis", "Financial Modeling", "IFRS Compliance", "Process Optimization", "Excel VBA", "SQL"],
     education: "BCom Financial Management — University of Cape Town (UCT)",
     layoutType: "ats-clean",
-    ctaText: "Customize Single-Column ATS",
+    ctaText: "Build Resume Now",
   },
   {
     id: "david_turner_resume.html",
@@ -72,7 +72,7 @@ const THREE_CANDIDATE_TEMPLATES = [
     skills: ["Capex Management", "ISO Compliance", "Vendor Procurement", "Project Engineering", "Scrum", "Risk Assessment"],
     education: "BSc Electrical Engineering — University of KwaZulu-Natal (UKZN)",
     layoutType: "executive-serif",
-    ctaText: "Customize Executive Serif",
+    ctaText: "Build Resume Now",
   },
 ];
 
@@ -195,14 +195,14 @@ export default function TemplateShowcase() {
 
                 </div>
 
-                {/* Footer Action Bar with Distinct High-Converting CTAs */}
+                {/* Footer Action Bar Prompting Direct Sign Up */}
                 <footer className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col gap-2">
                   <button
                     onClick={() => router.push("/register")}
                     className="w-full py-2.5 px-4 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs rounded-lg shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
                     <span>{tpl.ctaText}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
                   <button
@@ -241,13 +241,13 @@ export default function TemplateShowcase() {
           ))}
         </div>
 
-        {/* Bottom CTA Pill Button */}
+        {/* Bottom CTA Pill Button Prompting Sign Up */}
         <div className="text-center pt-2">
           <button
             onClick={() => router.push("/register")}
-            className="px-10 py-3.5 border-2 border-indigo-950 text-indigo-950 hover:bg-indigo-950 hover:text-white font-bold text-sm rounded-full transition-all cursor-pointer"
+            className="px-10 py-3.5 border-2 border-indigo-950 text-indigo-950 hover:bg-indigo-950 hover:text-white font-bold text-sm rounded-full transition-all cursor-pointer shadow-xs"
           >
-            Build my CV
+            Build Resume Now
           </button>
         </div>
 
@@ -366,7 +366,7 @@ export default function TemplateShowcase() {
                 }}
                 className="flex-1 py-3 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
               >
-                <span>Use This Template</span>
+                <span>Build Resume Now</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </footer>
