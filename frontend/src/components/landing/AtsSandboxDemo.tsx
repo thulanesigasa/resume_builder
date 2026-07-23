@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Check, Search, Sparkles } from "lucide-react";
+import { Check, Search, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const CATEGORIES = [
@@ -38,99 +38,90 @@ export default function AtsSandboxDemo() {
   };
 
   return (
-    <section className="bg-slate-50 py-16 md:py-24 border-b border-slate-200/80">
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
-          {/* Left Text Column (Matching Screenshot 1) */}
-          <div className="lg:col-span-6 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-teal-50 border border-teal-200 text-teal-800 text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-              <span>PRE-WRITTEN CV CONTENT VAULT</span>
-            </div>
-
-            <h2 className="text-3xl md:text-5xl font-black text-indigo-950 tracking-tight leading-tight">
-              Insert our pre-written CV content
-            </h2>
-
-            <p className="text-base md:text-lg text-slate-600 font-normal leading-relaxed">
-              No writing required – just point and click. Our library provides thousands of recruiter-approved phrases tailored for your target role.
-            </p>
-
-            <div className="pt-2">
-              <button
-                onClick={() => router.push("/register")}
-                className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer"
-              >
-                Try Pre-Written Bullets
-              </button>
-            </div>
+    <section className="bg-slate-50 py-16 md:py-24 border-b border-slate-200">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        {/* Left Text Column */}
+        <header className="lg:col-span-6 space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-slate-200 text-indigo-950 text-xs font-semibold">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-700" />
+            <span>PRE-WRITTEN CV CONTENT VAULT</span>
           </div>
 
-          {/* Right Column: UI Mockup Card (Matching Screenshot 1 Layout) */}
-          <div className="lg:col-span-6">
-            <div className="bg-amber-50/60 p-6 md:p-8 rounded-3xl border border-amber-200/80 shadow-lg space-y-5">
-              
-              {/* Category Search Input */}
-              <div className="bg-white rounded-xl border border-slate-300 p-2 flex items-center justify-between shadow-2xs">
-                <span className="text-xs font-bold text-indigo-950 px-2">
-                  Ex: {CATEGORIES.find((c) => c.id === activeCategory)?.label}
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-                  <Search className="w-4 h-4" />
-                </div>
-              </div>
+          <h2 className="text-3xl md:text-5xl font-black text-indigo-950 tracking-tight leading-tight">
+            Insert our pre-written CV content
+          </h2>
 
-              {/* Category Pills */}
-              <div className="flex gap-2">
-                {CATEGORIES.map((cat) => (
+          <p className="text-base md:text-lg text-slate-600 font-normal leading-relaxed">
+            No writing required – just point and click. Our library provides thousands of recruiter-approved phrases tailored for your target role.
+          </p>
+
+          <div className="pt-2">
+            <button
+              onClick={() => router.push("/register")}
+              className="px-8 py-3.5 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-sm rounded-xl transition-all cursor-pointer shadow-sm"
+            >
+              Try Pre-Written Bullets
+            </button>
+          </div>
+        </header>
+
+        {/* Right Column: UI Mockup Card (Clean White/Slate) */}
+        <article className="lg:col-span-6 bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-md space-y-5">
+          
+          <div className="bg-slate-50 rounded-xl border border-slate-300 p-2.5 flex items-center justify-between">
+            <span className="text-xs font-bold text-indigo-950 px-2">
+              Ex: {CATEGORIES.find((c) => c.id === activeCategory)?.label}
+            </span>
+            <Search className="w-4 h-4 text-slate-400" />
+          </div>
+
+          <div className="flex gap-2">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded border transition-all cursor-pointer ${
+                  activeCategory === cat.id
+                    ? "bg-indigo-950 text-white border-indigo-950"
+                    : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"
+                }`}
+              >
+                {cat.label.split(" ")[0]}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            {PREWRITTEN_BULLETS[activeCategory].map((bulletText, idx) => {
+              const key = `${activeCategory}-${idx}`;
+              const isAdded = !!addedItems[key];
+              return (
+                <div
+                  key={idx}
+                  onClick={() => toggleItem(key)}
+                  className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-start gap-3 cursor-pointer select-none"
+                >
                   <button
-                    key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                      activeCategory === cat.id
-                        ? "bg-indigo-900 text-white border-indigo-900"
-                        : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"
+                    type="button"
+                    className={`px-3 py-1.5 rounded text-xs font-bold shrink-0 transition-colors ${
+                      isAdded
+                        ? "bg-indigo-950 text-white"
+                        : "bg-slate-200 text-slate-700 hover:bg-indigo-700 hover:text-white"
                     }`}
                   >
-                    {cat.label.split(" ")[0]}
+                    {isAdded ? "Added" : "Add"}
                   </button>
-                ))}
-              </div>
-
-              {/* Pre-written Bullet List */}
-              <div className="space-y-3">
-                {PREWRITTEN_BULLETS[activeCategory].map((bulletText, idx) => {
-                  const key = `${activeCategory}-${idx}`;
-                  const isAdded = !!addedItems[key];
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => toggleItem(key)}
-                      className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex items-start gap-3 cursor-pointer select-none"
-                    >
-                      <button
-                        type="button"
-                        className={`px-3 py-1.5 rounded-md text-xs font-bold shrink-0 transition-colors ${
-                          isAdded
-                            ? "bg-teal-700 text-white"
-                            : "bg-slate-100 text-slate-700 hover:bg-teal-600 hover:text-white"
-                        }`}
-                      >
-                        {isAdded ? "Added" : "Add"}
-                      </button>
-                      <p className="text-xs text-slate-700 font-medium leading-relaxed">
-                        {bulletText}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-
-            </div>
+                  <p className="text-xs text-slate-700 font-medium leading-relaxed">
+                    {bulletText}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
-        </div>
+        </article>
+
       </div>
     </section>
   );

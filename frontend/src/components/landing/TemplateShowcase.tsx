@@ -1,29 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Check, Eye, X, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const CAROUSEL_TEMPLATES = [
   {
     id: "ui_ux_pro_max_resume.html",
-    name: "AHMED GULAL (Professional Summary)",
+    name: "THABO NKOSI (Professional Summary)",
     style: "Modern Classic",
-    color: "bg-slate-700",
-    role: "Senior Business Analyst",
+    color: "bg-indigo-950",
+    role: "Senior Software Engineer",
     ats: "100%",
     bullets: [
-      "Designed analytical solutions for business optimization projects, producing 15% market share increase.",
-      "Conducted demand analysis, identifying risk mitigation opportunities that led to R500,000 cost savings.",
+      "Architected scalable React & TypeScript microservices, reducing cloud latency by 38%.",
+      "Conducted demand analysis, identifying performance bottlenecks that saved R500,000 annually.",
       "Liaised with stakeholders to verify business & technology alignment.",
     ],
   },
   {
     id: "ats_resume_template.html",
-    name: "AHMED GULAL (Clean ATS Blueprint)",
+    name: "NOMALANGA DLAMINI (Clean ATS Blueprint)",
     style: "Executive Minimalist",
-    color: "bg-amber-700",
-    role: "Business Analyst / McKinsey & Co",
+    color: "bg-indigo-900",
+    role: "Business Analyst / Financial Lead",
     ats: "100%",
     bullets: [
       "Analyzed business, user, and technical requirements for proposal system solutions.",
@@ -33,9 +33,9 @@ const CAROUSEL_TEMPLATES = [
   },
   {
     id: "david_turner_resume.html",
-    name: "AHMED GULAL (Serif Executive)",
+    name: "SIPHO MTHEMBU (Serif Executive)",
     style: "Classic Formal",
-    color: "bg-indigo-900",
+    color: "bg-slate-800",
     role: "Senior Technical Consultant",
     ats: "98%",
     bullets: [
@@ -60,51 +60,49 @@ export default function TemplateShowcase() {
   };
 
   return (
-    <section className="bg-white py-16 md:py-24 border-b border-slate-200/80">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 space-y-12">
+    <section className="bg-white py-16 md:py-24 border-b border-slate-200">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 space-y-10">
         
-        {/* Section Header (Matching Screenshot 2) */}
-        <div className="text-center space-y-3 max-w-3xl mx-auto">
+        {/* Header */}
+        <header className="text-center space-y-3 max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-5xl font-black text-indigo-950 tracking-tight">
             Top professional templates for a perfect CV
           </h2>
           <p className="text-sm md:text-base text-slate-600 font-normal leading-relaxed">
             30+ expert-designed CV templates to choose from. Optimised to impress recruiters and pass ATS. One-click layouts – no formatting necessary.
           </p>
-        </div>
+        </header>
 
-        {/* Interactive Template Carousel (Matching Screenshot 2 Layout) */}
+        {/* Interactive Template Carousel */}
         <div className="relative max-w-5xl mx-auto flex items-center justify-center">
           
-          {/* Previous Arrow */}
+          {/* Previous Arrow (Purple Button) */}
           <button
             onClick={prevSlide}
-            className="w-12 h-12 rounded-full bg-teal-600 hover:bg-teal-700 text-white flex items-center justify-center shadow-md transition-all shrink-0 z-10 cursor-pointer"
+            className="w-11 h-11 rounded-full bg-indigo-700 hover:bg-indigo-800 text-white flex items-center justify-center shadow-sm transition-all shrink-0 z-10 cursor-pointer"
             aria-label="Previous Template"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
 
           {/* Cards Slider Container */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 md:px-8 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 md:px-6 w-full">
             {CAROUSEL_TEMPLATES.map((tpl, idx) => (
-              <div
+              <article
                 key={tpl.id}
                 onClick={() => setPreviewTemplate(tpl)}
-                className={`bg-white border rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-1 flex flex-col justify-between ${
-                  currentIndex === idx ? "border-indigo-600 ring-2 ring-indigo-500/20" : "border-slate-200"
+                className={`bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between ${
+                  currentIndex === idx ? "border-indigo-700 ring-2 ring-indigo-700/20" : "border-slate-200"
                 }`}
               >
-                {/* CV Mockup Header Color Stripe */}
-                <div className={`p-4 ${tpl.color} text-white font-bold text-xs uppercase tracking-wider flex justify-between items-center`}>
+                <header className={`p-4 ${tpl.color} text-white font-bold text-xs uppercase tracking-wider flex justify-between items-center`}>
                   <span>{tpl.style}</span>
                   <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">ATS {tpl.ats}</span>
-                </div>
+                </header>
 
-                {/* CV Content Mockup */}
                 <div className="p-5 space-y-3 text-left">
                   <div className="border-b border-slate-200 pb-2">
-                    <h4 className="font-extrabold text-sm text-slate-900">{tpl.name}</h4>
+                    <h4 className="font-extrabold text-sm text-indigo-950">{tpl.name}</h4>
                     <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{tpl.role}</p>
                   </div>
 
@@ -120,21 +118,20 @@ export default function TemplateShowcase() {
                   </div>
                 </div>
 
-                {/* Footer preview button */}
-                <div className="p-3 bg-slate-50 border-t border-slate-200 text-center text-xs font-bold text-indigo-900 group-hover:underline">
+                <footer className="p-3 bg-slate-50 border-t border-slate-200 text-center text-xs font-bold text-indigo-950">
                   Click to Preview Layout
-                </div>
-              </div>
+                </footer>
+              </article>
             ))}
           </div>
 
-          {/* Next Arrow */}
+          {/* Next Arrow (Purple Button) */}
           <button
             onClick={nextSlide}
-            className="w-12 h-12 rounded-full bg-teal-600 hover:bg-teal-700 text-white flex items-center justify-center shadow-md transition-all shrink-0 z-10 cursor-pointer"
+            className="w-11 h-11 rounded-full bg-indigo-700 hover:bg-indigo-800 text-white flex items-center justify-center shadow-sm transition-all shrink-0 z-10 cursor-pointer"
             aria-label="Next Template"
           >
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="w-5 h-5" />
           </button>
 
         </div>
@@ -146,17 +143,17 @@ export default function TemplateShowcase() {
               key={idx}
               onClick={() => setCurrentIndex(idx)}
               className={`h-2.5 rounded-full transition-all cursor-pointer ${
-                currentIndex === idx ? "w-6 bg-indigo-600" : "w-2.5 bg-slate-300 hover:bg-slate-400"
+                currentIndex === idx ? "w-6 bg-indigo-700" : "w-2.5 bg-slate-300 hover:bg-slate-400"
               }`}
             />
           ))}
         </div>
 
-        {/* Bottom CTA Button (Matching Screenshot 2 "Build my CV" Pill Button) */}
-        <div className="text-center pt-4">
+        {/* Bottom CTA Pill Button */}
+        <div className="text-center pt-2">
           <button
             onClick={() => router.push("/register")}
-            className="px-10 py-3.5 border-2 border-indigo-900 text-indigo-950 hover:bg-indigo-950 hover:text-white font-bold text-sm rounded-full transition-all cursor-pointer shadow-sm"
+            className="px-10 py-3.5 border-2 border-indigo-950 text-indigo-950 hover:bg-indigo-950 hover:text-white font-bold text-sm rounded-full transition-all cursor-pointer"
           >
             Build my CV
           </button>
@@ -166,8 +163,8 @@ export default function TemplateShowcase() {
 
       {/* Preview Modal */}
       {previewTemplate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white p-6 md:p-8 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-300 space-y-6 relative animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="bg-white p-6 md:p-8 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-300 space-y-6 relative">
             <button
               onClick={() => setPreviewTemplate(null)}
               className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors"
@@ -175,27 +172,27 @@ export default function TemplateShowcase() {
               <X className="w-5 h-5" />
             </button>
 
-            <div className="space-y-2">
-              <span className="text-[10px] font-bold uppercase px-2.5 py-1 bg-indigo-100 text-indigo-900 rounded-md">
+            <header className="space-y-2">
+              <span className="text-[10px] font-bold uppercase px-2.5 py-1 bg-slate-100 text-indigo-950 rounded">
                 {previewTemplate.style}
               </span>
-              <h3 className="text-xl font-extrabold text-slate-900">{previewTemplate.name}</h3>
+              <h3 className="text-xl font-extrabold text-indigo-950">{previewTemplate.name}</h3>
               <p className="text-xs text-slate-500 font-semibold">{previewTemplate.role}</p>
-            </div>
+            </header>
 
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2 text-xs text-slate-700">
-              <span className="font-bold text-slate-900 block border-b border-slate-200 pb-1 mb-2">
+              <span className="font-bold text-indigo-950 block border-b border-slate-200 pb-1 mb-2">
                 ATS Compatibility Rating: {previewTemplate.ats}
               </span>
               {previewTemplate.bullets.map((b: string, idx: number) => (
                 <div key={idx} className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <Check className="w-4 h-4 text-indigo-700 shrink-0 mt-0.5" />
                   <span>{b}</span>
                 </div>
               ))}
             </div>
 
-            <div className="flex gap-3">
+            <footer className="flex gap-3">
               <button
                 onClick={() => setPreviewTemplate(null)}
                 className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl"
@@ -207,12 +204,12 @@ export default function TemplateShowcase() {
                   setPreviewTemplate(null);
                   router.push("/register");
                 }}
-                className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm"
+                className="flex-1 py-3 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm"
               >
                 <span>Use This Template</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
-            </div>
+            </footer>
           </div>
         </div>
       )}
