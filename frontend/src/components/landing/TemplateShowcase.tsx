@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Check, X, ArrowRight, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, ArrowRight, Eye, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const REAL_TEMPLATES = [
+const THREE_CANDIDATE_TEMPLATES = [
   {
     id: "ui_ux_pro_max_resume.html",
     name: "THABO NKOSI",
@@ -26,6 +26,7 @@ const REAL_TEMPLATES = [
     skills: ["React", "TypeScript", "Node.js", "AWS Cloud", "PostgreSQL", "Microservices", "Docker", "CI/CD"],
     education: "BSc Computer Science & Info Systems — Wits University",
     layoutType: "modern-cyan",
+    ctaText: "Customize Modern Tech Layout",
   },
   {
     id: "ats_resume_template.html",
@@ -48,6 +49,7 @@ const REAL_TEMPLATES = [
     skills: ["Business Analysis", "Financial Modeling", "IFRS Compliance", "Process Optimization", "Excel VBA", "SQL"],
     education: "BCom Financial Management — University of Cape Town (UCT)",
     layoutType: "ats-clean",
+    ctaText: "Customize Single-Column ATS",
   },
   {
     id: "david_turner_resume.html",
@@ -70,48 +72,7 @@ const REAL_TEMPLATES = [
     skills: ["Capex Management", "ISO Compliance", "Vendor Procurement", "Project Engineering", "Scrum", "Risk Assessment"],
     education: "BSc Electrical Engineering — University of KwaZulu-Natal (UKZN)",
     layoutType: "executive-serif",
-  },
-  {
-    id: "amy_stein_resume.html",
-    name: "KEAGAN VAN DER MERWE",
-    title: "Amy Stein Elegant",
-    style: "Elegant Top Accent",
-    color: "bg-indigo-950",
-    role: "Marketing & Brand Strategist",
-    ats: "97%",
-    email: "keagan.vdm@gmail.com",
-    phone: "+27 84 321 0987",
-    location: "Cape Town, WC",
-    summary: "Creative Marketing & Brand Strategist skilled in digital growth campaigns, multi-channel performance advertising, and brand elevation.",
-    bullets: [
-      "Directed digital acquisition campaigns generating R4.2M in new customer revenue within 12 months.",
-      "Managed monthly advertising budgets of R250,000 with a 3.4x return on ad spend (ROAS).",
-      "Led re-branding initiative across social media, web assets, and print collaterals.",
-    ],
-    skills: ["Brand Strategy", "Performance Marketing", "Google Analytics", "SEO/SEM", "Content Creation"],
-    education: "BA Strategic Communications — Stellenbosch University",
-    layoutType: "elegant-top-accent",
-  },
-  {
-    id: "noma_resume_template_black.html",
-    name: "LUNGILE MTHEMBU",
-    title: "Noma Tech Minimal",
-    style: "High-Density Technical",
-    color: "bg-slate-900",
-    role: "Data Scientist & AI Engineer",
-    ats: "99%",
-    email: "lungile.m@gmail.com",
-    phone: "+27 72 654 3210",
-    location: "Pretoria, GP",
-    summary: "Data Scientist specialized in Python predictive modeling, NLP pipelines, and cloud data architecture.",
-    bullets: [
-      "Built Machine Learning algorithms improving customer churn prediction accuracy by 24%.",
-      "Engineered automated ETL data pipelines in PySpark handling 1.5TB daily data streams.",
-      "Published enterprise dashboards using Tableau and PowerBI for executive leadership.",
-    ],
-    skills: ["Python", "PySpark", "Machine Learning", "SQL", "Tableau", "AWS Redshift"],
-    education: "BSc Hons Mathematical Statistics — University of Pretoria",
-    layoutType: "high-density-tech",
+    ctaText: "Customize Executive Serif",
   },
 ];
 
@@ -121,11 +82,11 @@ export default function TemplateShowcase() {
   const [previewTemplate, setPreviewTemplate] = useState<any | null>(null);
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % REAL_TEMPLATES.length);
+    setCurrentIndex((prev) => (prev + 1) % THREE_CANDIDATE_TEMPLATES.length);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + REAL_TEMPLATES.length) % REAL_TEMPLATES.length);
+    setCurrentIndex((prev) => (prev - 1 + THREE_CANDIDATE_TEMPLATES.length) % THREE_CANDIDATE_TEMPLATES.length);
   };
 
   return (
@@ -142,7 +103,7 @@ export default function TemplateShowcase() {
           </p>
         </header>
 
-        {/* Carousel Container */}
+        {/* Carousel Container for 3 Candidates */}
         <div className="relative max-w-5xl mx-auto flex items-center justify-center">
           
           {/* Previous Arrow */}
@@ -154,13 +115,12 @@ export default function TemplateShowcase() {
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          {/* Cards Slider Grid */}
+          {/* Cards Slider Grid: 3 Candidates */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 md:px-6 w-full">
-            {REAL_TEMPLATES.map((tpl, idx) => (
+            {THREE_CANDIDATE_TEMPLATES.map((tpl, idx) => (
               <article
                 key={tpl.id}
-                onClick={() => setPreviewTemplate(tpl)}
-                className={`bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between group ${
+                className={`bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all flex flex-col justify-between group ${
                   currentIndex === idx ? "border-indigo-700 ring-2 ring-indigo-700/20" : "border-slate-200"
                 }`}
               >
@@ -170,8 +130,11 @@ export default function TemplateShowcase() {
                   <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">ATS {tpl.ats}</span>
                 </header>
 
-                {/* Blurry Visual Resume Document Layout Mockup (Matching user request) */}
-                <div className="p-4 relative min-h-[280px] bg-slate-100 flex flex-col justify-between overflow-hidden">
+                {/* Blurry Visual Resume Document Layout Mockup */}
+                <div
+                  onClick={() => setPreviewTemplate(tpl)}
+                  className="p-4 relative min-h-[260px] bg-slate-100 flex flex-col justify-between overflow-hidden cursor-pointer"
+                >
                   
                   {/* Blurry Real Template Layout Silhouette */}
                   <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 space-y-3 blur-[2px] group-hover:blur-[1px] transition-all duration-300 select-none pointer-events-none">
@@ -220,22 +183,35 @@ export default function TemplateShowcase() {
 
                   </div>
 
-                  {/* Template Title & Name Overlay */}
+                  {/* Template Title & Candidate Name Overlay */}
                   <div className="absolute inset-x-0 bottom-3 px-3 flex items-center justify-between pointer-events-none">
                     <span className="text-xs font-black text-indigo-950 bg-white/95 px-2.5 py-1 rounded shadow-xs border border-slate-200">
-                      {tpl.title}
+                      {tpl.name}
                     </span>
                     <span className="text-[10px] font-bold text-slate-600 bg-white/95 px-2 py-1 rounded shadow-xs border border-slate-200">
-                      {tpl.name.split(" ")[0]}
+                      {tpl.title}
                     </span>
                   </div>
 
                 </div>
 
-                {/* Footer Action Bar */}
-                <footer className="p-3 bg-slate-50 border-t border-slate-200 text-center text-xs font-bold text-indigo-950 flex items-center justify-center gap-1.5 group-hover:bg-indigo-950 group-hover:text-white transition-colors">
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>Click to Preview Layout</span>
+                {/* Footer Action Bar with Distinct High-Converting CTAs */}
+                <footer className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col gap-2">
+                  <button
+                    onClick={() => router.push("/register")}
+                    className="w-full py-2.5 px-4 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs rounded-lg shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
+                    <span>{tpl.ctaText}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setPreviewTemplate(tpl)}
+                    className="w-full py-1.5 px-3 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-lg border border-slate-200 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <Eye className="w-3 h-3 text-slate-500" />
+                    <span>Preview Layout</span>
+                  </button>
                 </footer>
               </article>
             ))}
@@ -252,9 +228,9 @@ export default function TemplateShowcase() {
 
         </div>
 
-        {/* Carousel Pagination Dots */}
+        {/* Carousel Pagination Dots for 3 Candidates */}
         <div className="flex items-center justify-center gap-2">
-          {REAL_TEMPLATES.map((_, idx) => (
+          {THREE_CANDIDATE_TEMPLATES.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
