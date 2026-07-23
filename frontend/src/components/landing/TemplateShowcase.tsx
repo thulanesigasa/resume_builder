@@ -1,21 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Check, X, ArrowRight, Eye, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, ArrowRight, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const CAROUSEL_TEMPLATES = [
+const REAL_TEMPLATES = [
   {
     id: "ui_ux_pro_max_resume.html",
     name: "THABO NKOSI",
-    style: "Modern Classic",
+    title: "UI/UX Pro Max",
+    style: "Modern Tech & Design",
     color: "bg-indigo-950",
     role: "Senior Software Engineer",
     ats: "100%",
     email: "thabo.nkosi@gmail.com",
     phone: "+27 82 456 7890",
-    location: "Johannesburg, South Africa",
-    summary: "Results-driven Senior Software Engineer with 6+ years of experience architecting high-throughput microservices, React frontends, and CI/CD automation pipelines across top South African financial technology platforms.",
+    location: "Johannesburg, SA",
+    summary: "Results-driven Senior Software Engineer with 6+ years of experience architecting high-throughput microservices, React frontends, and automated CI/CD pipelines across South African fintech systems.",
     bullets: [
       "Architected scalable React & TypeScript microservices, reducing cloud infrastructure latency by 38%.",
       "Conducted demand analysis & database indexing, identifying performance bottlenecks that saved R500,000 annually.",
@@ -23,18 +24,20 @@ const CAROUSEL_TEMPLATES = [
       "Automated CI/CD deployment pipelines, cutting release turnaround times from 3 days to under 45 minutes.",
     ],
     skills: ["React", "TypeScript", "Node.js", "AWS Cloud", "PostgreSQL", "Microservices", "Docker", "CI/CD"],
-    education: "BSc Computer Science & Information Systems — University of the Witwatersrand (Wits)",
+    education: "BSc Computer Science & Info Systems — Wits University",
+    layoutType: "modern-cyan",
   },
   {
     id: "ats_resume_template.html",
     name: "NOMALANGA DLAMINI",
-    style: "Executive Minimalist",
+    title: "ATS Blueprint Standard",
+    style: "Clean Single-Column ATS",
     color: "bg-indigo-900",
     role: "Business Analyst & Financial Lead",
     ats: "100%",
     email: "nomalanga.dlamini@gmail.com",
     phone: "+27 71 234 5678",
-    location: "Sandton, Gauteng, South Africa",
+    location: "Sandton, Gauteng",
     summary: "Detail-oriented Business Analyst and Financial Lead specializing in enterprise process optimization, financial modeling, and IFRS compliance across banking and advisory sectors.",
     bullets: [
       "Analyzed business, user, and technical requirements for proposal system solutions for R45M portfolios.",
@@ -44,17 +47,19 @@ const CAROUSEL_TEMPLATES = [
     ],
     skills: ["Business Analysis", "Financial Modeling", "IFRS Compliance", "Process Optimization", "Excel VBA", "SQL"],
     education: "BCom Financial Management — University of Cape Town (UCT)",
+    layoutType: "ats-clean",
   },
   {
     id: "david_turner_resume.html",
     name: "SIPHO MTHEMBU",
-    style: "Classic Formal",
+    title: "David Turner Executive",
+    style: "Classic Serif Executive",
     color: "bg-slate-800",
     role: "Senior Technical Consultant",
     ats: "98%",
     email: "sipho.mthembu@gmail.com",
     phone: "+27 83 987 6543",
-    location: "Durban, KwaZulu-Natal, South Africa",
+    location: "Durban, KZN",
     summary: "Senior Technical Consultant with extensive experience directing large-scale Capex engineering projects, vendor procurement, and ISO compliance standards.",
     bullets: [
       "Spearheaded enterprise IT and engineering transformations across financial and industrial sectors.",
@@ -64,6 +69,49 @@ const CAROUSEL_TEMPLATES = [
     ],
     skills: ["Capex Management", "ISO Compliance", "Vendor Procurement", "Project Engineering", "Scrum", "Risk Assessment"],
     education: "BSc Electrical Engineering — University of KwaZulu-Natal (UKZN)",
+    layoutType: "executive-serif",
+  },
+  {
+    id: "amy_stein_resume.html",
+    name: "KEAGAN VAN DER MERWE",
+    title: "Amy Stein Elegant",
+    style: "Elegant Top Accent",
+    color: "bg-indigo-950",
+    role: "Marketing & Brand Strategist",
+    ats: "97%",
+    email: "keagan.vdm@gmail.com",
+    phone: "+27 84 321 0987",
+    location: "Cape Town, WC",
+    summary: "Creative Marketing & Brand Strategist skilled in digital growth campaigns, multi-channel performance advertising, and brand elevation.",
+    bullets: [
+      "Directed digital acquisition campaigns generating R4.2M in new customer revenue within 12 months.",
+      "Managed monthly advertising budgets of R250,000 with a 3.4x return on ad spend (ROAS).",
+      "Led re-branding initiative across social media, web assets, and print collaterals.",
+    ],
+    skills: ["Brand Strategy", "Performance Marketing", "Google Analytics", "SEO/SEM", "Content Creation"],
+    education: "BA Strategic Communications — Stellenbosch University",
+    layoutType: "elegant-top-accent",
+  },
+  {
+    id: "noma_resume_template_black.html",
+    name: "LUNGILE MTHEMBU",
+    title: "Noma Tech Minimal",
+    style: "High-Density Technical",
+    color: "bg-slate-900",
+    role: "Data Scientist & AI Engineer",
+    ats: "99%",
+    email: "lungile.m@gmail.com",
+    phone: "+27 72 654 3210",
+    location: "Pretoria, GP",
+    summary: "Data Scientist specialized in Python predictive modeling, NLP pipelines, and cloud data architecture.",
+    bullets: [
+      "Built Machine Learning algorithms improving customer churn prediction accuracy by 24%.",
+      "Engineered automated ETL data pipelines in PySpark handling 1.5TB daily data streams.",
+      "Published enterprise dashboards using Tableau and PowerBI for executive leadership.",
+    ],
+    skills: ["Python", "PySpark", "Machine Learning", "SQL", "Tableau", "AWS Redshift"],
+    education: "BSc Hons Mathematical Statistics — University of Pretoria",
+    layoutType: "high-density-tech",
   },
 ];
 
@@ -73,11 +121,11 @@ export default function TemplateShowcase() {
   const [previewTemplate, setPreviewTemplate] = useState<any | null>(null);
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % CAROUSEL_TEMPLATES.length);
+    setCurrentIndex((prev) => (prev + 1) % REAL_TEMPLATES.length);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + CAROUSEL_TEMPLATES.length) % CAROUSEL_TEMPLATES.length);
+    setCurrentIndex((prev) => (prev - 1 + REAL_TEMPLATES.length) % REAL_TEMPLATES.length);
   };
 
   return (
@@ -94,7 +142,7 @@ export default function TemplateShowcase() {
           </p>
         </header>
 
-        {/* Interactive Template Carousel */}
+        {/* Carousel Container */}
         <div className="relative max-w-5xl mx-auto flex items-center justify-center">
           
           {/* Previous Arrow */}
@@ -106,9 +154,9 @@ export default function TemplateShowcase() {
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          {/* Cards Slider Container */}
+          {/* Cards Slider Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 md:px-6 w-full">
-            {CAROUSEL_TEMPLATES.map((tpl, idx) => (
+            {REAL_TEMPLATES.map((tpl, idx) => (
               <article
                 key={tpl.id}
                 onClick={() => setPreviewTemplate(tpl)}
@@ -116,60 +164,69 @@ export default function TemplateShowcase() {
                   currentIndex === idx ? "border-indigo-700 ring-2 ring-indigo-700/20" : "border-slate-200"
                 }`}
               >
-                {/* Header Stripe */}
+                {/* Card Header Stripe */}
                 <header className={`p-3.5 ${tpl.color} text-white font-bold text-xs uppercase tracking-wider flex justify-between items-center`}>
                   <span>{tpl.style}</span>
                   <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">ATS {tpl.ats}</span>
                 </header>
 
-                {/* Blurry Visual Resume Document Layout Mockup */}
-                <div className="p-5 relative min-h-[260px] bg-slate-50 flex flex-col justify-between overflow-hidden">
+                {/* Blurry Visual Resume Document Layout Mockup (Matching user request) */}
+                <div className="p-4 relative min-h-[280px] bg-slate-100 flex flex-col justify-between overflow-hidden">
                   
-                  {/* Blurry Document Canvas Wrapper */}
-                  <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 space-y-3 blur-[1.5px] group-hover:blur-none transition-all duration-300 select-none">
+                  {/* Blurry Real Template Layout Silhouette */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 space-y-3 blur-[2px] group-hover:blur-[1px] transition-all duration-300 select-none pointer-events-none">
                     
-                    {/* CV Header Silhouette */}
-                    <div className="border-b border-slate-200 pb-2 space-y-1">
-                      <div className="h-3 bg-indigo-950 rounded w-2/3" />
-                      <div className="h-2 bg-slate-400 rounded w-1/3" />
-                    </div>
-
-                    {/* Summary paragraph lines */}
-                    <div className="space-y-1 pt-1">
-                      <div className="h-1.5 bg-slate-300 rounded w-full" />
-                      <div className="h-1.5 bg-slate-300 rounded w-5/6" />
-                      <div className="h-1.5 bg-slate-300 rounded w-4/5" />
-                    </div>
-
-                    {/* Section 1: Work History */}
-                    <div className="pt-2 space-y-1.5">
-                      <div className="h-2 bg-indigo-800 rounded w-2/5" />
-                      <div className="h-1.5 bg-slate-400 rounded w-1/2" />
-                      <div className="space-y-1 pt-0.5">
-                        <div className="h-1.5 bg-slate-300 rounded w-full" />
-                        <div className="h-1.5 bg-slate-300 rounded w-11/12" />
+                    {/* Header */}
+                    <div className="text-center border-b border-indigo-900/20 pb-2 space-y-1">
+                      <div className="h-3.5 bg-indigo-950 rounded w-2/3 mx-auto" />
+                      <div className="h-2 bg-indigo-700 rounded w-1/3 mx-auto" />
+                      <div className="flex justify-center gap-1 pt-1">
+                        <div className="h-1.5 bg-slate-300 rounded w-10" />
+                        <div className="h-1.5 bg-slate-300 rounded w-12" />
+                        <div className="h-1.5 bg-slate-300 rounded w-14" />
                       </div>
                     </div>
 
-                    {/* Section 2: Education & Skills */}
-                    <div className="pt-2 space-y-1.5">
-                      <div className="h-2 bg-indigo-800 rounded w-1/3" />
-                      <div className="flex gap-1">
-                        <div className="h-3 bg-slate-200 rounded-xs w-12" />
-                        <div className="h-3 bg-slate-200 rounded-xs w-10" />
-                        <div className="h-3 bg-slate-200 rounded-xs w-14" />
+                    {/* Section: Summary */}
+                    <div className="space-y-1">
+                      <div className="h-2 bg-indigo-900 rounded w-1/3" />
+                      <div className="h-1.5 bg-slate-300 rounded w-full" />
+                      <div className="h-1.5 bg-slate-300 rounded w-11/12" />
+                    </div>
+
+                    {/* Section: Work Experience */}
+                    <div className="space-y-1.5 pt-1">
+                      <div className="h-2 bg-indigo-900 rounded w-2/5" />
+                      <div className="flex justify-between">
+                        <div className="h-2 bg-slate-800 rounded w-1/2" />
+                        <div className="h-2 bg-slate-300 rounded w-12" />
+                      </div>
+                      <div className="space-y-1 pl-2">
+                        <div className="h-1.5 bg-slate-300 rounded w-full" />
+                        <div className="h-1.5 bg-slate-300 rounded w-4/5" />
+                      </div>
+                    </div>
+
+                    {/* Section: Skills */}
+                    <div className="space-y-1 pt-1">
+                      <div className="h-2 bg-indigo-900 rounded w-1/4" />
+                      <div className="flex flex-wrap gap-1">
+                        <div className="h-2.5 bg-indigo-100 rounded w-8" />
+                        <div className="h-2.5 bg-indigo-100 rounded w-10" />
+                        <div className="h-2.5 bg-indigo-100 rounded w-7" />
+                        <div className="h-2.5 bg-indigo-100 rounded w-12" />
                       </div>
                     </div>
 
                   </div>
 
-                  {/* Overlay Name Badge */}
-                  <div className="absolute inset-x-0 bottom-3 px-4 flex items-center justify-between pointer-events-none">
+                  {/* Template Title & Name Overlay */}
+                  <div className="absolute inset-x-0 bottom-3 px-3 flex items-center justify-between pointer-events-none">
                     <span className="text-xs font-black text-indigo-950 bg-white/95 px-2.5 py-1 rounded shadow-xs border border-slate-200">
-                      {tpl.name}
+                      {tpl.title}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-500 bg-white/95 px-2 py-1 rounded shadow-xs border border-slate-200">
-                      {tpl.role}
+                    <span className="text-[10px] font-bold text-slate-600 bg-white/95 px-2 py-1 rounded shadow-xs border border-slate-200">
+                      {tpl.name.split(" ")[0]}
                     </span>
                   </div>
 
@@ -197,7 +254,7 @@ export default function TemplateShowcase() {
 
         {/* Carousel Pagination Dots */}
         <div className="flex items-center justify-center gap-2">
-          {CAROUSEL_TEMPLATES.map((_, idx) => (
+          {REAL_TEMPLATES.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
@@ -220,7 +277,7 @@ export default function TemplateShowcase() {
 
       </div>
 
-      {/* Unblurred Full Resume Document Template Modal (Matching user request) */}
+      {/* Unblurred Full Resume Template Document Preview Modal */}
       {previewTemplate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white p-6 md:p-8 rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-300 space-y-6 relative max-h-[90vh] flex flex-col justify-between animate-in zoom-in-95 duration-200">
@@ -236,14 +293,14 @@ export default function TemplateShowcase() {
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-indigo-100 text-indigo-950 rounded">
-                  {previewTemplate.style} Layout Preview
+                  {previewTemplate.title} ({previewTemplate.id})
                 </span>
                 <h3 className="text-lg font-black text-indigo-950 mt-1">
-                  {previewTemplate.name} — CV Template
+                  {previewTemplate.style} Template Preview
                 </h3>
               </div>
               <span className="text-xs font-mono font-bold text-indigo-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded">
-                ATS Rating: {previewTemplate.ats}
+                ATS Score: {previewTemplate.ats}
               </span>
             </div>
 
@@ -251,8 +308,8 @@ export default function TemplateShowcase() {
             <div className="bg-slate-50 border border-slate-300 rounded-xl p-6 shadow-inner space-y-5 overflow-y-auto max-h-[55vh] text-left font-sans text-xs text-slate-800">
               
               {/* Document Title Header */}
-              <div className="border-b-2 border-indigo-950 pb-3 space-y-1">
-                <h2 className="text-xl font-black text-indigo-950 tracking-tight">{previewTemplate.name}</h2>
+              <div className="border-b-2 border-indigo-950 pb-3 space-y-1 text-center">
+                <h2 className="text-2xl font-black text-indigo-950 tracking-tight">{previewTemplate.name}</h2>
                 <p className="text-xs font-bold text-indigo-700">{previewTemplate.role}</p>
                 <div className="text-[11px] text-slate-500 font-mono pt-1">
                   {previewTemplate.email} • {previewTemplate.phone} • {previewTemplate.location}
