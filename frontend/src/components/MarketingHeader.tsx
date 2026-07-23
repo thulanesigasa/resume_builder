@@ -20,11 +20,19 @@ export default function MarketingHeader() {
     };
     checkUser();
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const navLinks = [
@@ -75,7 +83,7 @@ export default function MarketingHeader() {
               onClick={() => router.push("/home")}
               className="px-5 py-2 btn-secondary text-xs cursor-pointer"
             >
-              Go to Dashboard
+              Go to Home
             </button>
           ) : (
             <div className="flex items-center gap-2">
@@ -143,7 +151,7 @@ export default function MarketingHeader() {
               }}
               className="w-full py-3 btn-primary text-sm cursor-pointer"
             >
-              Go to Dashboard
+              Go to Home
             </button>
           ) : (
             <div className="grid grid-cols-2 gap-2 mt-4">

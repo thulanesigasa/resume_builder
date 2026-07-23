@@ -16,6 +16,14 @@ export default function PricingTiers() {
       setUser(user);
     };
     checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
@@ -39,7 +47,7 @@ export default function PricingTiers() {
       return;
     }
 
-    triggerToast(`Initializing secure Payfast checkout for ${planName}...`, "info");
+    triggerToast("connecting to your bank", "info");
     
     try {
       const amount = parseFloat(amountStr.replace(/[^0-9.]/g, ""));
@@ -78,9 +86,9 @@ export default function PricingTiers() {
         </div>
 
         {/* Pricing tiers grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 pt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 pt-6">
           {/* Resume Only */}
-          <div className="glass-panel p-8 rounded-2xl flex flex-col justify-between space-y-6 relative overflow-hidden group">
+          <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between space-y-6 relative overflow-hidden group">
             <div className="space-y-4">
               <div className="text-xs uppercase font-bold text-brand-navy/50">Resume Only</div>
               <div className="flex items-baseline text-brand-deep">
@@ -111,8 +119,41 @@ export default function PricingTiers() {
             </button>
           </div>
 
+          {/* Resume Building */}
+          <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between space-y-6 relative overflow-hidden border-brand-indigo/25 group">
+            <div className="space-y-4">
+              <div className="text-xs uppercase font-bold text-brand-navy/50">Resume Building</div>
+              <div className="flex items-baseline text-brand-deep">
+                <span className="text-4xl font-extrabold">R25</span>
+                <span className="text-xs text-brand-navy/60 ml-1">/ generation</span>
+              </div>
+              <p className="text-xs text-brand-navy/70">Create a brand new professional ATS-optimized resume from scratch.</p>
+              <div className="h-[1px] bg-brand-navy/10 pt-2"></div>
+              <ul className="space-y-3">
+                {[
+                  "1 Resume created from scratch",
+                  "Step-by-step building wizard",
+                  "Auto-fill from existing profiles",
+                  "ATS keywords & scoring scan",
+                  "Instant secure PDF download",
+                ].map((feat, i) => (
+                  <li key={i} className="flex items-center gap-2 text-xs text-brand-navy/85">
+                    <Check className="w-3.5 h-3.5 text-brand-indigo flex-shrink-0" />
+                    {feat}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <button
+              onClick={() => handleSelectPlan("Resume Building Plan", "R25")}
+              className="w-full py-2.5 btn-secondary text-xs cursor-pointer"
+            >
+              Get Resume Building
+            </button>
+          </div>
+
           {/* Resume & Cover Letter Combo */}
-          <div className="glass-panel p-8 rounded-2xl flex flex-col justify-between space-y-6 relative overflow-hidden border-brand-indigo/60 shadow-[0_0_25px_rgba(91,88,235,0.06)] group">
+          <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between space-y-6 relative overflow-hidden border-brand-indigo/60 shadow-[0_0_25px_rgba(91,88,235,0.06)] group">
             <div className="absolute top-0 right-0 bg-brand-indigo text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider flex items-center gap-1">
               <Zap className="w-3 h-3" />
               Best Value
@@ -150,7 +191,7 @@ export default function PricingTiers() {
           </div>
 
           {/* Batch Autopilot Discount Calculator */}
-          <div className="glass-panel p-8 rounded-2xl flex flex-col justify-between space-y-6 relative overflow-hidden group">
+          <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between space-y-6 relative overflow-hidden group">
             <div className="space-y-4">
               <div className="text-xs uppercase font-bold text-brand-navy/50">Batch Autopilot Calculator</div>
               <div className="text-xs text-brand-navy/70">
