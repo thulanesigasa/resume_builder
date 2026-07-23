@@ -6,28 +6,28 @@ import { Star, ChevronDown } from "lucide-react";
 const REVIEWS = [
   {
     author: "Thabo Nkosi",
-    time: "Verified User • South Africa",
+    time: "Verified Candidate • South Africa",
     headline: "Great CV builder",
     body: "Easy to use site with nice features. Got my CV tailored for an engineering role in under 2 minutes.",
     stars: 5,
   },
   {
     author: "Nomalanga Dlamini",
-    time: "Verified User • South Africa",
+    time: "Verified Candidate • South Africa",
     headline: "Best services ever.",
     body: "Best services ever. Resume made easy and perfect. 100% ATS friendly and passed recruiter screening.",
     stars: 5,
   },
   {
     author: "Sipho Mthembu",
-    time: "Verified User • South Africa",
+    time: "Verified Candidate • South Africa",
     headline: "Extremely helpful",
     body: "I can't even explain how helpful this tool is. Had my CV and cover letter ready for PayFast checkout instantly.",
     stars: 5,
   },
   {
     author: "Keagan van der Merwe",
-    time: "Verified User • South Africa",
+    time: "Verified Candidate • South Africa",
     headline: "Excellent value for money",
     body: "The best and most economical CV writing service that is guaranteed to get interview responses without monthly traps.",
     stars: 5,
@@ -64,8 +64,8 @@ export default function FaqAccordion() {
     <section className="bg-white py-16 md:py-24 border-b border-slate-200 space-y-16">
       <div className="max-w-6xl mx-auto px-4 md:px-6 space-y-12">
         
-        {/* User Satisfaction Banner Card (Pure Purple & White - No misleading survey claims) */}
-        <header className="bg-indigo-950 text-white rounded-2xl p-8 md:p-12 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
+        {/* User Satisfaction Banner Card (Updated to 4.76/5.0 with smooth hover animation) */}
+        <header className="bg-indigo-950 text-white rounded-2xl p-8 md:p-12 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300">
           <div className="space-y-2 max-w-xl text-center md:text-left">
             <h3 className="text-3xl md:text-4xl font-black leading-tight tracking-tight">
               Designed for Job Seekers Across South Africa & Global Roles
@@ -74,8 +74,8 @@ export default function FaqAccordion() {
               Pass recruiter screenings with ATS-tailored bullet points and instant PDF export.
             </p>
           </div>
-          <div className="px-6 py-4 rounded-xl bg-indigo-900 border border-indigo-700 text-center shrink-0">
-            <span className="text-2xl font-black text-white">5.0 / 5.0</span>
+          <div className="px-6 py-4 rounded-xl bg-indigo-900 border border-indigo-700 text-center shrink-0 shadow-inner group hover:scale-105 transition-transform duration-300">
+            <span className="text-2xl font-black text-white block">4.76 / 5.0</span>
             <span className="block text-[11px] text-indigo-200 uppercase font-semibold">Candidate Feedback</span>
           </div>
         </header>
@@ -90,19 +90,19 @@ export default function FaqAccordion() {
             <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-600">
               <div className="flex text-indigo-700">
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} className="w-4 h-4 fill-indigo-700 text-indigo-700" />
+                  <Star key={s} className="w-4 h-4 fill-indigo-700 text-indigo-700 hover:scale-125 transition-transform duration-200" />
                 ))}
               </div>
-              <span>Rated 5-Stars by candidates across top industries</span>
+              <span>Rated 4.76 / 5.0 by candidates across top industries</span>
             </div>
           </header>
 
-          {/* Reviews Cards Grid (South African Names) */}
+          {/* Reviews Cards Grid (Hover lift micro-animations) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {REVIEWS.map((rev, idx) => (
               <article
                 key={idx}
-                className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-2xs space-y-3 flex flex-col justify-between"
+                className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-2xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 space-y-3 flex flex-col justify-between"
               >
                 <div className="space-y-2">
                   <div className="flex text-indigo-700">
@@ -140,18 +140,18 @@ export default function FaqAccordion() {
               return (
                 <div
                   key={faq.question}
-                  className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden transition-all"
+                  className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden transition-all duration-300 hover:border-indigo-300"
                 >
                   <button
                     onClick={() => toggleFaq(idx)}
                     className="w-full p-4 text-left flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-indigo-950 hover:text-indigo-700 cursor-pointer"
                   >
                     <span>{faq.question}</span>
-                    <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? "rotate-180 text-indigo-700" : ""}`} />
+                    <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${isOpen ? "rotate-180 text-indigo-700" : ""}`} />
                   </button>
 
                   {isOpen && (
-                    <div className="px-4 pb-4 text-xs text-slate-600 leading-relaxed border-t border-slate-200 pt-3 font-normal">
+                    <div className="px-4 pb-4 text-xs text-slate-600 leading-relaxed border-t border-slate-200 pt-3 font-normal animate-in fade-in duration-200">
                       {faq.answer}
                     </div>
                   )}
