@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Check, X, ArrowRight, Eye, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const THREE_CANDIDATE_TEMPLATES = [
@@ -132,7 +132,7 @@ export default function TemplateShowcase() {
 
                 {/* Blurry Visual Resume Document Layout Mockup */}
                 <div
-                  onClick={() => setPreviewTemplate(tpl)}
+                  onClick={() => router.push("/register")}
                   className="p-4 relative min-h-[260px] bg-slate-100 flex flex-col justify-between overflow-hidden cursor-pointer"
                 >
                   
@@ -195,22 +195,14 @@ export default function TemplateShowcase() {
 
                 </div>
 
-                {/* Footer Action Bar Prompting Direct Sign Up */}
-                <footer className="p-3 bg-slate-50 border-t border-slate-200 flex flex-col gap-2">
+                {/* Single High-Converting Primary CTA Footer (No Preview Layout button) */}
+                <footer className="p-3 bg-slate-50 border-t border-slate-200">
                   <button
                     onClick={() => router.push("/register")}
                     className="w-full py-2.5 px-4 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs rounded-lg shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>{tpl.ctaText}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-
-                  <button
-                    onClick={() => setPreviewTemplate(tpl)}
-                    className="w-full py-1.5 px-3 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-lg border border-slate-200 transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    <Eye className="w-3 h-3 text-slate-500" />
-                    <span>Preview Layout</span>
                   </button>
                 </footer>
               </article>
@@ -252,129 +244,6 @@ export default function TemplateShowcase() {
         </div>
 
       </div>
-
-      {/* Unblurred Full Resume Template Document Preview Modal */}
-      {previewTemplate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white p-6 md:p-8 rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-300 space-y-6 relative max-h-[90vh] flex flex-col justify-between animate-in zoom-in-95 duration-200">
-            
-            <button
-              onClick={() => setPreviewTemplate(null)}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors z-20"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <div>
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-indigo-100 text-indigo-950 rounded">
-                  {previewTemplate.title} ({previewTemplate.id})
-                </span>
-                <h3 className="text-lg font-black text-indigo-950 mt-1">
-                  {previewTemplate.style} Template Preview
-                </h3>
-              </div>
-              <span className="text-xs font-mono font-bold text-indigo-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded">
-                ATS Score: {previewTemplate.ats}
-              </span>
-            </div>
-
-            {/* Un-blurred Crisp A4 Resume Paper Sheet Container */}
-            <div className="bg-slate-50 border border-slate-300 rounded-xl p-6 shadow-inner space-y-5 overflow-y-auto max-h-[55vh] text-left font-sans text-xs text-slate-800">
-              
-              {/* Document Title Header */}
-              <div className="border-b-2 border-indigo-950 pb-3 space-y-1 text-center">
-                <h2 className="text-2xl font-black text-indigo-950 tracking-tight">{previewTemplate.name}</h2>
-                <p className="text-xs font-bold text-indigo-700">{previewTemplate.role}</p>
-                <div className="text-[11px] text-slate-500 font-mono pt-1">
-                  {previewTemplate.email} • {previewTemplate.phone} • {previewTemplate.location}
-                </div>
-              </div>
-
-              {/* Professional Summary */}
-              <div className="space-y-1.5">
-                <h4 className="text-xs font-extrabold text-indigo-950 uppercase tracking-wider border-b border-slate-200 pb-0.5">
-                  PROFESSIONAL SUMMARY
-                </h4>
-                <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                  {previewTemplate.summary}
-                </p>
-              </div>
-
-              {/* Work Experience */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-extrabold text-indigo-950 uppercase tracking-wider border-b border-slate-200 pb-0.5">
-                  WORK EXPERIENCE
-                </h4>
-                
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-baseline font-bold text-slate-900">
-                    <span>{previewTemplate.role}</span>
-                    <span className="text-[11px] text-slate-500 font-mono">2021 – Present</span>
-                  </div>
-                  
-                  <div className="space-y-1 pl-2">
-                    {previewTemplate.bullets.map((bullet: string, i: number) => (
-                      <div key={i} className="flex items-start gap-1.5 text-xs text-slate-700 leading-relaxed font-normal">
-                        <span className="text-indigo-700 font-bold">•</span>
-                        <span>{bullet}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Key Skills */}
-              <div className="space-y-1.5">
-                <h4 className="text-xs font-extrabold text-indigo-950 uppercase tracking-wider border-b border-slate-200 pb-0.5">
-                  CORE COMPETENCIES & TECHNICAL SKILLS
-                </h4>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {previewTemplate.skills.map((skill: string) => (
-                    <span key={skill} className="px-2 py-0.5 bg-white border border-slate-300 rounded font-semibold text-[11px] text-indigo-950 shadow-2xs">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Education */}
-              <div className="space-y-1">
-                <h4 className="text-xs font-extrabold text-indigo-950 uppercase tracking-wider border-b border-slate-200 pb-0.5">
-                  EDUCATION & ACCREDITATIONS
-                </h4>
-                <p className="text-xs text-slate-700 font-semibold pt-0.5">
-                  {previewTemplate.education}
-                </p>
-              </div>
-
-            </div>
-
-            {/* Modal Actions */}
-            <footer className="flex gap-3 pt-2">
-              <button
-                onClick={() => setPreviewTemplate(null)}
-                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
-              >
-                Close Preview
-              </button>
-              <button
-                onClick={() => {
-                  setPreviewTemplate(null);
-                  router.push("/register");
-                }}
-                className="flex-1 py-3 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
-              >
-                <span>Build Resume Now</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </footer>
-
-          </div>
-        </div>
-      )}
-
     </section>
   );
 }
