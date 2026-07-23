@@ -53,11 +53,11 @@ export default function CtaBanner({ user }: CtaBannerProps) {
 
           <div className="pt-4 flex items-center justify-center gap-6 text-xs text-indigo-300 font-semibold">
             <span className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-400" />
+              <Check className="w-4 h-4 text-indigo-300" />
               Pay-As-You-Go in ZAR
             </span>
             <span className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-400" />
+              <Check className="w-4 h-4 text-indigo-300" />
               Zero Monthly Auto-Billing
             </span>
           </div>

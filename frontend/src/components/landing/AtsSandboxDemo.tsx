@@ -43,11 +43,6 @@ export default function AtsSandboxDemo() {
         
         {/* Left Text Column */}
         <header className="lg:col-span-6 space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-slate-200 text-indigo-950 text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-700" />
-            <span>PRE-WRITTEN CV CONTENT VAULT</span>
-          </div>
-
           <h2 className="text-3xl md:text-5xl font-black text-indigo-950 tracking-tight leading-tight">
             Insert our pre-written CV content
           </h2>

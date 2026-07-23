@@ -37,13 +37,13 @@ export default function ComparisonMatrix() {
             <span className="text-indigo-300">premium feature set</span>
           </h2>
 
-          <div className="flex flex-wrap justify-center gap-4 text-xs font-semibold text-indigo-200 pt-2">
-            <span className="flex items-center gap-1 bg-indigo-900 px-3 py-1 rounded border border-indigo-700">
-              <ArrowUpRight className="w-4 h-4 text-indigo-300" />
+          <div className="flex flex-wrap justify-center gap-6 text-xs font-semibold text-white pt-2">
+            <span className="flex items-center gap-1.5 text-white">
+              <ArrowUpRight className="w-4 h-4 text-white" />
               30% more likely to land a job*
             </span>
-            <span className="flex items-center gap-1 bg-indigo-900 px-3 py-1 rounded border border-indigo-700">
-              <ArrowUpRight className="w-4 h-4 text-indigo-300" />
+            <span className="flex items-center gap-1.5 text-white">
+              <ArrowUpRight className="w-4 h-4 text-white" />
               42% boost in recruiter response rate*
             </span>
           </div>

@@ -34,21 +34,18 @@ export default function HowItWorksSection() {
   const [activeStep, setActiveStep] = useState(0);
 
   return (
-    <section className="bg-slate-50 py-16 md:py-24 border-b border-slate-200/80">
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
+    <section className="bg-slate-50 py-16 md:py-24 border-b border-slate-200">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 space-y-12">
         
-        {/* Header */}
-        <div className="text-center space-y-3 max-w-3xl mx-auto mb-14">
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-700 bg-indigo-100 px-3 py-1 rounded-md">
-            Simple 3-Step Process
-          </span>
+        {/* Header (Top pill removed) */}
+        <header className="text-center space-y-3 max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-5xl font-black text-indigo-950 tracking-tight">
             How rbptech Works
           </h2>
-          <p className="text-sm md:text-base text-slate-600">
+          <p className="text-sm md:text-base text-slate-600 font-normal">
             From job posting to an ATS-optimized, tailored PDF resume in under two minutes.
           </p>
-        </div>
+        </header>
 
         {/* Step Selector & Details Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-6xl mx-auto">
@@ -58,7 +55,7 @@ export default function HowItWorksSection() {
             {STEPS.map((step, idx) => {
               const isActive = activeStep === idx;
               return (
-                <div
+                <article
                   key={step.num}
                   onClick={() => setActiveStep(idx)}
                   className={`p-5 rounded-2xl border transition-all cursor-pointer ${
@@ -70,13 +67,13 @@ export default function HowItWorksSection() {
                   <div className="flex items-start gap-4">
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
-                        isActive ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600"
+                        isActive ? "bg-indigo-700 text-white" : "bg-slate-100 text-slate-600"
                       }`}
                     >
                       {step.num}
                     </div>
                     <div className="space-y-1">
-                      <h3 className={`text-sm font-bold ${isActive ? "text-white" : "text-slate-900"}`}>
+                      <h3 className={`text-sm font-bold ${isActive ? "text-white" : "text-indigo-950"}`}>
                         {step.title}
                       </h3>
                       <p className={`text-xs leading-relaxed ${isActive ? "text-indigo-200" : "text-slate-500"}`}>
@@ -84,22 +81,23 @@ export default function HowItWorksSection() {
                       </p>
                     </div>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>
 
-          {/* Right Column: Active Step Details Preview Card */}
+          {/* Right Column: Active Step Details Card with Fade Animation */}
           <div className="lg:col-span-7">
-            <div className="h-full p-8 rounded-3xl bg-white border border-slate-200 shadow-md flex flex-col justify-between space-y-6">
+            <article className="h-full p-8 rounded-2xl bg-white border border-slate-200 shadow-md flex flex-col justify-between space-y-6">
               
-              <div className="space-y-6">
+              {/* Fade animation wrapper keyed to activeStep */}
+              <div key={activeStep} className="space-y-6 transition-opacity duration-300 ease-in-out animate-in fade-in duration-300">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl font-black text-indigo-600 font-mono">
+                    <span className="text-2xl font-black text-indigo-700 font-mono">
                       Step {STEPS[activeStep].num}
                     </span>
-                    <span className="text-base font-extrabold text-slate-900">
+                    <span className="text-base font-extrabold text-indigo-950">
                       {STEPS[activeStep].title}
                     </span>
                   </div>
@@ -114,36 +112,36 @@ export default function HowItWorksSection() {
                     Included Features:
                   </span>
                   {STEPS[activeStep].highlights.map((item) => (
-                    <div key={item} className="flex items-center gap-2.5 text-xs font-semibold text-slate-800">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <div key={item} className="flex items-center gap-2.5 text-xs font-semibold text-indigo-950">
+                      <CheckCircle2 className="w-4 h-4 text-indigo-700 shrink-0" />
                       <span>{item}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
+              <footer className="pt-4 border-t border-slate-200 flex items-center justify-between">
                 <div className="flex gap-2">
                   {STEPS.map((_, idx) => (
                     <button
                       key={idx}
                       onClick={() => setActiveStep(idx)}
                       className={`h-2 rounded-full transition-all cursor-pointer ${
-                        activeStep === idx ? "w-6 bg-indigo-600" : "w-2 bg-slate-200"
+                        activeStep === idx ? "w-6 bg-indigo-700" : "w-2 bg-slate-200"
                       }`}
                     />
                   ))}
                 </div>
                 <button
                   onClick={() => setActiveStep((prev) => (prev + 1) % STEPS.length)}
-                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-bold text-indigo-700 hover:text-indigo-950 flex items-center gap-1 cursor-pointer"
                 >
                   <span>Next Step</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
-              </div>
+              </footer>
 
-            </div>
+            </article>
           </div>
 
         </div>

@@ -47,11 +47,6 @@ export default function HeroSection({ user }: HeroSectionProps) {
         {/* Left Column: Copy & Primary Actions */}
         <header className="lg:col-span-6 space-y-6 text-center lg:text-left">
           
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-slate-100 border border-slate-200 text-indigo-950 text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-700" />
-            <span>AI-POWERED PROFESSIONAL CV BUILDER</span>
-          </div>
-
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-indigo-950 tracking-tight leading-[1.15]">
             Create a <span className="text-indigo-700 underline decoration-slate-300">Professional CV</span> in Minutes.
           </h1>
