@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Check, X, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, ArrowRight, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const CAROUSEL_TEMPLATES = [
   {
     id: "ui_ux_pro_max_resume.html",
-    name: "THABO NKOSI (Professional Summary)",
+    name: "THABO NKOSI",
     style: "Modern Classic",
     color: "bg-indigo-950",
     role: "Senior Software Engineer",
@@ -20,7 +20,7 @@ const CAROUSEL_TEMPLATES = [
   },
   {
     id: "ats_resume_template.html",
-    name: "NOMALANGA DLAMINI (Clean ATS Blueprint)",
+    name: "NOMALANGA DLAMINI",
     style: "Executive Minimalist",
     color: "bg-indigo-900",
     role: "Business Analyst / Financial Lead",
@@ -33,7 +33,7 @@ const CAROUSEL_TEMPLATES = [
   },
   {
     id: "david_turner_resume.html",
-    name: "SIPHO MTHEMBU (Serif Executive)",
+    name: "SIPHO MTHEMBU",
     style: "Classic Formal",
     color: "bg-slate-800",
     role: "Senior Technical Consultant",
@@ -76,7 +76,7 @@ export default function TemplateShowcase() {
         {/* Interactive Template Carousel */}
         <div className="relative max-w-5xl mx-auto flex items-center justify-center">
           
-          {/* Previous Arrow (Purple Button) */}
+          {/* Previous Arrow */}
           <button
             onClick={prevSlide}
             className="w-11 h-11 rounded-full bg-indigo-700 hover:bg-indigo-800 text-white flex items-center justify-center shadow-sm transition-all shrink-0 z-10 cursor-pointer"
@@ -91,41 +91,79 @@ export default function TemplateShowcase() {
               <article
                 key={tpl.id}
                 onClick={() => setPreviewTemplate(tpl)}
-                className={`bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between ${
+                className={`bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between group ${
                   currentIndex === idx ? "border-indigo-700 ring-2 ring-indigo-700/20" : "border-slate-200"
                 }`}
               >
-                <header className={`p-4 ${tpl.color} text-white font-bold text-xs uppercase tracking-wider flex justify-between items-center`}>
+                {/* Header Stripe */}
+                <header className={`p-3.5 ${tpl.color} text-white font-bold text-xs uppercase tracking-wider flex justify-between items-center`}>
                   <span>{tpl.style}</span>
                   <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">ATS {tpl.ats}</span>
                 </header>
 
-                <div className="p-5 space-y-3 text-left">
-                  <div className="border-b border-slate-200 pb-2">
-                    <h4 className="font-extrabold text-sm text-indigo-950">{tpl.name}</h4>
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{tpl.role}</p>
+                {/* Blurry Visual Resume Document Layout Mockup (Matching user request) */}
+                <div className="p-5 relative min-h-[260px] bg-slate-50 flex flex-col justify-between overflow-hidden">
+                  
+                  {/* Blurry Document Canvas Wrapper */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 space-y-3 blur-[1.5px] group-hover:blur-none transition-all duration-300 select-none">
+                    
+                    {/* CV Header Silhouette */}
+                    <div className="border-b border-slate-200 pb-2 space-y-1">
+                      <div className="h-3 bg-indigo-950 rounded w-2/3" />
+                      <div className="h-2 bg-slate-400 rounded w-1/3" />
+                    </div>
+
+                    {/* Summary paragraph lines */}
+                    <div className="space-y-1 pt-1">
+                      <div className="h-1.5 bg-slate-300 rounded w-full" />
+                      <div className="h-1.5 bg-slate-300 rounded w-5/6" />
+                      <div className="h-1.5 bg-slate-300 rounded w-4/5" />
+                    </div>
+
+                    {/* Section 1: Work History */}
+                    <div className="pt-2 space-y-1.5">
+                      <div className="h-2 bg-indigo-800 rounded w-2/5" />
+                      <div className="h-1.5 bg-slate-400 rounded w-1/2" />
+                      <div className="space-y-1 pt-0.5">
+                        <div className="h-1.5 bg-slate-300 rounded w-full" />
+                        <div className="h-1.5 bg-slate-300 rounded w-11/12" />
+                      </div>
+                    </div>
+
+                    {/* Section 2: Education & Skills */}
+                    <div className="pt-2 space-y-1.5">
+                      <div className="h-2 bg-indigo-800 rounded w-1/3" />
+                      <div className="flex gap-1">
+                        <div className="h-3 bg-slate-200 rounded-xs w-12" />
+                        <div className="h-3 bg-slate-200 rounded-xs w-10" />
+                        <div className="h-3 bg-slate-200 rounded-xs w-14" />
+                      </div>
+                    </div>
+
                   </div>
 
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
-                      WORK HISTORY HIGHLIGHTS
+                  {/* Overlay Name Badge */}
+                  <div className="absolute inset-x-0 bottom-3 px-4 flex items-center justify-between pointer-events-none">
+                    <span className="text-xs font-black text-indigo-950 bg-white/95 px-2.5 py-1 rounded shadow-xs border border-slate-200">
+                      {tpl.name}
                     </span>
-                    {tpl.bullets.map((bullet, i) => (
-                      <p key={i} className="text-[11px] text-slate-600 leading-snug line-clamp-2">
-                        • {bullet}
-                      </p>
-                    ))}
+                    <span className="text-[10px] font-bold text-slate-500 bg-white/95 px-2 py-1 rounded shadow-xs border border-slate-200">
+                      {tpl.role}
+                    </span>
                   </div>
+
                 </div>
 
-                <footer className="p-3 bg-slate-50 border-t border-slate-200 text-center text-xs font-bold text-indigo-950">
-                  Click to Preview Layout
+                {/* Footer Action Bar */}
+                <footer className="p-3 bg-slate-50 border-t border-slate-200 text-center text-xs font-bold text-indigo-950 flex items-center justify-center gap-1.5 group-hover:bg-indigo-950 group-hover:text-white transition-colors">
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Click to Preview Layout</span>
                 </footer>
               </article>
             ))}
           </div>
 
-          {/* Next Arrow (Purple Button) */}
+          {/* Next Arrow */}
           <button
             onClick={nextSlide}
             className="w-11 h-11 rounded-full bg-indigo-700 hover:bg-indigo-800 text-white flex items-center justify-center shadow-sm transition-all shrink-0 z-10 cursor-pointer"
@@ -161,7 +199,7 @@ export default function TemplateShowcase() {
 
       </div>
 
-      {/* Preview Modal */}
+      {/* Unblurred Full Preview Modal */}
       {previewTemplate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
           <div className="bg-white p-6 md:p-8 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-300 space-y-6 relative">

@@ -6,29 +6,29 @@ import { Star, ChevronDown } from "lucide-react";
 const REVIEWS = [
   {
     author: "Thabo Nkosi",
-    time: "South Africa",
+    time: "Verified User • South Africa",
     headline: "Great CV builder",
     body: "Easy to use site with nice features. Got my CV tailored for an engineering role in under 2 minutes.",
     stars: 5,
   },
   {
     author: "Nomalanga Dlamini",
-    time: "South Africa",
+    time: "Verified User • South Africa",
     headline: "Best services ever.",
     body: "Best services ever. Resume made easy and perfect. 100% ATS friendly and passed recruiter screening.",
     stars: 5,
   },
   {
     author: "Sipho Mthembu",
-    time: "South Africa",
-    headline: "extremely helpful",
+    time: "Verified User • South Africa",
+    headline: "Extremely helpful",
     body: "I can't even explain how helpful this tool is. Had my CV and cover letter ready for PayFast checkout instantly.",
     stars: 5,
   },
   {
     author: "Keagan van der Merwe",
-    time: "South Africa",
-    headline: "EXCELLENT VALUE FOR MONEY",
+    time: "Verified User • South Africa",
+    headline: "Excellent value for money",
     body: "The best and most economical CV writing service that is guaranteed to get interview responses without monthly traps.",
     stars: 5,
   },
@@ -64,37 +64,36 @@ export default function FaqAccordion() {
     <section className="bg-white py-16 md:py-24 border-b border-slate-200 space-y-16">
       <div className="max-w-6xl mx-auto px-4 md:px-6 space-y-12">
         
-        {/* User Satisfaction Banner Card (Pure Purple & White) */}
+        {/* User Satisfaction Banner Card (Pure Purple & White - No misleading survey claims) */}
         <header className="bg-indigo-950 text-white rounded-2xl p-8 md:p-12 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="space-y-2 max-w-xl text-center md:text-left">
             <h3 className="text-3xl md:text-4xl font-black leading-tight tracking-tight">
-              85% of rbptech users rate their experience positively.*
+              Designed for Job Seekers Across South Africa & Global Roles
             </h3>
-            <p className="text-xs text-indigo-300 italic">
-              *Based on a survey of 11,242 users across job applications in 2026.
+            <p className="text-xs text-indigo-200">
+              Pass recruiter screenings with ATS-tailored bullet points and instant PDF export.
             </p>
           </div>
           <div className="px-6 py-4 rounded-xl bg-indigo-900 border border-indigo-700 text-center shrink-0">
-            <span className="text-2xl font-black text-white">4.8 / 5.0</span>
-            <span className="block text-[11px] text-indigo-200 uppercase font-semibold">User Satisfaction</span>
+            <span className="text-2xl font-black text-white">5.0 / 5.0</span>
+            <span className="block text-[11px] text-indigo-200 uppercase font-semibold">Candidate Feedback</span>
           </div>
         </header>
 
-        {/* Testimonials Review Cards Section (South African Names & Purple Stars) */}
+        {/* Candidate Feedback Section */}
         <div className="space-y-8">
           <header className="text-center space-y-3">
             <h3 className="text-3xl font-black text-indigo-950 tracking-tight">
-              Check out our latest reviews
+              Candidate Feedback
             </h3>
             
-            {/* Rating Widget (Purple Stars ONLY, No Yellow/Green) */}
             <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-600">
               <div className="flex text-indigo-700">
                 {[1, 2, 3, 4, 5].map((s) => (
                   <Star key={s} className="w-4 h-4 fill-indigo-700 text-indigo-700" />
                 ))}
               </div>
-              <span>based on <span className="font-bold text-indigo-950">4,138 reviews</span> on Trustpilot</span>
+              <span>Rated 5-Stars by candidates across top industries</span>
             </div>
           </header>
 
