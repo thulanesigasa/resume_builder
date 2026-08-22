@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { api, API_BASE_URL } from "@/lib/api";
 import ResumeBuilderWizard from "@/components/ResumeBuilderWizard";
-import MarketingFooter from "@/components/MarketingFooter";
+import WorkspaceSidebar from "@/components/dashboard/WorkspaceSidebar";
 import {
   User,
   LogOut,
@@ -1550,17 +1550,22 @@ function DashboardContent() {
 
   return (
     <>
-    <div className="flex-1 flex flex-col min-h-screen">
+    <div className="min-h-screen bg-slate-50 lg:flex">
+      <WorkspaceSidebar activeTab={activeTab} onNavigate={setActiveTab} />
+      <div className="min-w-0 flex-1 flex flex-col">
 
 
       {/* Top Navbar */}
-      <nav className="glass-panel sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-t-0 border-x-0">
-        <div className="flex items-center gap-3">
-          {/* Brand mark removed as requested */}
+      <nav className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur md:px-8">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-600">Workspace</p>
+          <h1 className="text-base font-extrabold tracking-tight text-slate-950">
+            {{ profile: "Overview", builder: "Build resume", generate: "Tailor to job", batch: "Batch autopilot", archive: "Applications" }[activeTab]}
+          </h1>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-brand-navy">
+          <div className="hidden items-center gap-2 text-sm text-brand-navy sm:flex">
             <User className="w-4 h-4 text-brand-indigo" />
             <span className="font-mono text-xs max-w-[120px] truncate">{username || user.email}</span>
           </div>
@@ -1570,14 +1575,14 @@ function DashboardContent() {
           </div>
           <button
             onClick={() => setActiveTab("archive")}
-            className="flex items-center gap-1.5 px-3 py-1.5 btn-primary text-xs"
+            className="hidden items-center gap-1.5 px-3 py-2 btn-primary text-xs md:flex"
           >
             <FolderOpen className="w-3.5 h-3.5" />
             My Resumes
           </button>
           <button
             onClick={handleLogOut}
-            className="flex items-center gap-1.5 px-3 py-1.5 btn-secondary text-xs"
+            className="flex items-center gap-1.5 px-3 py-2 btn-secondary text-xs"
           >
             <LogOut className="w-3.5 h-3.5" />
             Log Out
@@ -1586,9 +1591,30 @@ function DashboardContent() {
       </nav>
 
       {/* Main Container */}
-      <main className={`flex-1 ${activeTab === 'builder' ? 'max-w-[1700px]' : 'max-w-7xl'} w-full mx-auto p-6 md:p-8 space-y-8 transition-all duration-300`}>
+      <main className={`flex-1 ${activeTab === 'builder' ? 'max-w-[1700px]' : 'max-w-7xl'} w-full mx-auto px-4 py-6 pb-24 md:p-8 md:pb-24 lg:pb-8 space-y-8 transition-all duration-300`}>
+        {activeTab === "profile" && (
+          <section className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between md:p-8">
+            <div>
+              <p className="text-sm font-semibold text-indigo-600">Your career workspace</p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 md:text-3xl">
+                Welcome back{firstName ? `, ${firstName}` : ""}.
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+                Build a strong master resume once, then tailor it to every opportunity without starting over.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button onClick={() => setActiveTab("builder")} className="btn-primary flex min-h-11 items-center justify-center gap-2 px-5 text-sm">
+                <Plus className="h-4 w-4" /> Create resume
+              </button>
+              <button onClick={() => setActiveTab("generate")} className="btn-secondary flex min-h-11 items-center justify-center gap-2 px-5 text-sm">
+                <Zap className="h-4 w-4 text-indigo-600" /> Tailor to a job
+              </button>
+            </div>
+          </section>
+        )}
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-4 md:gap-6">
+        {activeTab !== "builder" && <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
           <div className="glass-panel p-6 rounded-xl text-center relative overflow-hidden group">
             <div className="absolute right-0 top-0 w-24 h-24 bg-brand-indigo/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
             <div className="text-3xl md:text-4xl font-extrabold text-brand-deep mb-1">{stats.appsCount}</div>
@@ -1615,12 +1641,12 @@ function DashboardContent() {
               Average Match
             </div>
           </div>
-        </div>
+        </div>}
 
         {/* Workspace Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+        <div className={`grid grid-cols-1 gap-8 items-start ${activeTab === "generate" || activeTab === "batch" ? "lg:grid-cols-4" : ""}`}>
           {/* Left Panel Sidebar Settings */}
-          <div className="glass-panel p-6 rounded-xl space-y-6 lg:sticky lg:top-24">
+          {(activeTab === "generate" || activeTab === "batch") && <div className="glass-panel p-6 rounded-xl space-y-6 lg:sticky lg:top-24">
             <h3 className="text-sm font-bold uppercase tracking-wider text-brand-navy flex items-center gap-2 border-b border-brand-navy/15 pb-3">
               <Settings className="w-4 h-4 text-brand-indigo" />
               Parameters
@@ -1688,12 +1714,12 @@ function DashboardContent() {
 
 
             </div>
-          </div>
+          </div>}
 
           {/* Right Panel Main Tabs */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className={`${activeTab === "generate" || activeTab === "batch" ? "lg:col-span-3" : ""} space-y-6`}>
             {/* Navigation Tabs */}
-            <div className="flex border-b border-brand-navy/15 gap-6">
+            <div className="hidden border-b border-brand-navy/15 gap-6">
               {[
                 { id: "profile", label: "My Profile & CV" },
                 { id: "builder", label: "Resume Builder (Coming Soon)" },
@@ -2690,6 +2716,8 @@ function DashboardContent() {
         </div>
       </main>
 
+      </div>
+
       {/* Preview Certificate Modal */}
       {previewCert && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
@@ -2910,7 +2938,6 @@ function DashboardContent() {
 
 
     </div>
-    <MarketingFooter />
     </>
   );
 }
