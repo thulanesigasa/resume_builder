@@ -2,20 +2,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-deep: #1e1b4b;
-  --color-brand-navy: #312e81;
-  --color-brand-indigo: #4f46e5;
+  --color-brand-deep: #0f172a;
+  --color-brand-navy: #334155;
+  --color-brand-indigo: #5b5bd6;
 }
 
 :root {
   --background: #ffffff;
-  --foreground: #1e1b4b;
+  --foreground: #0f172a;
   --font-sans: 'Poppins', Calibri, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 body {
-  background-color: var(--background);
+  background-color: #f8fafc;
   color: var(--foreground);
   font-family: var(--font-sans);
   min-height: 100vh;
@@ -41,7 +41,7 @@ body {
 .glass-panel {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 20px 0 rgba(30, 27, 75, 0.04);
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
 }
 
 .glass-panel-hover {
@@ -56,8 +56,8 @@ body {
 .glass-input {
   background: #ffffff !important;
   border: 1px solid #cbd5e1 !important;
-  color: #1e1b4b !important;
-  border-radius: 8px;
+  color: #0f172a !important;
+  border-radius: 10px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .glass-input:focus {
@@ -71,17 +71,17 @@ body {
 
 /* Solid Buttons (Pure Purple & White) */
 .btn-primary {
-  background-color: #4f46e5;
+  background-color: #5b5bd6;
   color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   transition: all 0.2s ease-in-out;
   cursor: pointer;
   box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.25);
 }
 .btn-primary:hover {
-  background-color: #4338ca;
+  background-color: #4f46c7;
   transform: translateY(-1px);
   box-shadow: 0 6px 20px 0 rgba(79, 70, 229, 0.35);
 }
@@ -91,9 +91,9 @@ body {
 
 .btn-secondary {
   background-color: #ffffff;
-  color: #1e1b4b;
+  color: #0f172a;
   border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 500;
   transition: all 0.2s ease-in-out;
   cursor: pointer;
