@@ -1863,36 +1863,33 @@ function DashboardContent() {
       {/* Main Workspace Container (With Left Padding for Fixed Sidebar) */}
       <main className={`flex-1 ${activeTab === 'builder' ? 'max-w-[1700px]' : 'max-w-7xl'} w-full mx-auto p-6 md:p-8 space-y-8 transition-all duration-300 ${sidebarCollapsed ? "pl-20" : "pl-72"}`}>
         
-        {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-4 md:gap-6">
-          <div className="glass-panel p-6 rounded-xl text-center relative overflow-hidden group">
-            <div className="absolute right-0 top-0 w-24 h-24 bg-brand-indigo/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
-            <div className="text-3xl md:text-4xl font-extrabold text-brand-deep mb-1">{stats.appsCount}</div>
-            <div className="text-xs uppercase tracking-wider text-brand-navy/70 font-semibold flex items-center justify-center gap-1.5">
-              <FolderOpen className="w-3.5 h-3.5 text-brand-indigo" />
-              Tailored Apps
-            </div>
+        {/* Simple Stats Overview Text Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-4 py-3.5 px-5 bg-white rounded-xl border border-brand-navy/15 shadow-2xs text-xs">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-slate-600">
+            <span className="flex items-center gap-2 font-semibold">
+              <FolderOpen className="w-4 h-4 text-brand-indigo" />
+              <span className="font-black text-brand-deep text-sm">{stats.appsCount}</span> Tailored Applications
+            </span>
+            <span className="text-slate-300 hidden sm:inline">•</span>
+            <span className="flex items-center gap-2 font-semibold">
+              <Award className="w-4 h-4 text-brand-indigo" />
+              <span className="font-black text-brand-deep text-sm">{stats.certsCount}</span> Loaded Credentials
+            </span>
+            <span className="text-slate-300 hidden sm:inline">•</span>
+            <span className="flex items-center gap-2 font-semibold">
+              <BarChart3 className="w-4 h-4 text-brand-indigo" />
+              <span className="font-black text-brand-deep text-sm">{stats.avgAts}%</span> Avg ATS Match
+            </span>
           </div>
 
-          <div className="glass-panel p-6 rounded-xl text-center relative overflow-hidden group">
-            <div className="absolute right-0 top-0 w-24 h-24 bg-brand-indigo/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
-            <div className="text-3xl md:text-4xl font-extrabold text-brand-deep mb-1">{stats.certsCount}</div>
-            <div className="text-xs uppercase tracking-wider text-brand-navy/70 font-semibold flex items-center justify-center gap-1.5">
-              <Award className="w-3.5 h-3.5 text-brand-indigo" />
-              Credentials
-            </div>
+          <div className="text-[11px] text-brand-navy/50 font-medium hidden md:block">
+            ⚡ Workspace Active
           </div>
-
-          <div className="glass-panel p-6 rounded-xl text-center relative overflow-hidden group">
-            <div className="absolute right-0 top-0 w-24 h-24 bg-brand-indigo/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
-            <div className="text-3xl md:text-4xl font-extrabold text-brand-deep mb-1">{stats.avgAts}%</div>
-            <div className="text-xs uppercase tracking-wider text-brand-navy/70 font-semibold flex items-center justify-center gap-1.5">
-              <BarChart3 className="w-3.5 h-3.5 text-brand-indigo" />
         </div>
 
         {/* TAB 1: MY PROFILE */}
             {activeTab === "profile" && (
-              <div className="glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-3xl">
+              <div className="space-y-6 animate-in fade-in duration-300 w-full">
                 <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
                   <User className="w-5 h-5 text-brand-indigo" />
                   Personal Information & Profile Settings
@@ -2492,7 +2489,7 @@ function DashboardContent() {
 
             {/* TAB 3: PARAMETERS & TEMPLATES SETTINGS */}
             {activeTab === "parameters" && (
-              <div className="glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-3xl">
+              <div className="space-y-6 animate-in fade-in duration-300 w-full">
                 <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
                   <Settings className="w-5 h-5 text-brand-indigo" />
                   Parameters & AI Template Settings
@@ -2575,7 +2572,7 @@ function DashboardContent() {
 
             {/* TAB B: TAILOR (SINGLE JOB) */}
             {activeTab === "generate" && (
-              <div className="glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="space-y-6 animate-in fade-in duration-300 w-full">
                 <div className="flex items-center justify-between border-b border-brand-navy/15 pb-3">
                   <h3 className="text-base font-bold text-brand-deep flex items-center gap-2">
                     <Zap className="w-5 h-5 text-brand-indigo" />
@@ -3015,8 +3012,6 @@ function DashboardContent() {
                 )}
               </div>
             )}
-          </div>
-        </div>
 
       {/* Preview Certificate Modal */}
       {previewCert && (
