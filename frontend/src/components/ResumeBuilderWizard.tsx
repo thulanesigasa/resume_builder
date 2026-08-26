@@ -381,13 +381,14 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     const observer = new ResizeObserver((entries) => {
       for (let entry of entries) {
         const { width, height } = entry.contentRect;
+        if (width === 0 || height === 0) return;
         // Scale to height first to fill vertical space
         let scale = height / 1131;
-        // Fallback to width-based scale if height-based scale causes horizontal overflow (cutting off words)
-        if (800 * scale > width) {
-          scale = width / 800;
+        // Fallback to width-based scale if height-based scale causes horizontal overflow
+        if (800 * scale > width * 0.9) {
+          scale = (width * 0.9) / 800;
         }
-        setPreviewScale(Math.min(scale, 1.5));
+        setPreviewScale(Math.max(0.4, Math.min(scale, 1.2)));
       }
     });
     observer.observe(previewContainerRef.current);
@@ -471,11 +472,6 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   // --- Live Preview API Hook ---
   useEffect(() => {
     if (!isLoaded) return;
-    const hasData = contact.firstName || contact.lastName || summary || experiences[0]?.employer || educations[0]?.school || skills[0]?.name;
-    if (!hasData) {
-      setPreviewHtml(null);
-      return;
-    }
 
     const timeoutId = setTimeout(async () => {
       setIsPreviewLoading(true);
@@ -486,14 +482,14 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           body_font: format.bodyFont || 'Lato',
           contact_info: {
             name: `${contact.firstName} ${contact.lastName}`.trim() || "Your Name",
-            email: contact.email || "",
-            phone: contact.phone || "",
-            location: `${contact.city} ${contact.postalCode}`.trim() || "",
+            email: contact.email || "email@example.com",
+            phone: contact.phone || "+27 12 344 5678",
+            location: `${contact.city} ${contact.postalCode}`.trim() || "City, South Africa",
             linkedin: "",
             github: "",
             _wizard: { firstName: contact.firstName, lastName: contact.lastName, city: contact.city, postalCode: contact.postalCode }
           },
-          professional_summary: summary || "",
+          professional_summary: summary || "Results-driven professional with expertise in technical strategy and execution.",
           skills: skills.filter(s => s.name).map(s => s.name),
           technical_skills: skills.filter(s => s.name && s.type === "Technical").map(s => s.name),
           soft_skills: skills.filter(s => s.name && s.type === "Soft").map(s => s.name),
@@ -511,7 +507,6 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`,
             _wizard: { degree: e.degree, course: e.course, startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
           })),
-          // Provide empty arrays for optional template sections to prevent Jinja2 errors
           certifications: [],
           professional_memberships: [],
           professional_development: [],
@@ -520,13 +515,15 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         };
 
         const res = await api.previewHtml(format.template, dummyData);
-        setPreviewHtml(res.html_content);
+        if (res?.html_content) {
+          setPreviewHtml(res.html_content);
+        }
       } catch (e) {
         console.error("Failed to load live preview", e);
       } finally {
         setIsPreviewLoading(false);
       }
-    }, 1000); // 1-second debounce
+    }, 200); // 200ms quick response
     return () => clearTimeout(timeoutId);
   }, [contact, experiences, educations, skills, summary, format, isLoaded]);
 
@@ -1305,7 +1302,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   if (!isLoaded) return null; // Prevent hydration mismatch on load
 
   return (
-    <div className="flex w-full min-h-[calc(100vh-2rem)] bg-white relative">
+    <div className="flex w-full h-[calc(100vh-3rem)] bg-white relative">
       
       {/* Fullscreen Compiling Loader */}
       {isCompiling && (
@@ -1321,80 +1318,68 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       {/* LEFT COLUMN: WIZARD */}
       <div className="w-full lg:w-[50%] xl:w-[50%] flex flex-col h-full bg-white overflow-y-auto relative">
         
-        {/* Progress Bar — auto-centering sliding steps */}
-        <div className="w-full border-b border-slate-200 bg-white sticky top-0 z-20">
-          <div ref={stepBarRef} className="relative w-full overflow-hidden" style={{ height: '72px' }}>
-
-            {/* Connector line — fixed behind the dots */}
-            <div className="absolute left-0 right-0 h-0.5 bg-brand-navy/10 z-0 pointer-events-none" style={{ top: '20px' }} />
-
-            {/* Sliding track — shifts so active step is always centered */}
-            <div
-              className="absolute flex items-start transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
-              style={{
-                top: 0,
-                left: 0,
-                height: '72px',
-                // stepBarWidth is the real container px width, measured via ResizeObserver
-                transform: `translateX(${stepBarWidth / 2 - currentStep * 96 - 48}px)`,
-                width: `${STEPS.length * 96}px`,
-              }}
-            >
-              {STEPS.map((step, idx) => {
-                const isActive = idx === currentStep;
-                const isCompleted = idx < currentStep;
-                const dist = Math.abs(idx - currentStep);
-                return (
-                  <div
-                    key={step}
-                    className="flex flex-col items-center gap-2 cursor-pointer px-2 pt-3 transition-all duration-500"
-                    style={{
-                      width: '96px',
-                      opacity: dist === 0 ? 1 : dist === 1 ? 0.55 : 0.2,
-                      transform: `scale(${dist === 0 ? 1 : dist === 1 ? 0.88 : 0.75})`,
-                      transformOrigin: 'top center',
-                    }}
-                    onClick={() => {
-                      if (idx <= currentStep) {
-                        setCurrentStep(idx);
-                      } else {
-                        for (let i = currentStep; i < idx; i++) {
-                          if (!validateStep(i)) { setCurrentStep(i); return; }
-                          
-                          if (i === 4) {
-                            const validSkills = skills.filter(s => s.name.trim());
-                            const techCount = validSkills.filter(s => s.type === "Technical").length;
-                            const softCount = validSkills.filter(s => s.type === "Soft").length;
-                            if ((techCount > 0 || softCount > 0) && techCount !== softCount) {
-                              setConfirmSkipModal({
-                                message: `You have an uneven ratio of Technical (${techCount}) to Soft (${softCount}) skills. For best ATS results, we recommend a 1:1 ratio. Do you want to continue anyway?`,
-                                onConfirm: () => { setConfirmSkipModal(null); setCurrentStep(idx); }
-                              });
-                              return;
-                            }
-                          }
-
-                          if ([1, 2, 4].includes(i) && !stepHasData(i)) {
+        {/* Progress Bar — Clean responsive horizontal stepper */}
+        <div className="w-full border-b border-slate-200 bg-white px-4 py-3 sticky top-0 z-20 shadow-2xs">
+          <div className="flex items-center justify-between max-w-full overflow-x-auto gap-1.5 py-1 px-1">
+            {STEPS.map((step, idx) => {
+              const isActive = idx === currentStep;
+              const isCompleted = idx < currentStep;
+              return (
+                <div
+                  key={step}
+                  onClick={() => {
+                    if (idx <= currentStep) {
+                      setCurrentStep(idx);
+                    } else {
+                      for (let i = currentStep; i < idx; i++) {
+                        if (!validateStep(i)) { setCurrentStep(i); return; }
+                        if (i === 4) {
+                          const validSkills = skills.filter(s => s.name.trim());
+                          const techCount = validSkills.filter(s => s.type === "Technical").length;
+                          const softCount = validSkills.filter(s => s.type === "Soft").length;
+                          if ((techCount > 0 || softCount > 0) && techCount !== softCount) {
                             setConfirmSkipModal({
-                              message: STEP_EMPTY_MESSAGES[i],
+                              message: `You have an uneven ratio of Technical (${techCount}) to Soft (${softCount}) skills. For best ATS results, we recommend a 1:1 ratio. Do you want to continue anyway?`,
                               onConfirm: () => { setConfirmSkipModal(null); setCurrentStep(idx); }
                             });
                             return;
                           }
                         }
-                        setCurrentStep(idx);
+                        if ([1, 2, 4].includes(i) && !stepHasData(i)) {
+                          setConfirmSkipModal({
+                            message: STEP_EMPTY_MESSAGES[i],
+                            onConfirm: () => { setConfirmSkipModal(null); setCurrentStep(idx); }
+                          });
+                          return;
+                        }
                       }
-                    }}
-                  >
-                    <div className={`w-4 h-4 rounded-full border-2 transition-all duration-300 flex-shrink-0 ${isActive || isCompleted ? 'border-brand-indigo bg-brand-indigo shadow-[0_0_10px_rgba(79,70,229,0.5)]' : 'border-brand-navy/20 bg-white'}`} />
-                    <span className={`text-[10px] font-bold uppercase tracking-wider text-center whitespace-nowrap transition-colors duration-300 leading-tight ${isActive ? 'text-brand-indigo' : isCompleted ? 'text-brand-indigo/60' : 'text-brand-navy/30'}`}>
-                      {step}
-                    </span>
+                      setCurrentStep(idx);
+                    }
+                  }}
+                  className={`flex items-center gap-1.5 shrink-0 cursor-pointer transition-all px-2 py-1 rounded-md ${
+                    isActive ? "bg-purple-50" : "hover:bg-slate-50"
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black transition-all ${
+                    isActive
+                      ? "bg-purple-600 text-white shadow-sm ring-2 ring-purple-200"
+                      : isCompleted
+                      ? "bg-purple-600 text-white"
+                      : "bg-slate-100 text-slate-400"
+                  }`}>
+                    {isCompleted ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                   </div>
-                );
-              })}
-            </div>
-
+                  <span className={`text-[11px] font-bold tracking-tight whitespace-nowrap ${
+                    isActive ? "text-purple-600 font-extrabold" : isCompleted ? "text-slate-800" : "text-slate-400"
+                  }`}>
+                    {step}
+                  </span>
+                  {idx < STEPS.length - 1 && (
+                    <div className={`h-0.5 w-3 sm:w-5 ml-1 transition-colors ${isCompleted ? "bg-purple-600" : "bg-slate-200"}`} />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -2287,8 +2272,19 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         </div>
       </div>
 
-      {/* RIGHT COLUMN: LIVE API PREVIEW */}
-      <div ref={previewContainerRef} className="hidden lg:flex flex-1 h-full bg-slate-50/70 relative overflow-hidden border-l border-slate-200">
+      {/* RIGHT COLUMN: LIVE API PREVIEW SHEET */}
+      <div ref={previewContainerRef} className="hidden lg:flex lg:w-[50%] h-full bg-slate-100/80 relative flex-col overflow-hidden border-l-2 border-slate-300">
+        
+        {/* Header Indicator */}
+        <div className="w-full bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between z-10 shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Live ATS Document Preview</span>
+          </div>
+          <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2.5 py-1 rounded border border-purple-200">
+            Real-time Compilation
+          </span>
+        </div>
         
         {/* Loading Overlay */}
         {isPreviewLoading && (
