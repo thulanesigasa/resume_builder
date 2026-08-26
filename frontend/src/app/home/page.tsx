@@ -40,6 +40,10 @@ function DashboardContent() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"welcome" | "profile" | "mycv" | "parameters" | "generate" | "batch" | "archive" | "builder">("welcome");
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [activeTab]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [settingsSubmenuOpen, setSettingsSubmenuOpen] = useState<boolean>(true);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
@@ -1544,6 +1548,59 @@ function DashboardContent() {
     }
   };
 
+  const handleOpenEditor = (app: any) => {
+    try {
+      const rJson = typeof app.resume_json === "string" 
+        ? app.resume_json 
+        : app.resume_json ? JSON.stringify(app.resume_json) : null;
+      
+      const cJson = typeof app.cl_json === "string" 
+        ? app.cl_json 
+        : app.cl_json ? JSON.stringify(app.cl_json) : null;
+
+      if (rJson) {
+        localStorage.setItem("edit_resume_json", rJson);
+      } else {
+        // Fallback resume structure if resume_json was null in database
+        const fallbackResume = {
+          contact_info: {
+            name: `${firstName} ${lastName}`.trim() || username || user?.email?.split("@")[0] || "Candidate",
+            email: user?.email || "",
+            phone: phone || "",
+            location: "Sandton, 2090",
+            linkedin: linkedinUrl || "",
+          },
+          professional_summary: profileRaw || "Experienced professional with a proven track record.",
+          skills: ["Project Management", "Communication", "Problem Solving", "Strategic Planning"],
+          experience: [
+            {
+              company: app.company_name || "Company",
+              title: app.job_title || "Target Role",
+              dates: "2024 - Present",
+              achievements: ["Successfully delivered key projects", "Collaborated with cross-functional teams"]
+            }
+          ]
+        };
+        localStorage.setItem("edit_resume_json", JSON.stringify(fallbackResume));
+      }
+
+      if (cJson) localStorage.setItem("edit_cl_json", cJson);
+      localStorage.setItem("edit_company", app.company_name || "Target Company");
+      localStorage.setItem("edit_job_title", app.job_title || "Target Position");
+      localStorage.setItem("edit_app_id", app.id || "");
+      if (app.ats_score !== undefined && app.ats_score !== null) {
+        localStorage.setItem("edit_ats_score", typeof app.ats_score === "object" ? JSON.stringify(app.ats_score) : String(app.ats_score));
+      }
+      localStorage.setItem("edit_resume_compile_count", String(app.resume_compile_count || 0));
+      localStorage.setItem("edit_cl_compile_count", String(app.cl_compile_count || 0));
+
+      router.push("/editor");
+    } catch (e: any) {
+      console.error("Error launching editor:", e);
+      router.push("/editor");
+    }
+  };
+
   if (loading || !user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -1568,15 +1625,15 @@ function DashboardContent() {
           {/* Header & Toggle Activation Button */}
           <div className="flex items-center justify-between pb-3 border-b border-brand-navy/10">
             {!sidebarCollapsed && (
-              <span className="text-xs font-black uppercase tracking-wider text-brand-deep flex items-center gap-2 px-1">
-                <Settings className="w-4 h-4 text-brand-indigo" />
+              <h1 className="text-xs font-black uppercase text-brand-deep tracking-wider flex items-center gap-2">
+                <Globe className="w-4 h-4 text-brand-indigo" />
                 Navigation
-              </span>
+              </h1>
             )}
             <button
               type="button"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              title={sidebarCollapsed ? "Activate / Expand Sidebar" : "Deactivate / Collapse Sidebar"}
+              title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
               className="p-2 rounded-xl bg-slate-100 hover:bg-brand-indigo/10 text-brand-deep hover:text-brand-indigo transition-all duration-300 mx-auto lg:mx-0 cursor-pointer shadow-xs"
             >
               {sidebarCollapsed ? (
@@ -1887,8 +1944,11 @@ function DashboardContent() {
         </div>
       </aside>
 
-      {/* Main Workspace Container (With Left Padding for Fixed Sidebar) */}
-      <main className={`flex-1 ${activeTab === 'builder' ? 'max-w-[1700px]' : 'max-w-7xl'} w-full mx-auto p-6 md:p-8 space-y-8 transition-all duration-300 ${sidebarCollapsed ? "pl-20" : "pl-72"}`}>
+      {/* Main Workspace Container (With Dynamic Left Padding for Sidebar) */}
+      <main 
+        style={{ paddingLeft: sidebarCollapsed ? "5rem" : "17.5rem" }}
+        className="flex-1 w-full p-6 md:p-8 space-y-8 transition-all duration-300 ease-in-out"
+      >
 
         {/* TAB 0: WELCOME OVERVIEW (60-30-10 RULE: WHITE - BLACK/GRAY - PURPLE) */}
         {activeTab === "welcome" && (
@@ -2036,9 +2096,7 @@ function DashboardContent() {
                           </a>
                         )}
                         <button
-                          onClick={() => {
-                            if (app.pdf_url) window.open(`/editor?pdf=${encodeURIComponent(app.pdf_url)}`, '_blank');
-                          }}
+                          onClick={() => handleOpenEditor(app)}
                           className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white text-xs font-bold transition-colors cursor-pointer"
                         >
                           Editor
@@ -3235,15 +3293,12 @@ function DashboardContent() {
                             <span className="text-xs text-brand-navy/40 italic text-center self-center">No CL compiled</span>
                           )}
                           
-                          {(app.resume_json || app.cl_json) && (
-                            <button
-                              onClick={() => handleOpenInEditor(app)}
-                              className="col-span-2 py-1.5 btn-secondary text-xs text-center flex items-center justify-center gap-1 mt-1 border-brand-indigo/30 hover:border-brand-indigo text-brand-indigo"
-                            >
-                              <Zap className="w-3.5 h-3.5" />
-                              Open in Editor
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleOpenEditor(app)}
+                            className="col-span-2 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white text-xs font-bold transition-colors cursor-pointer mt-1"
+                          >
+                            Open in Editor
+                          </button>
                           
                           <button
                             onClick={() => handleDeleteApps([app.id])}
