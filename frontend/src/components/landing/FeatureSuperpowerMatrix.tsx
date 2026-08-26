@@ -48,9 +48,6 @@ export default function FeatureSuperpowerMatrix() {
         
         {/* Header */}
         <header className="text-center space-y-3 max-w-3xl mx-auto">
-          <span className="text-xs font-bold uppercase tracking-widest text-purple-600 bg-purple-50 px-3 py-1 rounded">
-            Built For Results
-          </span>
           <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">
             Features designed to get you hired
           </h2>

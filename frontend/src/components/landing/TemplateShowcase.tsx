@@ -33,7 +33,7 @@ const THREE_CANDIDATE_TEMPLATES = [
     name: "NOMALANGA DLAMINI",
     title: "ATS Blueprint Standard",
     style: "Clean Single-Column ATS",
-    color: "bg-purple-700",
+    color: "bg-slate-900",
     role: "Business Analyst & Financial Lead",
     ats: "100%",
     email: "nomalanga.dlamini@gmail.com",
@@ -56,7 +56,7 @@ const THREE_CANDIDATE_TEMPLATES = [
     name: "SIPHO MTHEMBU",
     title: "David Turner Executive",
     style: "Classic Serif Executive",
-    color: "bg-slate-800",
+    color: "bg-purple-600",
     role: "Senior Technical Consultant",
     ats: "98%",
     email: "sipho.mthembu@gmail.com",
@@ -199,7 +199,11 @@ export default function TemplateShowcase() {
                 <footer className="p-3 bg-slate-50 border-t border-slate-200">
                   <button
                     onClick={() => router.push("/register")}
-                    className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    className={`w-full py-2.5 px-4 text-white font-bold text-xs rounded-lg shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      tpl.color === "bg-slate-900"
+                        ? "bg-slate-900 hover:bg-black"
+                        : "bg-purple-600 hover:bg-purple-700"
+                    }`}
                   >
                     <span>{tpl.ctaText}</span>
                     <ArrowRight className="w-3.5 h-3.5" />

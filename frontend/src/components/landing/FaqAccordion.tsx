@@ -1,38 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star, ChevronDown } from "lucide-react";
-
-const REVIEWS = [
-  {
-    author: "Thabo Nkosi",
-    time: "Verified Candidate • South Africa",
-    headline: "Great CV builder",
-    body: "Easy to use site with nice features. Got my CV tailored for an engineering role in under 2 minutes.",
-    stars: 5,
-  },
-  {
-    author: "Nomalanga Dlamini",
-    time: "Verified Candidate • South Africa",
-    headline: "Best services ever.",
-    body: "Best services ever. Resume made easy and perfect. 100% ATS friendly and passed recruiter screening.",
-    stars: 5,
-  },
-  {
-    author: "Sipho Mthembu",
-    time: "Verified Candidate • South Africa",
-    headline: "Extremely helpful",
-    body: "I can't even explain how helpful this tool is. Had my CV and cover letter ready for PayFast checkout instantly.",
-    stars: 5,
-  },
-  {
-    author: "Keagan van der Merwe",
-    time: "Verified Candidate • South Africa",
-    headline: "Excellent value for money",
-    body: "The best and most economical CV writing service that is guaranteed to get interview responses without monthly traps.",
-    stars: 5,
-  },
-];
+import { ChevronDown } from "lucide-react";
 
 const FAQS = [
   {
@@ -80,55 +49,8 @@ export default function FaqAccordion() {
           </div>
         </header>
 
-        {/* Candidate Feedback Section */}
-        <div className="space-y-8">
-          <header className="text-center space-y-3">
-            <h3 className="text-3xl font-black text-slate-900 tracking-tight">
-              Candidate Feedback
-            </h3>
-            
-            <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-600">
-              <div className="flex text-purple-600">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} className="w-4 h-4 fill-purple-600 text-purple-600 hover:scale-125 transition-transform duration-200" />
-                ))}
-              </div>
-              <span>Rated 4.76 / 5.0 by candidates across top industries</span>
-            </div>
-          </header>
-
-          {/* Reviews Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {REVIEWS.map((rev, idx) => (
-              <article
-                key={idx}
-                className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 space-y-3 flex flex-col justify-between"
-              >
-                <div className="space-y-2">
-                  <div className="flex text-purple-600">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} className="w-3.5 h-3.5 fill-purple-600 text-purple-600" />
-                    ))}
-                  </div>
-
-                  <div>
-                    <h4 className="font-extrabold text-xs text-slate-900">{rev.author}</h4>
-                    <span className="text-[10px] text-slate-400 block">{rev.time}</span>
-                  </div>
-
-                  <h5 className="font-bold text-xs text-slate-800 pt-1">{rev.headline}</h5>
-
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                    "{rev.body}"
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-
         {/* FAQ Accordion Section */}
-        <div className="pt-8 border-t border-slate-200 space-y-6 max-w-4xl mx-auto">
+        <div className="space-y-6 max-w-4xl mx-auto">
           <header className="text-center space-y-2">
             <h3 className="text-2xl font-black text-slate-900">Frequently Asked Questions</h3>
             <p className="text-xs text-slate-500">Everything you need to know about our CV builder & pricing</p>
