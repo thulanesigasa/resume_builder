@@ -152,10 +152,6 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         {/* Branding header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 text-xs tracking-wider text-brand-navy/70 bg-brand-navy/5 border border-brand-navy/10 px-3 py-1 rounded-full mb-4">
-            <span className="w-1.5 h-1.5 bg-brand-indigo rounded-full glow-border-brand"></span>
-            A PRODUCT BY T.S INDUSTRIES
-          </div>
           <h1 className="text-4xl font-extrabold tracking-tight mb-2 text-brand-deep">
             <span className="text-brand-indigo glow-text-brand">Resume Builder</span>
           </h1>

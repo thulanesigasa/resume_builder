@@ -47,8 +47,8 @@ export default function HeroSection({ user }: HeroSectionProps) {
         {/* Left Column: Copy & Primary Actions */}
         <header className="lg:col-span-6 space-y-6 text-center lg:text-left">
           
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-indigo-950 tracking-tight leading-[1.15]">
-            Create a <span className="text-indigo-700 underline decoration-slate-300">Professional CV</span> in Minutes.
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15]">
+            Create a <span className="text-purple-600 underline decoration-slate-200">Professional CV</span> in Minutes.
           </h1>
 
           <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed">
@@ -59,7 +59,7 @@ export default function HeroSection({ user }: HeroSectionProps) {
             {user ? (
               <button
                 onClick={() => router.push("/home")}
-                className="w-full sm:w-auto px-8 py-4 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-sm rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5 cursor-pointer shadow-sm hover:shadow-indigo-500/20"
+                className="w-full sm:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5 cursor-pointer shadow-sm hover:shadow-purple-500/20"
               >
                 <span>Go to Workspace</span>
                 <ArrowRight className="w-4 h-4" />
@@ -67,7 +67,7 @@ export default function HeroSection({ user }: HeroSectionProps) {
             ) : (
               <button
                 onClick={() => router.push("/register")}
-                className="w-full sm:w-auto px-8 py-4 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-sm rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5 cursor-pointer shadow-sm hover:shadow-indigo-500/20"
+                className="w-full sm:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5 cursor-pointer shadow-sm hover:shadow-purple-500/20"
               >
                 <span>Build My CV</span>
                 <ArrowRight className="w-4 h-4" />
@@ -83,12 +83,12 @@ export default function HeroSection({ user }: HeroSectionProps) {
           </div>
 
           <div className="pt-4 flex flex-wrap justify-center lg:justify-start gap-6 text-xs font-semibold text-slate-600">
-            <span className="flex items-center gap-1.5 hover:text-indigo-950 transition-colors">
-              <Check className="w-4 h-4 text-indigo-700" />
+            <span className="flex items-center gap-1.5 hover:text-slate-900 transition-colors">
+              <Check className="w-4 h-4 text-purple-600" />
               Passes 98.4% of ATS Scanners
             </span>
-            <span className="flex items-center gap-1.5 hover:text-indigo-950 transition-colors">
-              <Check className="w-4 h-4 text-indigo-700" />
+            <span className="flex items-center gap-1.5 hover:text-slate-900 transition-colors">
+              <Check className="w-4 h-4 text-purple-600" />
               Pay-As-You-Go (R15 per CV)
             </span>
           </div>
@@ -96,13 +96,13 @@ export default function HeroSection({ user }: HeroSectionProps) {
         </header>
 
         {/* Right Column: Clean Interactive Mockup Card with micro-animations */}
-        <article className="lg:col-span-6 p-6 sm:p-8 rounded-2xl bg-slate-50 border border-slate-200 shadow-md hover:shadow-xl transition-all duration-300 space-y-5">
+        <article className="lg:col-span-6 p-6 sm:p-8 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 space-y-5">
           
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Pre-Written Phrase Selector
             </span>
-            <span className="text-xs font-semibold text-indigo-950 bg-slate-200 px-2.5 py-0.5 rounded animate-pulse">
+            <span className="text-xs font-semibold text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded animate-pulse">
               Point & Click
             </span>
           </div>
@@ -112,7 +112,7 @@ export default function HeroSection({ user }: HeroSectionProps) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-4 pr-10 py-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-indigo-950 focus:outline-none focus:border-indigo-700 transition-colors"
+              className="w-full pl-4 pr-10 py-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-purple-600 transition-colors"
               placeholder="Search job title or skill..."
             />
             <Search className="w-4 h-4 absolute right-3 top-3.5 text-slate-400 pointer-events-none" />
@@ -123,16 +123,16 @@ export default function HeroSection({ user }: HeroSectionProps) {
               <div
                 key={item.id}
                 onClick={() => togglePhrase(item.id)}
-                className={`p-4 rounded-xl border transition-all duration-200 hover:-translate-y-0.5 flex items-start gap-3 cursor-pointer select-none ${
-                  item.added ? "bg-white border-indigo-700 shadow-xs" : "bg-white/60 border-slate-200 hover:border-slate-300"
+                className={`p-4 rounded-xl border transition-all duration-200 flex items-start gap-3 cursor-pointer select-none ${
+                  item.added ? "bg-slate-50 border-purple-600 shadow-xs" : "bg-white border-slate-200 hover:border-slate-300"
                 }`}
               >
                 <button
                   type="button"
                   className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 shrink-0 transition-all duration-200 ${
                     item.added
-                      ? "bg-indigo-950 text-white scale-105"
-                      : "bg-slate-200 text-slate-700 hover:bg-indigo-700 hover:text-white"
+                      ? "bg-purple-600 text-white scale-105"
+                      : "bg-slate-200 text-slate-700 hover:bg-purple-600 hover:text-white"
                   }`}
                 >
                   {item.added ? (
@@ -148,7 +148,7 @@ export default function HeroSection({ user }: HeroSectionProps) {
                   )}
                 </button>
 
-                <p className={`text-xs sm:text-sm leading-relaxed ${item.added ? "text-indigo-950 font-semibold" : "text-slate-600"}`}>
+                <p className={`text-xs sm:text-sm leading-relaxed ${item.added ? "text-slate-900 font-semibold" : "text-slate-600"}`}>
                   {item.text}
                 </p>
               </div>

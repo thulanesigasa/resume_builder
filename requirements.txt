@@ -10,3 +10,5 @@ fastapi==0.111.1
 uvicorn==0.30.6
 python-multipart==0.0.9
 slowapi==0.1.9
+scrapling>=0.4.15
+lxml>=6.1.2

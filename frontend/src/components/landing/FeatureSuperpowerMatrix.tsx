@@ -48,10 +48,10 @@ export default function FeatureSuperpowerMatrix() {
         
         {/* Header */}
         <header className="text-center space-y-3 max-w-3xl mx-auto">
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-950 bg-slate-100 px-3 py-1 rounded">
+          <span className="text-xs font-bold uppercase tracking-widest text-purple-600 bg-purple-50 px-3 py-1 rounded">
             Built For Results
           </span>
-          <h2 className="text-3xl md:text-5xl font-black text-indigo-950 tracking-tight">
+          <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">
             Features designed to get you hired
           </h2>
           <p className="text-sm md:text-base text-slate-600 font-normal">
@@ -59,15 +59,14 @@ export default function FeatureSuperpowerMatrix() {
           </p>
         </header>
 
-        {/* Feature Cards Grid (No icon background boxes) */}
+        {/* Feature Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {FEATURES.map((feat) => (
             <article
               key={feat.title}
-              className="bg-slate-50 p-6 md:p-8 rounded-2xl border border-slate-200 hover:border-indigo-700 transition-all space-y-4 flex flex-col justify-between"
+              className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 hover:border-purple-600 shadow-sm transition-all space-y-4 flex flex-col justify-between"
             >
               <div className="space-y-4">
-                {/* SVG Icon rendered cleanly WITHOUT background box */}
                 <Image
                   src={feat.iconSrc}
                   alt={feat.title}
@@ -76,7 +75,7 @@ export default function FeatureSuperpowerMatrix() {
                   className="w-9 h-9 object-contain"
                 />
 
-                <h3 className="text-lg font-extrabold text-indigo-950">
+                <h3 className="text-lg font-extrabold text-slate-900">
                   {feat.title}
                 </h3>
 
@@ -85,8 +84,8 @@ export default function FeatureSuperpowerMatrix() {
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 text-xs font-bold text-indigo-950 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-indigo-700 rounded-full" />
+              <div className="pt-3 border-t border-slate-200 text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 bg-purple-600 rounded-full" />
                 <span>{feat.highlight}</span>
               </div>
             </article>

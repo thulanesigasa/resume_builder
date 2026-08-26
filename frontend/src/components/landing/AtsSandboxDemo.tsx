@@ -38,12 +38,12 @@ export default function AtsSandboxDemo() {
   };
 
   return (
-    <section className="bg-slate-50 py-16 md:py-24 border-b border-slate-200">
+    <section className="bg-white py-16 md:py-24 border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         
         {/* Left Text Column */}
         <header className="lg:col-span-6 space-y-6">
-          <h2 className="text-3xl md:text-5xl font-black text-indigo-950 tracking-tight leading-tight">
+          <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
             Insert our pre-written CV content
           </h2>
 
@@ -54,7 +54,7 @@ export default function AtsSandboxDemo() {
           <div className="pt-2">
             <button
               onClick={() => router.push("/register")}
-              className="px-8 py-3.5 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-sm rounded-xl transition-all cursor-pointer shadow-sm"
+              className="px-8 py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-xl transition-all cursor-pointer shadow-sm"
             >
               Try Pre-Written Bullets
             </button>
@@ -62,10 +62,10 @@ export default function AtsSandboxDemo() {
         </header>
 
         {/* Right Column: UI Mockup Card (Clean White/Slate) */}
-        <article className="lg:col-span-6 bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-md space-y-5">
+        <article className="lg:col-span-6 bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-5">
           
-          <div className="bg-slate-50 rounded-xl border border-slate-300 p-2.5 flex items-center justify-between">
-            <span className="text-xs font-bold text-indigo-950 px-2">
+          <div className="bg-slate-50 rounded-xl border border-slate-200 p-2.5 flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-900 px-2">
               Ex: {CATEGORIES.find((c) => c.id === activeCategory)?.label}
             </span>
             <Search className="w-4 h-4 text-slate-400" />
@@ -78,8 +78,8 @@ export default function AtsSandboxDemo() {
                 onClick={() => setActiveCategory(cat.id)}
                 className={`px-3 py-1.5 text-xs font-semibold rounded border transition-all cursor-pointer ${
                   activeCategory === cat.id
-                    ? "bg-indigo-950 text-white border-indigo-950"
-                    : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"
+                    ? "bg-purple-600 text-white border-purple-600"
+                    : "bg-slate-100 text-slate-700 border-slate-200 hover:border-purple-300"
                 }`}
               >
                 {cat.label.split(" ")[0]}
@@ -101,8 +101,8 @@ export default function AtsSandboxDemo() {
                     type="button"
                     className={`px-3 py-1.5 rounded text-xs font-bold shrink-0 transition-colors ${
                       isAdded
-                        ? "bg-indigo-950 text-white"
-                        : "bg-slate-200 text-slate-700 hover:bg-indigo-700 hover:text-white"
+                        ? "bg-purple-600 text-white"
+                        : "bg-slate-200 text-slate-700 hover:bg-purple-600 hover:text-white"
                     }`}
                   >
                     {isAdded ? "Added" : "Add"}

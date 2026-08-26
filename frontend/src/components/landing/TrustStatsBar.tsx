@@ -23,7 +23,7 @@ export default function TrustStatsBar() {
           {ATS_SYSTEMS.map((system) => (
             <span
               key={system}
-              className="text-xs md:text-sm font-extrabold text-indigo-950 tracking-wider font-mono select-none"
+              className="text-xs md:text-sm font-extrabold text-slate-900 tracking-wider font-mono select-none"
             >
               {system}
             </span>

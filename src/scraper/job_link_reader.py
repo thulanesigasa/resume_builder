@@ -69,8 +69,18 @@ def get_job_description(url: str) -> str:
         
     logger.info(f"Fetching job description from: {url}")
     
+    # 1. Primary Scrapling Engine Attempt (Undetected Browser TLS Fingerprinting)
+    try:
+        from src.scraper.scrapling_fetcher import fetch_job_with_scrapling
+        scrapling_text = fetch_job_with_scrapling(url)
+        if scrapling_text and len(scrapling_text) > 100:
+            logger.info("Successfully extracted job description via Scrapling engine.")
+            return scrapling_text
+    except Exception as e:
+        logger.warning(f"Scrapling engine primary attempt failed: {e}. Falling back to proxy/requests...")
+
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Accept-Language": "en-US,en;q=0.9",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
     }
@@ -78,41 +88,32 @@ def get_job_description(url: str) -> str:
     target_url = url
     params = {}
     
-    # If a scraping API key is configured, route requests through it
+    # If a scraping API key is configured, route requests through it as secondary fallback
     if SCRAPING_API_KEY:
-        logger.info("Scraping API key detected. Routing request through scraping API proxy...")
-        # Detect provider based on key format or default to scrape.do
-        # Scrape.do key is typically 40 chars; ZenRows is 40 chars too. 
-        # Let's support ZenRows first, then Scrape.do. 
-        # We assume Scrape.do as the default if it doesn't match ZenRows-specific checks,
-        # or we check if there's any indicator in the key.
-        # Let's implement Scrape.do URL as it is very popular in SA.
+        logger.info("Scraping API key detected. Routing fallback request through scraping API proxy...")
         target_url = "https://api.scrape.do"
         params = {
             "token": SCRAPING_API_KEY,
             "url": url
         }
     else:
-        logger.warning("No SCRAPING_API_KEY configured. Making direct request (may be blocked by job boards).")
+        logger.warning("No SCRAPING_API_KEY configured. Making direct requests fallback.")
 
     try:
         response = requests.get(target_url, headers=headers, params=params, timeout=30)
         
         if response.status_code == 200:
             raw_html = response.text
-            # Extract readable text from the HTML page
             plain_text = clean_html(raw_html)
-            logger.info("Successfully fetched and cleaned job description text.")
+            logger.info("Successfully fetched and cleaned job description text via fallback requests.")
             return plain_text
         else:
             error_msg = f"Failed to fetch page. Status code: {response.status_code}."
-            if response.status_code in [403, 503, 429] and not SCRAPING_API_KEY:
-                error_msg += " This job board likely uses Cloudflare/anti-bot protection. Please configure a valid SCRAPING_API_KEY in your .env file to bypass these checks."
             logger.error(error_msg + f" Response snippet: {response.text[:200]}")
             return ""
             
     except Exception as e:
-        logger.error(f"Error during job description fetch: {e}")
+        logger.error(f"Error during job description fetch fallback: {e}")
         return ""
 
 if __name__ == "__main__":
