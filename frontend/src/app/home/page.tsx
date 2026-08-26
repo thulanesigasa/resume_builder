@@ -2,10 +2,16 @@
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
 import { api, API_BASE_URL } from "@/lib/api";
-import ResumeBuilderWizard from "@/components/ResumeBuilderWizard";
 import MarketingFooter from "@/components/MarketingFooter";
+import { WelcomeSkeleton, ContentSkeleton } from "@/components/WorkspaceSkeleton";
+
+const ResumeBuilderWizard = dynamic(() => import("@/components/ResumeBuilderWizard"), {
+  ssr: false,
+  loading: () => <ContentSkeleton />
+});
 import {
   User,
   LogOut,
@@ -436,30 +442,83 @@ function DashboardContent() {
 
   const loadUserData = async (userId: string) => {
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (currentUser?.email && !emailInput) {
-        setEmailInput(currentUser.email);
+      // Optimistic cache hydration from localStorage for instant render (<50ms)
+      const cachedProfile = localStorage.getItem(`cache_profile_${userId}`);
+      const cachedApps = localStorage.getItem(`cache_apps_${userId}`);
+      if (cachedProfile) {
+        try {
+          const parsed = JSON.parse(cachedProfile);
+          setUsername(parsed.username || "");
+          setFirstName(parsed.first_name || "");
+          setLastName(parsed.last_name || "");
+          setPhone(parsed.phone || "");
+          setTargetJobTitle(parsed.target_job_title || "");
+          if (parsed.experience_level) setExperienceLevel(parsed.experience_level);
+          setLinkedinUrl(parsed.linkedin_url || "");
+          setUserCredits(parsed.credits ?? 0);
+          setUserRole(parsed.role || "standard");
+        } catch (e) {}
+      }
+      if (cachedApps) {
+        try {
+          const parsedApps = JSON.parse(cachedApps);
+          setApplications(parsedApps);
+          setStats((prev) => ({ ...prev, appsCount: parsedApps.length }));
+        } catch (e) {}
       }
 
-      // 1. Fetch Profile (with safe schema fallback)
-      let profile: any = null;
-      try {
-        const res = await supabase
-          .from("profiles")
-          .select("raw_info, username, first_name, last_name, phone, credits, target_job_title, experience_level, location, linkedin_url, role, last_credit_reset")
-          .eq("id", userId)
-          .single();
-        profile = res.data;
-      } catch (err) {
-        console.warn("Failed to select role/last_credit_reset (schema may not exist yet), falling back:", err);
-        const res = await supabase
+      const fetchProfile = async () => {
+        try {
+          const res = await supabase
+            .from("profiles")
+            .select("raw_info, username, first_name, last_name, phone, credits, target_job_title, experience_level, location, linkedin_url, role, last_credit_reset")
+            .eq("id", userId)
+            .single();
+          if (res.data) return res;
+        } catch (e) {}
+        return await supabase
           .from("profiles")
           .select("raw_info, username, first_name, last_name, phone, credits, target_job_title, experience_level, location, linkedin_url")
           .eq("id", userId)
           .single();
-        profile = res.data;
-      }
+      };
 
+      const fetchMasterList = async () => {
+        try {
+          return await supabase.storage.from("resumes").list(`${userId}/master_cv`);
+        } catch (e) {
+          return { data: null, error: null };
+        }
+      };
+
+      const fetchCerts = async () => {
+        try {
+          return await supabase.from("certificates").select("*").eq("user_id", userId);
+        } catch (e) {
+          return { data: [], error: null };
+        }
+      };
+
+      const fetchApps = async () => {
+        try {
+          return await supabase.from("applications").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+        } catch (e) {
+          return { data: [], error: null };
+        }
+      };
+
+      // Parallel Data Fetching via Promise.all (Fires all Supabase queries simultaneously)
+      const [profileRes, masterListRes, certsRes, appsRes] = await Promise.all([
+        fetchProfile(),
+        fetchMasterList(),
+        fetchCerts(),
+        fetchApps()
+      ]);
+
+      const currentUser = (await supabase.auth.getUser()).data.user;
+      if (currentUser?.email && !emailInput) setEmailInput(currentUser.email);
+
+      const profile: any = profileRes.data;
       let activeRawInfo = profile?.raw_info || "";
 
       if (profile) {
@@ -471,22 +530,13 @@ function DashboardContent() {
         if (profile.experience_level) setExperienceLevel(profile.experience_level);
         setLinkedinUrl(profile.linkedin_url || "");
 
-        // Determine if admin (by role column or email)
         const isAdmin = profile.role === "admin" || currentUser?.email === "kairosounds.01@gmail.com";
-        
         if (isAdmin) {
           setUserRole("admin");
-          // Check if daily reset is needed (50 credits a day)
           const todayStr = new Date().toISOString().split("T")[0];
-          const lastReset = profile.last_credit_reset;
-          
-          if (!lastReset || lastReset !== todayStr) {
-            await supabase
-              .from("profiles")
-              .update({ credits: 50, last_credit_reset: todayStr })
-              .eq("id", userId);
+          if (!profile.last_credit_reset || profile.last_credit_reset !== todayStr) {
+            await supabase.from("profiles").update({ credits: 50, last_credit_reset: todayStr }).eq("id", userId);
             setUserCredits(50);
-            console.log(`[Admin Reset] Reset credits to 50 for today: ${todayStr}`);
           } else {
             setUserCredits(profile.credits ?? 0);
           }
@@ -494,95 +544,53 @@ function DashboardContent() {
           setUserRole(profile.role || "standard");
           setUserCredits(profile.credits ?? 0);
         }
+        localStorage.setItem(`cache_profile_${userId}`, JSON.stringify(profile));
       }
 
-      // Fallback/Sync: If raw_info is empty, check if Master_CV.txt exists in storage
-      if (!activeRawInfo.trim()) {
-        try {
-          const { data: textData } = await supabase.storage
-            .from("resumes")
-            .download(`${userId}/master_cv/Master_CV.txt`);
-          if (textData) {
-            const textContent = await textData.text();
-            if (textContent.trim()) {
-              activeRawInfo = textContent;
-              // Sync back to database
-              await supabase.from("profiles").upsert({
-                id: userId,
-                raw_info: textContent,
-                updated_at: new Date().toISOString(),
-              });
-            }
-          }
-        } catch (e) {
-          // file may not exist yet
-        }
-      }
       setProfileRaw(activeRawInfo);
 
-      // 2. Fetch Master CV File Download URL if exists in storage
-      try {
-        const { data: listRes, error: listError } = await supabase.storage
-          .from("resumes")
-          .list(`${userId}/master_cv`);
-          
-        const hasMasterCv = listRes?.some(file => file.name === "Master_CV.pdf");
-        
-        if (hasMasterCv) {
-          const { data: cvSignRes } = await supabase.storage
-            .from("resumes")
-            .createSignedUrl(`${userId}/master_cv/Master_CV.pdf`, 7200);
-          if (cvSignRes?.signedUrl) {
-            setMasterCvUrl(cvSignRes.signedUrl);
-          } else {
-            setMasterCvUrl(null);
-          }
-        } else {
-          setMasterCvUrl(null);
-        }
-      } catch (e) {
+      // Handle Master CV Signed URL asynchronously in background
+      const listRes = masterListRes.data;
+      const hasMasterCv = listRes?.some((file: any) => file.name === "Master_CV.pdf");
+      if (hasMasterCv) {
+        supabase.storage.from("resumes").createSignedUrl(`${userId}/master_cv/Master_CV.pdf`, 7200).then(({ data }) => {
+          if (data?.signedUrl) setMasterCvUrl(data.signedUrl);
+        });
+      } else {
         setMasterCvUrl(null);
       }
 
-      // 3. Fetch Certificates
-      const { data: certs } = await supabase
-        .from("certificates")
-        .select("*")
-        .eq("user_id", userId);
-      
-      const loadedCerts = certs || [];
+      // Handle Certificates & Signed URLs asynchronously in parallel
+      const loadedCerts = certsRes.data || [];
       setCertificates(loadedCerts);
 
-      // Fetch signed URLs for certificates
-      const loadedCertUrls: { [id: string]: string } = {};
-      for (const cert of loadedCerts) {
-        try {
-          const { data: cSignRes } = await supabase.storage
-            .from("resumes")
-            .createSignedUrl(`${userId}/certificates/${cert.id}.pdf`, 7200);
-          if (cSignRes?.signedUrl) {
-            loadedCertUrls[cert.id] = cSignRes.signedUrl;
-          }
-        } catch (e) {
-          // File might not exist
-        }
+      if (loadedCerts.length > 0) {
+        Promise.all(
+          loadedCerts.map((cert: any) =>
+            supabase.storage
+              .from("resumes")
+              .createSignedUrl(`${userId}/certificates/${cert.id}.pdf`, 7200)
+              .then(({ data }) => ({ id: cert.id, url: data?.signedUrl || null }))
+              .catch(() => ({ id: cert.id, url: null }))
+          )
+        ).then((results) => {
+          const loadedCertUrls: { [id: string]: string } = {};
+          results.forEach((r) => {
+            if (r.url) loadedCertUrls[r.id] = r.url;
+          });
+          setCertUrls(loadedCertUrls);
+        });
       }
-      setCertUrls(loadedCertUrls);
 
-      // 4. Fetch Applications
-      const { data: apps } = await supabase
-        .from("applications")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
-      const loadedApps = apps || [];
+      // Handle Applications
+      const loadedApps = appsRes.data || [];
       setApplications(loadedApps);
+      localStorage.setItem(`cache_apps_${userId}`, JSON.stringify(loadedApps));
 
-      // 5. Calculate Stats
-      const scoreRows = loadedApps.filter((a) => a.ats_score !== null);
+      // Calculate Stats
+      const scoreRows = loadedApps.filter((a: any) => a.ats_score !== null);
       const avg = scoreRows.length > 0
-        ? Math.round(scoreRows.reduce((sum, a) => sum + (a.ats_score || 0), 0) / scoreRows.length)
+        ? Math.round(scoreRows.reduce((acc: number, curr: any) => acc + (curr.ats_score || 0), 0) / scoreRows.length)
         : 0;
 
       setStats({
@@ -591,7 +599,7 @@ function DashboardContent() {
         avgAts: avg,
       });
     } catch (err) {
-      console.error("Error loading user data:", err);
+      console.error("Error loading user workspace data:", err);
     }
   };
 

@@ -65,12 +65,7 @@ export default function PricingTiers() {
   return (
     <div className="min-h-screen py-16 px-4 flex flex-col justify-between">
       <div className="max-w-6xl w-full mx-auto space-y-12">
-        <div className="flex items-center justify-end">
-          <div className="flex items-center gap-2 text-xs tracking-wider text-brand-navy/70 bg-brand-navy/5 border border-brand-navy/10 px-3 py-1 rounded-full">
-            <span className="w-1.5 h-1.5 bg-brand-indigo rounded-full glow-border-brand animate-pulse"></span>
-            CREDITS & LICENSING
-          </div>
-        </div>
+
 
 
         <div className="text-center space-y-4">
