@@ -1989,11 +1989,10 @@ function DashboardContent() {
               </button>
             </div>
 
-            {/* Recent Tailored Applications Preview (Utilizes lower workspace space framelessly) */}
+            {/* Recent Tailored Applications Preview (Clean 60-30-10 Text Layout, No Iconography) */}
             <div className="pt-6 border-t border-slate-200 space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                  <FolderOpen className="w-4 h-4 text-purple-600" />
+                <h3 className="text-sm font-extrabold text-slate-900">
                   Recent Tailored Applications ({applications.length})
                 </h3>
                 {applications.length > 0 && (
@@ -2012,10 +2011,10 @@ function DashboardContent() {
                 </p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {applications.slice(0, 4).map((app) => (
+                  {applications.slice(0, 8).map((app) => (
                     <div 
                       key={app.id}
-                      className="py-3 px-4 border border-slate-200 hover:border-purple-300 hover:bg-slate-50 transition-colors rounded-xl flex items-center justify-between gap-4"
+                      className="py-3.5 px-4 border border-slate-200 hover:border-purple-300 hover:bg-slate-50 transition-colors rounded-xl flex items-center justify-between gap-4"
                     >
                       <div className="min-w-0 space-y-0.5">
                         <div className="text-[10px] text-slate-500 font-mono">
@@ -2031,26 +2030,42 @@ function DashboardContent() {
                             href={app.pdf_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="p-1.5 px-2.5 rounded-lg bg-slate-100 hover:bg-purple-600 hover:text-white text-slate-800 text-[11px] font-semibold transition-colors flex items-center gap-1"
+                            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-purple-600 hover:text-white text-slate-800 text-xs font-bold transition-colors"
                           >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>PDF</span>
+                            PDF
                           </a>
                         )}
                         <button
                           onClick={() => {
                             if (app.pdf_url) window.open(`/editor?pdf=${encodeURIComponent(app.pdf_url)}`, '_blank');
                           }}
-                          className="p-1.5 px-2.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white text-[11px] font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white text-xs font-bold transition-colors cursor-pointer"
                         >
-                          <Zap className="w-3.5 h-3.5" />
-                          <span>Editor</span>
+                          Editor
                         </button>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Workspace & Master Data Status Overview Footer */}
+            <div className="pt-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-600 font-medium">
+              <div>
+                <span className="font-bold text-slate-900">Master CV Status: </span>
+                <span className="text-purple-600 font-semibold">{masterCvUrl ? "Active Master PDF Loaded" : "No PDF Uploaded"}</span>
+              </div>
+              <div>
+                <span className="font-bold text-slate-900">Credentials Vault: </span>
+                <span className="text-purple-600 font-semibold">{stats.certsCount} Verified Credentials</span>
+              </div>
+              <button
+                onClick={() => setActiveTab("mycv")}
+                className="text-purple-600 font-bold hover:underline cursor-pointer"
+              >
+                Manage CV & Vault &rarr;
+              </button>
             </div>
           </div>
         )}
@@ -2336,10 +2351,10 @@ function DashboardContent() {
                       <input
                         type="file"
                         accept=".pdf"
-                        ref={certFileInputRef}
-                        onChange={handleUploadCert}
+                        ref={cvFileInputRef}
+                        onChange={handleParseCvPdf}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                        disabled={uploadingCert}
+                        disabled={parsingCv}
                       />
                       <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
                         <Upload className="w-6 h-6" />
@@ -2354,7 +2369,7 @@ function DashboardContent() {
                       </div>
                       <span className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-purple-700 transition-colors inline-flex items-center gap-2">
                         <Upload className="w-3.5 h-3.5" />
-                        {uploadingCert ? "Uploading..." : "Browse Certificate PDF"}
+                        {parsingCv ? "Parsing..." : "Browse Certificate PDF"}
                       </span>
                     </div>
 
