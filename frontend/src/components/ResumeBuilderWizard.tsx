@@ -382,13 +382,12 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       for (let entry of entries) {
         const { width, height } = entry.contentRect;
         if (width === 0 || height === 0) return;
-        // Scale to height first to fill vertical space
-        let scale = height / 1131;
-        // Fallback to width-based scale if height-based scale causes horizontal overflow
-        if (800 * scale > width * 0.9) {
-          scale = (width * 0.9) / 800;
+        // Scale to height first to fill vertical space, scaled down by 0.75
+        let scale = (height / 1131) * 0.75;
+        if (800 * scale > width * 0.8) {
+          scale = (width * 0.8) / 800;
         }
-        setPreviewScale(Math.max(0.4, Math.min(scale, 1.2)));
+        setPreviewScale(Math.max(0.3, Math.min(scale, 0.75)));
       }
     });
     observer.observe(previewContainerRef.current);
@@ -1036,33 +1035,49 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   };
 
+  // --- Warning Toast Timer Ref ---
+  const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showWarning = (msg: string) => {
+    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    setValidationError(msg);
+    warningTimerRef.current = setTimeout(() => {
+      setValidationError(null);
+    }, 3500);
+  };
+
   // --- Navigation & Validation ---
   const validateStep = (stepIndex: number): boolean => {
     setValidationError(null);
     if (stepIndex === 0) {
-      if (!contact.firstName.trim() || !contact.lastName.trim() || !contact.city.trim() || !contact.postalCode.trim() || !contact.phone.trim() || !contact.email.trim()) {
-        setValidationError("All contact fields are mandatory to proceed.");
+      if (!contact.firstName.trim()) {
+        showWarning("Please fill in your First Name.");
         return false;
       }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(contact.email.trim())) {
-        setValidationError("Please provide a valid email address.");
+      if (!contact.lastName.trim()) {
+        showWarning("Please fill in your Last Name.");
         return false;
       }
-      const strippedPhone = contact.phone.trim().replace(/[\s\-\(\)]/g, '');
-      if (!/^(\+27|0)[1-9]\d{8}$/.test(strippedPhone)) {
-        setValidationError("Please provide a valid South African phone number (e.g. 012 344 5678 or +27 12 344 5678).");
+      if (!contact.city.trim()) {
+        showWarning("Please fill in your City.");
         return false;
       }
-      const postalCodeRegex = /^\d{4}$/;
-      if (!postalCodeRegex.test(contact.postalCode.trim())) {
-        setValidationError("Please provide a valid South African postal code (exactly 4 digits).");
+      if (!contact.postalCode.trim() || !/^\d{4}$/.test(contact.postalCode.trim())) {
+        showWarning("Please fill in a valid 4-digit Postal Code.");
+        return false;
+      }
+      if (!contact.phone.trim() || !/^(\+27|0)[1-9]\d{8}$/.test(contact.phone.trim().replace(/[\s\-\(\)]/g, ''))) {
+        showWarning("Please fill in a valid SA Phone Number (e.g. +27 12 344 5678).");
+        return false;
+      }
+      if (!contact.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email.trim())) {
+        showWarning("Please fill in a valid Email Address.");
         return false;
       }
     } else if (stepIndex === 1) {
       const invalidExp = experiences.find(exp => !exp.employer.trim());
       if (invalidExp) {
-        setValidationError("Please provide an Employer name for all listed experiences.");
+        showWarning("Please fill in the Employer Name for all listed experiences.");
         return false;
       }
     }
@@ -2275,17 +2290,6 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       {/* RIGHT COLUMN: LIVE API PREVIEW SHEET */}
       <div ref={previewContainerRef} className="hidden lg:flex lg:w-[50%] h-full bg-slate-100/80 relative flex-col overflow-hidden border-l-2 border-slate-300">
         
-        {/* Header Indicator */}
-        <div className="w-full bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between z-10 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Live ATS Document Preview</span>
-          </div>
-          <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2.5 py-1 rounded border border-purple-200">
-            Real-time Compilation
-          </span>
-        </div>
-        
         {/* Loading Overlay */}
         {isPreviewLoading && (
           <div className="absolute inset-0 bg-white/40 backdrop-blur-sm z-30 flex items-center justify-center transition-all">
@@ -2300,11 +2304,12 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         {previewHtml ? (
           <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
             <div 
-              className="origin-center transition-transform duration-200"
+              className="origin-center transition-all duration-300"
               style={{
                 width: '800px',
                 height: '1131px',
                 transform: `scale(${previewScale})`,
+                filter: 'blur(3.5px)',
                 flexShrink: 0,
               }}
             >
