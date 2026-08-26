@@ -468,9 +468,93 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   }, [selectedTemplate, isLoaded]);
 
+const generateClientFallbackHtml = (formatData: any, contactData: any, expData: any[], eduData: any[], skillsData: any[], summaryText: string) => {
+  const name = `${contactData.firstName || 'Your'} ${contactData.lastName || 'Name'}`.trim();
+  const email = contactData.email || 'email@example.com';
+  const phone = contactData.phone || '+27 12 344 5678';
+  const location = `${contactData.city || 'City'} ${contactData.postalCode || ''}`.trim();
+  const accent = formatData.accentColor || '#4f46e5';
+  
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; padding: 36px; color: #1e293b; background: #fff; line-height: 1.5; font-size: 13px; margin: 0; min-height: 100vh; box-sizing: border-box; }
+  h1 { font-size: 28px; color: ${accent}; margin: 0 0 4px 0; text-transform: uppercase; font-weight: 800; letter-spacing: -0.5px; }
+  .contact { font-size: 11px; color: #64748b; margin-bottom: 16px; font-weight: 600; display: flex; gap: 12px; }
+  .divider { border-bottom: 2px solid ${accent}; margin-bottom: 20px; }
+  .section-title { font-size: 12px; font-weight: 800; color: ${accent}; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 4px; margin: 20px 0 10px 0; }
+  .job-title { font-weight: 700; color: #0f172a; font-size: 14px; }
+  .job-company { color: #475569; font-style: italic; font-size: 12px; }
+  ul { margin: 6px 0; padding-left: 20px; }
+  li { margin-bottom: 4px; color: #334155; }
+  .badge { display: inline-block; background: ${accent}15; color: ${accent}; font-weight: 700; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin: 3px 4px 3px 0; }
+</style>
+</head>
+<body>
+  <h1>${name}</h1>
+  <div class="contact"><span>${location}</span> • <span>${phone}</span> • <span>${email}</span></div>
+  <div class="divider"></div>
+  
+  <div class="section-title">Professional Summary</div>
+  <p style="color: #334155;">${summaryText || 'Results-driven professional dedicated to delivering high quality technical solutions and operational excellence.'}</p>
+  
+  <div class="section-title">Experience</div>
+  ${expData.length > 0 && expData.some(e => e.title || e.employer) ? expData.filter(e => e.title || e.employer).map(e => `
+    <div style="margin-bottom: 12px;">
+      <div style="display:flex; justify-content:space-between; align-items: baseline;">
+        <span class="job-title">${e.title || 'Job Title'}</span>
+        <span style="font-size:11px; font-weight:600; color:#64748b;">${e.startDate || '2020'} - ${e.current ? 'Present' : (e.endDate || '2023')}</span>
+      </div>
+      <div class="job-company">${e.employer || 'Company Name'} ${e.city ? '• ' + e.city : ''}</div>
+      ${e.description ? `<ul>${e.description.split('\n').filter((l: string) => l.trim()).map((l: string) => `<li>${l}</li>`).join('')}</ul>` : ''}
+    </div>
+  `).join('') : `
+    <div style="margin-bottom: 12px;">
+      <div style="display:flex; justify-content:space-between; align-items: baseline;">
+        <span class="job-title">Software Developer</span>
+        <span style="font-size:11px; font-weight:600; color:#64748b;">2021 - Present</span>
+      </div>
+      <div class="job-company">Tech Corp • Johannesburg</div>
+      <ul><li>Developed web applications and scalable backend APIs.</li></ul>
+    </div>
+  `}
+  
+  <div class="section-title">Education</div>
+  ${eduData.length > 0 && eduData.some(e => e.school || e.degree) ? eduData.filter(e => e.school || e.degree).map(e => `
+    <div style="margin-bottom: 10px;">
+      <div style="display:flex; justify-content:space-between;">
+        <span class="job-title">${e.degree || 'Degree'} ${e.course ? '- ' + e.course : ''}</span>
+        <span style="font-size:11px; color:#64748b;">${e.startDate || '2017'} - ${e.endDate || '2021'}</span>
+      </div>
+      <div class="job-company">${e.school || 'University Name'}</div>
+    </div>
+  `).join('') : `
+    <div style="margin-bottom: 10px;">
+      <div style="display:flex; justify-content:space-between;">
+        <span class="job-title">Bachelor of Science in Information Technology</span>
+        <span style="font-size:11px; color:#64748b;">2017 - 2021</span>
+      </div>
+      <div class="job-company">University of South Africa</div>
+    </div>
+  `}
+  
+  <div class="section-title">Skills</div>
+  <div>
+    ${skillsData.filter(s => s.name).length > 0 ? skillsData.filter(s => s.name).map(s => `<span class="badge">${s.name}</span>`).join('') : '<span class="badge">Problem Solving</span><span class="badge">Communication</span><span class="badge">Team Leadership</span>'}
+  </div>
+</body>
+</html>`;
+};
+
   // --- Live Preview API Hook ---
   useEffect(() => {
     if (!isLoaded) return;
+
+    // Immediately render instant client fallback so preview is NEVER blank
+    const fallbackHtml = generateClientFallbackHtml(format, contact, experiences, educations, skills, summary);
+    setPreviewHtml((prev) => prev || fallbackHtml);
 
     const timeoutId = setTimeout(async () => {
       setIsPreviewLoading(true);
@@ -519,9 +603,12 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         });
         if (res?.html_content) {
           setPreviewHtml(res.html_content);
+        } else {
+          setPreviewHtml(generateClientFallbackHtml(format, contact, experiences, educations, skills, summary));
         }
       } catch (e) {
         console.warn("Failed to load live preview", e);
+        setPreviewHtml(generateClientFallbackHtml(format, contact, experiences, educations, skills, summary));
       } finally {
         setIsPreviewLoading(false);
       }
