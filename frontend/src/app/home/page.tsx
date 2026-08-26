@@ -1390,9 +1390,9 @@ function DashboardContent() {
             job_description: sRes.job_description,
             requirements: sRes.requirements
           });
-          setBatchLogs((prev) => [...prev, `✅ Analyzed: ${sRes.job_title} at ${sRes.company_name}`]);
+          setBatchLogs((prev) => [...prev, `[OK] Analyzed: ${sRes.job_title} at ${sRes.company_name}`]);
         } catch (e: any) {
-          setBatchLogs((prev) => [...prev, `❌ Failed to analyze: ${url.slice(0, 40)}... (${e.message})`]);
+          setBatchLogs((prev) => [...prev, `[Error] Failed to analyze: ${url.slice(0, 40)}... (${e.message})`]);
         }
       }
       
@@ -1523,14 +1523,14 @@ function DashboardContent() {
             cl_json: clJson
           });
 
-          setBatchLogs((prev) => [...prev, `✅ [Job ${i + 1}] Finished and logged into archive.`]);
+          setBatchLogs((prev) => [...prev, `[OK] [Job ${i + 1}] Finished and logged into archive.`]);
         } catch (e: any) {
           if (e.message === "INSUFFICIENT_CREDITS") {
-            setBatchLogs((prev) => [...prev, `❌ [Job ${i + 1}] Failed: Insufficient credits to generate document.`]);
+            setBatchLogs((prev) => [...prev, `[Error] [Job ${i + 1}] Failed: Insufficient credits to generate document.`]);
             triggerToast("Insufficient credits! Halting autopilot run.", "error");
             break; // Stop processing the rest of the batch
           } else {
-            setBatchLogs((prev) => [...prev, `❌ [Job ${i + 1}] Failed: ${e.message}`]);
+            setBatchLogs((prev) => [...prev, `[Error] [Job ${i + 1}] Failed: ${e.message}`]);
           }
         }
 
@@ -2852,7 +2852,7 @@ function DashboardContent() {
                     placeholder="e.g. Emphasise my cloud engineering background, keep tone assertive, prioritise AWS and Python skills..."
                     className="w-full h-28 px-3.5 py-2.5 bg-white border border-brand-navy/15 rounded-xl text-xs text-brand-deep placeholder-brand-navy/30 focus:outline-none focus:border-brand-indigo resize-none"
                   />
-                  <p className="text-[11px] text-brand-indigo/80 font-medium">⚡ The AI strictly follows these instructions during single and batch generation runs.</p>
+                  <p className="text-[11px] text-purple-700 font-medium">The AI strictly follows these instructions during single and batch generation runs.</p>
                 </div>
               </div>
             )}
