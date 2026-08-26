@@ -312,8 +312,8 @@ class PreviewRequest(BaseModel):
     template_name: str
 
 @app.post("/api/preview-html")
-@limiter.limit("30/minute")
-async def preview_html(payload: PreviewRequest, request: Request, user: dict = Depends(verify_token)):
+@limiter.limit("60/minute")
+async def preview_html(payload: PreviewRequest, request: Request):
     logger.info(f"API Preview HTML request received for: {payload.template_name}")
     try:
         html_content = inject_json_to_html(payload.json_data, payload.template_name)

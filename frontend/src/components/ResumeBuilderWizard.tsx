@@ -2312,7 +2312,6 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
                 width: '800px',
                 height: '1131px',
                 transform: `scale(${previewScale})`,
-                filter: 'blur(3.5px)',
                 flexShrink: 0,
               }}
             >
