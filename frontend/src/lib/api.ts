@@ -5,13 +5,19 @@ export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhos
 // Intercept all API calls in this file to handle expired tokens globally
 const originalFetch = typeof window !== 'undefined' ? window.fetch : globalThis.fetch;
 const fetchInterceptor = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  const res = await originalFetch(input, init);
-  if (res.status === 401 && typeof window !== 'undefined') {
-    await supabase.auth.signOut().catch(() => {});
-    window.location.href = '/login?expired=true';
-    throw new Error('Session expired. Redirecting to login...');
+  try {
+    const res = await originalFetch(input, init);
+    if (res.status === 401 && typeof window !== 'undefined') {
+      await supabase.auth.signOut().catch(() => {});
+      window.location.href = '/login?expired=true';
+      throw new Error('Session expired. Redirecting to login...');
+    }
+    return res;
+  } catch (err: any) {
+    if (err?.message?.includes('Session expired')) throw err;
+    console.warn(`[API Fetch Warning] Could not reach API endpoint (${input}):`, err?.message || err);
+    throw err;
   }
-  return res;
 };
 const fetch = fetchInterceptor;
 

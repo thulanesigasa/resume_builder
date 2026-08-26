@@ -513,12 +513,15 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           _wizard_format: format,
         };
 
-        const res = await api.previewHtml(format.template, dummyData);
+        const res = await api.previewHtml(format.template, dummyData).catch((err) => {
+          console.warn("[Preview HTML] API endpoint unreachable or restarting:", err?.message || err);
+          return null;
+        });
         if (res?.html_content) {
           setPreviewHtml(res.html_content);
         }
       } catch (e) {
-        console.error("Failed to load live preview", e);
+        console.warn("Failed to load live preview", e);
       } finally {
         setIsPreviewLoading(false);
       }
