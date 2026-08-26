@@ -36,7 +36,7 @@ function DashboardContent() {
   const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"profile" | "generate" | "batch" | "archive" | "builder">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "mycv" | "parameters" | "generate" | "batch" | "archive" | "builder">("profile");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [deleteCertId, setDeleteCertId] = useState<string | null>(null);
 
@@ -1617,272 +1617,363 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Workspace Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-          {/* Left Panel Sidebar Settings */}
-          <div className="glass-panel p-6 rounded-xl space-y-6 lg:sticky lg:top-24">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-brand-navy flex items-center gap-2 border-b border-brand-navy/15 pb-3">
-              <Settings className="w-4 h-4 text-brand-indigo" />
-              Parameters
-            </h3>
+        {/* Workspace Layout with Spacious Left Navigation Side Panel */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Left Side Navigation Panel (Spacious Vertical Sidebar) */}
+          <div className="lg:col-span-3 lg:sticky lg:top-24 space-y-4">
+            <div className="glass-panel p-4 rounded-xl space-y-4 shadow-sm border border-brand-navy/15">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-brand-navy/70 px-2 flex items-center gap-2 border-b border-brand-navy/10 pb-2">
+                <Settings className="w-3.5 h-3.5 text-brand-indigo" />
+                Navigation & Settings
+              </h3>
 
-            {/* Template selections */}
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between items-end mb-2">
-                  <label className="block text-[10px] font-semibold text-brand-navy/70 uppercase">
-                    Resume Template
-                  </label>
-                  <button onClick={() => handlePreview(selectedResume, 'Resume')} className="text-[10px] text-brand-indigo hover:underline flex items-center gap-1">
-                    <Eye className="w-3 h-3" /> Preview
-                  </button>
-                </div>
-                <select
-                  value={selectedResume}
-                  onChange={(e) => setSelectedResume(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-brand-navy/15 rounded-lg text-xs text-brand-deep focus:outline-none focus:border-brand-indigo"
+              {/* Group 1: PROFILE & DOCUMENTS */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-widest px-2 block mb-1">
+                  Profile & Documents
+                </span>
+                <button
+                  onClick={() => setActiveTab("profile")}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === "profile"
+                      ? "bg-brand-indigo text-white shadow-sm"
+                      : "text-brand-deep hover:bg-brand-navy/5"
+                  }`}
                 >
-                  <option value="ui_ux_pro_max_resume.html">UI/UX Pro Max (Tailored)</option>
-                  <option value="ats_resume_template.html">ATS Clean Blueprint</option>
-                  <option value="david_turner_resume.html">David Turner (Modern Classic)</option>
-                  <option value="amy_stein_resume.html">Amy Stein (Elegant Design)</option>
-                  <option value="ava_martinez_resume.html">Ava Martinez (Minimalist)</option>
-                  <option value="base_resume_template_black.html">Base Blueprint (Traditional)</option>
-                  <option value="noma_resume_template_black.html">Noma Clean (Modern)</option>
-                  <option value="note_resume_template_black.html">Note Serif (Classic)</option>
-                  <option value="page_resume_template_black.html">Page Minimalist (Modern Border)</option>
-                </select>
-              </div>
+                  <User className="w-4 h-4" />
+                  My Profile
+                </button>
 
-              <div>
-                <div className="flex justify-between items-end mb-2">
-                  <label className="block text-[10px] font-semibold text-brand-navy/70 uppercase">
-                    Cover Letter Template
-                  </label>
-                  <button onClick={() => handlePreview(selectedCl, 'Cover Letter')} className="text-[10px] text-brand-indigo hover:underline flex items-center gap-1">
-                    <Eye className="w-3 h-3" /> Preview
-                  </button>
-                </div>
-                <select
-                  value={selectedCl}
-                  onChange={(e) => setSelectedCl(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-brand-navy/15 rounded-lg text-xs text-brand-deep focus:outline-none focus:border-brand-indigo"
+                <button
+                  onClick={() => setActiveTab("mycv")}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === "mycv"
+                      ? "bg-brand-indigo text-white shadow-sm"
+                      : "text-brand-deep hover:bg-brand-navy/5"
+                  }`}
                 >
-                  <option value="caleb_foster_cover_letter.html">Caleb Foster (Modern Bold)</option>
-                  <option value="takanori_ito_cover_letter.html">Takanori Ito (Formal)</option>
-                </select>
+                  <FileText className="w-4 h-4" />
+                  My CV & Documents
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("parameters")}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === "parameters"
+                      ? "bg-brand-indigo text-white shadow-sm"
+                      : "text-brand-deep hover:bg-brand-navy/5"
+                  }`}
+                >
+                  <Settings className="w-4 h-4" />
+                  Parameters & Templates
+                </button>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-semibold text-brand-navy/70 uppercase mb-2">
-                  AI Focus Instructions
-                </label>
-                <textarea
-                  value={customInstructions}
-                  onChange={(e) => setCustomInstructions(e.target.value)}
-                  placeholder="e.g. Emphasise my cloud engineering background, keep tone assertive, prioritise AWS and Python skills..."
-                  className="w-full h-24 px-3 py-2 bg-white border border-brand-navy/15 rounded-lg text-xs text-brand-deep placeholder-brand-navy/30 focus:outline-none focus:border-brand-indigo resize-none"
-                />
-                <p className="text-[9px] text-brand-indigo/70 mt-1">⚡ The AI strictly follows these instructions — be specific for best results.</p>
+              {/* Group 2: AI APPLICATION TOOLS */}
+              <div className="space-y-1 pt-2 border-t border-brand-navy/10">
+                <span className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-widest px-2 block mb-1">
+                  AI Tailoring Tools
+                </span>
+                <button
+                  onClick={() => setActiveTab("generate")}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === "generate"
+                      ? "bg-brand-indigo text-white shadow-sm"
+                      : "text-brand-deep hover:bg-brand-navy/5"
+                  }`}
+                >
+                  <Zap className="w-4 h-4" />
+                  Tailor (Single Job)
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("batch")}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === "batch"
+                      ? "bg-brand-indigo text-white shadow-sm"
+                      : "text-brand-deep hover:bg-brand-navy/5"
+                  }`}
+                >
+                  <Briefcase className="w-4 h-4" />
+                  Batch Autopilot
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("builder")}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === "builder"
+                      ? "bg-brand-indigo text-white shadow-sm"
+                      : "text-brand-deep hover:bg-brand-navy/5"
+                  }`}
+                >
+                  <Construction className="w-4 h-4" />
+                  Resume Builder
+                </button>
               </div>
 
-
+              {/* Group 3: HISTORY */}
+              <div className="space-y-1 pt-2 border-t border-brand-navy/10">
+                <span className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-widest px-2 block mb-1">
+                  Archives
+                </span>
+                <button
+                  onClick={() => setActiveTab("archive")}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === "archive"
+                      ? "bg-brand-indigo text-white shadow-sm"
+                      : "text-brand-deep hover:bg-brand-navy/5"
+                  }`}
+                >
+                  <FolderOpen className="w-4 h-4" />
+                  Saved Archives
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Right Panel Main Tabs */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Navigation Tabs */}
-            <div className="flex border-b border-brand-navy/15 gap-6">
-              {[
-                { id: "profile", label: "My Profile & CV" },
-                { id: "builder", label: "Resume Builder (Coming Soon)" },
-                { id: "generate", label: "Tailor (Single Job)" },
-                { id: "batch", label: "Batch Autopilot" },
-                { id: "archive", label: "Saved Archives" },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`pb-3 text-sm font-medium transition-all relative ${
-                    activeTab === tab.id
-                      ? "text-brand-deep font-semibold"
-                      : "text-brand-navy/70 hover:text-brand-deep"
-                  }`}
-                >
-                  {tab.label}
-                  {activeTab === tab.id && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand-indigo"></span>
-                  )}
-                </button>
-              ))}
-            </div>
+          {/* Main Workspace Content Area (Spacious 9/12 Columns) */}
+          <div className="lg:col-span-9 space-y-6">
 
-            {/* TAB A: PROFILE & MASTER DOCUMENTS */}
+            {/* TAB 1: MY PROFILE */}
             {activeTab === "profile" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="glass-panel p-6 rounded-xl space-y-6">
-                  <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
-                    <User className="w-5 h-5 text-brand-indigo" />
-                    Personal Information
-                  </h3>
+              <div className="glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-3xl">
+                <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
+                  <User className="w-5 h-5 text-brand-indigo" />
+                  Personal Information & Profile Settings
+                </h3>
 
-                  <div className="space-y-4">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs text-brand-navy/70 mb-1">Username</label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 glass-input text-sm"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-brand-navy/70 mb-1">Username</label>
+                      <label className="block text-xs text-brand-navy/70 mb-1">First Name</label>
                       <input
                         type="text"
                         className="w-full px-3 py-2 glass-input text-sm"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs text-brand-navy/70 mb-1">First Name</label>
-                        <input
-                          type="text"
-                          className="w-full px-3 py-2 glass-input text-sm"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-brand-navy/70 mb-1">Last Name</label>
-                        <input
-                          type="text"
-                          className="w-full px-3 py-2 glass-input text-sm"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
-                        />
-                      </div>
-                    </div>
                     <div>
-                      <label className="block text-xs text-brand-navy/70 mb-1">Mobile Number</label>
+                      <label className="block text-xs text-brand-navy/70 mb-1">Last Name</label>
                       <input
                         type="text"
                         className="w-full px-3 py-2 glass-input text-sm"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
                       />
                     </div>
-                    
-                    <div className="pt-2 border-t border-brand-navy/15">
-                      <h4 className="text-xs font-bold text-brand-navy/70 uppercase mb-3">Professional Details</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <label className="block text-xs text-brand-navy/70 mb-1">Target Job Title</label>
-                          <input
-                            type="text"
-                            className="w-full px-3 py-2 glass-input text-sm"
-                            value={targetJobTitle}
-                            onChange={(e) => setTargetJobTitle(e.target.value)}
-                            placeholder="e.g. Software Engineer"
-                          />
-                        </div>
-                        <div className="relative">
-                          <label className="block text-xs text-brand-navy/70 mb-1">Experience Level</label>
-                          <button
-                            type="button"
-                            onClick={() => setShowExperienceDropdown(!showExperienceDropdown)}
-                            className="w-full px-3 py-2 glass-input text-sm flex justify-between items-center text-left"
-                          >
-                            <span>{experienceOptions.find(o => o.value === experienceLevel)?.label || "Select Level"}</span>
-                            <ChevronDown className={`h-4 w-4 text-brand-navy/40 transition-transform ${showExperienceDropdown ? 'rotate-180' : ''}`} />
-                          </button>
-
-                          {showExperienceDropdown && (
-                            <>
-                              <div 
-                                className="fixed inset-0 z-10"
-                                onClick={() => setShowExperienceDropdown(false)}
-                              ></div>
-                              <div className="absolute z-20 w-full mt-1 bg-white border border-brand-navy/10 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2">
-                                {experienceOptions.map((opt) => (
-                                  <button
-                                    key={opt.value}
-                                    type="button"
-                                    onClick={() => {
-                                      setExperienceLevel(opt.value);
-                                      setShowExperienceDropdown(false);
-                                    }}
-                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-brand-navy/5 transition-colors ${experienceLevel === opt.value ? 'bg-brand-indigo/5 text-brand-indigo font-medium' : 'text-brand-deep'}`}
-                                  >
-                                    {opt.label}
-                                  </button>
-                                ))}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <label className="block text-xs text-brand-navy/70 mb-1">LinkedIn URL</label>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-brand-navy/70 mb-1">Mobile Number</label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 glass-input text-sm"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="pt-2 border-t border-brand-navy/15">
+                    <h4 className="text-xs font-bold text-brand-navy/70 uppercase mb-3">Professional Details</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-xs text-brand-navy/70 mb-1">Target Job Title</label>
                         <input
-                          type="url"
+                          type="text"
                           className="w-full px-3 py-2 glass-input text-sm"
-                          value={linkedinUrl}
-                          onChange={(e) => setLinkedinUrl(e.target.value)}
-                          placeholder="https://linkedin.com/in/..."
+                          value={targetJobTitle}
+                          onChange={(e) => setTargetJobTitle(e.target.value)}
+                          placeholder="e.g. Software Engineer"
                         />
                       </div>
-                    </div>
-                    
-                    <div className="pt-2 border-t border-brand-navy/15">
-                      <label className="block text-xs text-brand-navy/70 mb-1">Account Email Address</label>
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <input
-                          type="email"
-                          className="flex-1 px-3 py-2 glass-input text-sm"
-                          value={emailInput}
-                          onChange={(e) => setEmailInput(e.target.value)}
-                        />
+                      <div className="relative">
+                        <label className="block text-xs text-brand-navy/70 mb-1">Experience Level</label>
                         <button
-                          onClick={promptChangeEmail}
-                          disabled={changingEmail || emailInput === user?.email}
-                          className="px-4 py-2 btn-primary text-xs disabled:opacity-50 sm:whitespace-nowrap"
+                          type="button"
+                          onClick={() => setShowExperienceDropdown(!showExperienceDropdown)}
+                          className="w-full px-3 py-2 glass-input text-sm flex justify-between items-center text-left"
                         >
-                          {changingEmail ? "Sending..." : "Change Email"}
+                          <span>{experienceOptions.find(o => o.value === experienceLevel)?.label || "Select Level"}</span>
+                          <ChevronDown className={`h-4 w-4 text-brand-navy/40 transition-transform ${showExperienceDropdown ? 'rotate-180' : ''}`} />
                         </button>
+
+                        {showExperienceDropdown && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-10"
+                              onClick={() => setShowExperienceDropdown(false)}
+                            ></div>
+                            <div className="absolute z-20 w-full mt-1 bg-white border border-brand-navy/10 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+                              {experienceOptions.map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setExperienceLevel(opt.value);
+                                    setShowExperienceDropdown(false);
+                                  }}
+                                  className={`w-full text-left px-4 py-2 text-sm hover:bg-brand-navy/5 transition-colors ${experienceLevel === opt.value ? 'bg-brand-indigo/5 text-brand-indigo font-medium' : 'text-brand-deep'}`}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
                       </div>
-                      <p className="text-[10px] text-brand-navy/50 mt-1">Changing your email requires verifying links sent to both your old and new inboxes.</p>
                     </div>
+                    <div className="mt-4">
+                      <label className="block text-xs text-brand-navy/70 mb-1">LinkedIn URL</label>
+                      <input
+                        type="url"
+                        className="w-full px-3 py-2 glass-input text-sm"
+                        value={linkedinUrl}
+                        onChange={(e) => setLinkedinUrl(e.target.value)}
+                        placeholder="https://linkedin.com/in/..."
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="pt-2 border-t border-brand-navy/15">
+                    <label className="block text-xs text-brand-navy/70 mb-1">Account Email Address</label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="email"
+                        className="flex-1 px-3 py-2 glass-input text-sm"
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                      />
+                      <button
+                        onClick={promptChangeEmail}
+                        disabled={changingEmail || emailInput === user?.email}
+                        className="px-4 py-2 btn-primary text-xs disabled:opacity-50 sm:whitespace-nowrap"
+                      >
+                        {changingEmail ? "Sending..." : "Change Email"}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-brand-navy/50 mt-1">Changing your email requires verifying links sent to both your old and new inboxes.</p>
+                  </div>
+
+                  <div className="pt-2 border-t border-brand-navy/15">
+                    <label className="block text-xs text-brand-navy/70 mb-1">Account Security</label>
                     <button
-                      onClick={handleUpdateProfile}
-                      disabled={savingProfile}
-                      className="w-full py-2 btn-secondary text-sm flex items-center justify-center gap-2"
+                      type="button"
+                      onClick={() => router.push("/update-password")}
+                      className="w-full py-2 border border-brand-indigo/30 text-brand-indigo hover:bg-brand-indigo/5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-2"
                     >
-                      <Save className="w-4 h-4 text-brand-indigo" />
-                      {savingProfile ? "Saving..." : "Update Profile Info"}
+                      <Key className="w-4 h-4 text-brand-indigo" />
+                      Update Account Password
                     </button>
                   </div>
 
-                  <div className="pt-4 border-t border-brand-navy/15">
-                    <h4 className="text-sm font-bold text-brand-deep mb-2">Master CV Text Data</h4>
-                    <p className="text-xs text-brand-navy/70 mb-4">
-                      This represents your core background resume text. AI will use it as base data.
-                    </p>
-                    <textarea
-                      value={profileRaw}
-                      onChange={(e) => setProfileRaw(e.target.value)}
-                      className="w-full h-48 px-3 py-2 glass-input text-xs"
-                      placeholder="Paste your general resume experience details..."
-                    />
+                  <button
+                    onClick={handleUpdateProfile}
+                    disabled={savingProfile}
+                    className="w-full py-2.5 btn-primary text-sm flex items-center justify-center gap-2 mt-4"
+                  >
+                    <Save className="w-4 h-4 text-white" />
+                    {savingProfile ? "Saving..." : "Update Profile Info"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: MY CV & DOCUMENTS */}
+            {activeTab === "mycv" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="glass-panel p-6 rounded-xl space-y-6">
+                  <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
+                    <Upload className="w-5 h-5 text-brand-indigo" />
+                    Load Master CV & Documents
+                  </h3>
+
+                  <div className="space-y-4">
+                    <div className="p-4 border border-dashed border-brand-navy/20 rounded-xl bg-brand-navy/[0.01] hover:bg-brand-navy/[0.03] transition-colors relative flex flex-col items-center justify-center text-center">
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        ref={cvFileInputRef}
+                        onChange={handleParseCvPdf}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={parsingCv}
+                      />
+                      <FileText className="w-8 h-8 text-brand-indigo mb-2" />
+                      <span className="text-xs font-semibold text-brand-deep">Parse Master CV from PDF</span>
+                      <span className="text-[10px] text-brand-navy/60 mt-1">Upload PDF to overwrite text history</span>
+                      {parsingCv && <span className="text-xs text-brand-indigo animate-pulse mt-2">Reading PDF text...</span>}
+                    </div>
+
+                    <div className="flex items-center gap-4 text-xs font-semibold text-brand-navy/40">
+                      <hr className="flex-1 border-brand-navy/10" />
+                      <span>OR</span>
+                      <hr className="flex-1 border-brand-navy/10" />
+                    </div>
+
                     <button
-                      onClick={handleUpdateMasterCvText}
-                      disabled={savingProfile}
-                      className="w-full py-2 btn-secondary text-sm mt-3 flex items-center justify-center gap-2"
+                      onClick={() => { localStorage.removeItem("resume_wizard_draft"); setActiveTab("builder"); }}
+                      className="w-full py-3 border border-brand-indigo/30 rounded-xl bg-brand-indigo/[0.02] hover:bg-brand-indigo/[0.05] transition-colors flex flex-col items-center justify-center text-center group"
                     >
-                      <Save className="w-4 h-4 text-brand-indigo" />
-                      Save Master CV Text
+                      <Plus className="w-6 h-6 text-brand-indigo mb-1 group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-semibold text-brand-deep">Create from Scratch</span>
+                      <span className="text-[10px] text-brand-navy/60 mt-0.5">Use our interactive builder to write your resume</span>
                     </button>
+
+                    {/* Master CV File details preview/download */}
+                    {masterCvUrl && (
+                      <div className="p-3.5 rounded-lg bg-brand-navy/5 border border-brand-navy/10 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4.5 h-4.5 text-brand-indigo" />
+                          <span className="text-xs font-bold text-brand-deep">Active Master CV PDF</span>
+                        </div>
+                        <a
+                          href={masterCvUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1 px-2.5 btn-secondary text-[10px] font-bold flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3 text-brand-indigo" />
+                          Download
+                        </a>
+                      </div>
+                    )}
+
+                    <div className="pt-4 border-t border-brand-navy/15">
+                      <h4 className="text-sm font-bold text-brand-deep mb-2">Master CV Text Data</h4>
+                      <p className="text-xs text-brand-navy/70 mb-4">
+                        This represents your core background resume text. AI will use it as base data.
+                      </p>
+                      <textarea
+                        value={profileRaw}
+                        onChange={(e) => setProfileRaw(e.target.value)}
+                        className="w-full h-48 px-3 py-2 glass-input text-xs"
+                        placeholder="Paste your general resume experience details..."
+                      />
+                      <button
+                        onClick={handleUpdateMasterCvText}
+                        disabled={savingProfile}
+                        className="w-full py-2 btn-secondary text-sm mt-3 flex items-center justify-center gap-2"
+                      >
+                        <Save className="w-4 h-4 text-brand-indigo" />
+                        Save Master CV Text
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 <div className="glass-panel p-6 rounded-xl space-y-6">
                   <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
-                    <Upload className="w-5 h-5 text-brand-indigo" />
-                    Load CV & Certificates
+                    <Award className="w-5 h-5 text-brand-indigo" />
+                    Credentials & Certificates Vault
                   </h3>
 
                   <div className="space-y-4">
@@ -2240,6 +2331,89 @@ function DashboardContent() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: PARAMETERS & TEMPLATES SETTINGS */}
+            {activeTab === "parameters" && (
+              <div className="glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-3xl">
+                <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-brand-indigo" />
+                  Parameters & AI Template Settings
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Resume Template Selection */}
+                  <div className="space-y-2 p-4 bg-brand-navy/[0.02] border border-brand-navy/10 rounded-xl">
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-xs font-bold text-brand-deep uppercase">
+                        Resume Template
+                      </label>
+                      <button 
+                        type="button"
+                        onClick={() => handlePreview(selectedResume, 'Resume')} 
+                        className="text-xs text-brand-indigo hover:underline flex items-center gap-1 font-semibold"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> Live Preview
+                      </button>
+                    </div>
+                    <select
+                      value={selectedResume}
+                      onChange={(e) => setSelectedResume(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-brand-navy/15 rounded-lg text-xs font-medium text-brand-deep focus:outline-none focus:border-brand-indigo"
+                    >
+                      <option value="ui_ux_pro_max_resume.html">UI/UX Pro Max (Tailored)</option>
+                      <option value="ats_resume_template.html">ATS Clean Blueprint</option>
+                      <option value="david_turner_resume.html">David Turner (Modern Classic)</option>
+                      <option value="amy_stein_resume.html">Amy Stein (Elegant Design)</option>
+                      <option value="ava_martinez_resume.html">Ava Martinez (Minimalist)</option>
+                      <option value="base_resume_template_black.html">Base Blueprint (Traditional)</option>
+                      <option value="noma_resume_template_black.html">Noma Clean (Modern)</option>
+                      <option value="note_resume_template_black.html">Note Serif (Classic)</option>
+                      <option value="page_resume_template_black.html">Page Minimalist (Modern Border)</option>
+                    </select>
+                    <p className="text-[10px] text-brand-navy/60">Selected layout format applied during single and batch resume generation.</p>
+                  </div>
+
+                  {/* Cover Letter Template Selection */}
+                  <div className="space-y-2 p-4 bg-brand-navy/[0.02] border border-brand-navy/10 rounded-xl">
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-xs font-bold text-brand-deep uppercase">
+                        Cover Letter Template
+                      </label>
+                      <button 
+                        type="button"
+                        onClick={() => handlePreview(selectedCl, 'Cover Letter')} 
+                        className="text-xs text-brand-indigo hover:underline flex items-center gap-1 font-semibold"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> Live Preview
+                      </button>
+                    </div>
+                    <select
+                      value={selectedCl}
+                      onChange={(e) => setSelectedCl(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-brand-navy/15 rounded-lg text-xs font-medium text-brand-deep focus:outline-none focus:border-brand-indigo"
+                    >
+                      <option value="caleb_foster_cover_letter.html">Caleb Foster (Modern Bold)</option>
+                      <option value="takanori_ito_cover_letter.html">Takanori Ito (Formal)</option>
+                    </select>
+                    <p className="text-[10px] text-brand-navy/60">Selected layout format applied during cover letter compilation.</p>
+                  </div>
+                </div>
+
+                {/* AI Focus Instructions */}
+                <div className="space-y-2 pt-4 border-t border-brand-navy/15">
+                  <label className="block text-xs font-bold text-brand-deep uppercase mb-1">
+                    AI Focus & Custom Tailoring Instructions
+                  </label>
+                  <textarea
+                    value={customInstructions}
+                    onChange={(e) => setCustomInstructions(e.target.value)}
+                    placeholder="e.g. Emphasise my cloud engineering background, keep tone assertive, prioritise AWS and Python skills..."
+                    className="w-full h-28 px-3.5 py-2.5 bg-white border border-brand-navy/15 rounded-xl text-xs text-brand-deep placeholder-brand-navy/30 focus:outline-none focus:border-brand-indigo resize-none"
+                  />
+                  <p className="text-[11px] text-brand-indigo/80 font-medium">⚡ The AI strictly follows these instructions during single and batch generation runs.</p>
                 </div>
               </div>
             )}
