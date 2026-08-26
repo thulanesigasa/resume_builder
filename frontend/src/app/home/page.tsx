@@ -39,7 +39,7 @@ function DashboardContent() {
   const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"profile" | "mycv" | "parameters" | "generate" | "batch" | "archive" | "builder">("profile");
+  const [activeTab, setActiveTab] = useState<"welcome" | "profile" | "mycv" | "parameters" | "generate" | "batch" | "archive" | "builder">("welcome");
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [settingsSubmenuOpen, setSettingsSubmenuOpen] = useState<boolean>(true);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
@@ -1592,6 +1592,21 @@ function DashboardContent() {
             <div className="flex flex-col gap-2 items-center py-2">
               <button
                 type="button"
+                onClick={() => setActiveTab("welcome")}
+                title="Welcome Overview"
+                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group cursor-pointer ${
+                  activeTab === "welcome"
+                    ? "bg-brand-indigo text-white shadow-md scale-110"
+                    : "bg-slate-50 text-slate-700 hover:bg-brand-indigo/10 hover:text-brand-indigo hover:scale-110"
+                }`}
+              >
+                <Globe className="w-5 h-5" />
+              </button>
+
+              <hr className="w-8 border-brand-navy/10 my-1" />
+
+              <button
+                type="button"
                 onClick={() => setActiveTab("profile")}
                 title="My Profile"
                 className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group cursor-pointer ${
@@ -1688,6 +1703,18 @@ function DashboardContent() {
           ) : (
             /* EXPANDED MODE: Full Menu with Categories & Sub-items */
             <div className="space-y-4">
+
+              <button
+                onClick={() => setActiveTab("welcome")}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "welcome"
+                    ? "bg-brand-indigo text-white shadow-sm"
+                    : "text-brand-deep hover:bg-brand-navy/5"
+                }`}
+              >
+                <Globe className="w-4 h-4" />
+                Welcome Overview
+              </button>
               
               {/* SETTINGS MENU GROUP */}
               <div className="space-y-1">
@@ -1862,38 +1889,139 @@ function DashboardContent() {
 
       {/* Main Workspace Container (With Left Padding for Fixed Sidebar) */}
       <main className={`flex-1 ${activeTab === 'builder' ? 'max-w-[1700px]' : 'max-w-7xl'} w-full mx-auto p-6 md:p-8 space-y-8 transition-all duration-300 ${sidebarCollapsed ? "pl-20" : "pl-72"}`}>
-        
-        {/* Simple Stats Overview Text Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 py-3.5 px-5 bg-white rounded-xl border border-brand-navy/15 shadow-2xs text-xs">
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-slate-600">
-            <span className="flex items-center gap-2 font-semibold">
-              <FolderOpen className="w-4 h-4 text-brand-indigo" />
-              <span className="font-black text-brand-deep text-sm">{stats.appsCount}</span> Tailored Applications
-            </span>
-            <span className="text-slate-300 hidden sm:inline">•</span>
-            <span className="flex items-center gap-2 font-semibold">
-              <Award className="w-4 h-4 text-brand-indigo" />
-              <span className="font-black text-brand-deep text-sm">{stats.certsCount}</span> Loaded Credentials
-            </span>
-            <span className="text-slate-300 hidden sm:inline">•</span>
-            <span className="flex items-center gap-2 font-semibold">
-              <BarChart3 className="w-4 h-4 text-brand-indigo" />
-              <span className="font-black text-brand-deep text-sm">{stats.avgAts}%</span> Avg ATS Match
-            </span>
-          </div>
 
-          <div className="text-[11px] text-brand-navy/50 font-medium hidden md:block">
-            ⚡ Workspace Active
+        {/* TAB 0: WELCOME OVERVIEW (DEFAULT LANDING PAGE ON LOGIN) */}
+        {activeTab === "welcome" && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-150 ease-out w-full">
+            
+            {/* Frameless Hero Welcome Section */}
+            <div className="space-y-2 border-b border-brand-navy/15 pb-6">
+              <h2 className="text-3xl font-black text-brand-deep tracking-tight">
+                Welcome back, {firstName || username || user?.email?.split("@")[0]}
+              </h2>
+              <p className="text-sm text-brand-navy/70 max-w-2xl leading-relaxed">
+                Select an option below to start compiling tailored resumes, managing master documents, or setting up bulk application workflows.
+              </p>
+            </div>
+
+            {/* Clean Frameless Quick Action Grid (No Logos, No Card Div Boxes) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-2">
+              <div 
+                onClick={() => setActiveTab("generate")}
+                className="space-y-3 cursor-pointer group"
+              >
+                <h3 className="text-lg font-bold text-brand-deep group-hover:text-brand-indigo transition-colors flex items-center gap-2">
+                  Tailor Resume (Single Job)
+                  <span className="text-brand-indigo opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">&rarr;</span>
+                </h3>
+                <p className="text-xs text-brand-navy/70 leading-relaxed">
+                  Extract requirements from a job URL or description text and instantly compile an ATS-optimized CV and cover letter.
+                </p>
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-xl bg-brand-indigo text-white text-xs font-bold hover:bg-brand-deep transition-colors cursor-pointer shadow-xs"
+                >
+                  Start Single Tailoring
+                </button>
+              </div>
+
+              <div 
+                onClick={() => setActiveTab("batch")}
+                className="space-y-3 cursor-pointer group"
+              >
+                <h3 className="text-lg font-bold text-brand-deep group-hover:text-brand-indigo transition-colors flex items-center gap-2">
+                  Batch Autopilot
+                  <span className="text-brand-indigo opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">&rarr;</span>
+                </h3>
+                <p className="text-xs text-brand-navy/70 leading-relaxed">
+                  Upload job description links in bulk to automatically generate, score, and store multiple application packages.
+                </p>
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-brand-deep hover:bg-brand-indigo hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Start Batch Autopilot
+                </button>
+              </div>
+
+              <div 
+                onClick={() => setActiveTab("builder")}
+                className="space-y-3 cursor-pointer group"
+              >
+                <h3 className="text-lg font-bold text-brand-deep group-hover:text-brand-indigo transition-colors flex items-center gap-2">
+                  Interactive Resume Builder
+                  <span className="text-brand-indigo opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">&rarr;</span>
+                </h3>
+                <p className="text-xs text-brand-navy/70 leading-relaxed">
+                  Step-by-step interactive resume creator to format experience, skills, and layout structure from scratch.
+                </p>
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-brand-deep hover:bg-brand-indigo hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Open Resume Builder
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Navigation Links */}
+            <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-brand-navy/15 text-xs text-brand-navy/70">
+              <span className="font-bold text-brand-deep">Quick Links:</span>
+              <button 
+                onClick={() => setActiveTab("mycv")}
+                className="text-brand-indigo hover:underline font-semibold cursor-pointer"
+              >
+                My CV & Master Data
+              </button>
+              <span className="text-slate-300">•</span>
+              <button 
+                onClick={() => setActiveTab("archive")}
+                className="text-brand-indigo hover:underline font-semibold cursor-pointer"
+              >
+                Applications Archives ({stats.appsCount})
+              </button>
+              <span className="text-slate-300">•</span>
+              <button 
+                onClick={() => setActiveTab("profile")}
+                className="text-brand-indigo hover:underline font-semibold cursor-pointer"
+              >
+                Account Settings
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* TAB 1: MY PROFILE */}
-            {activeTab === "profile" && (
-              <div className="space-y-6 animate-in fade-in duration-300 w-full">
-                <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
-                  <User className="w-5 h-5 text-brand-indigo" />
-                  Personal Information & Profile Settings
-                </h3>
+        {activeTab === "profile" && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-150 ease-out w-full">
+            <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
+              <User className="w-5 h-5 text-brand-indigo" />
+              Personal Information & Profile Settings
+            </h3>
+
+            {/* Workspace Statistics Summary (Frameless text under Settings -> My Profile) */}
+            <div className="pb-4 border-b border-brand-navy/15">
+              <h4 className="text-xs font-bold text-brand-navy/70 uppercase mb-2.5 flex items-center gap-1.5">
+                <BarChart3 className="w-3.5 h-3.5 text-brand-indigo" />
+                Workspace Statistics
+              </h4>
+              <div className="flex flex-wrap items-center gap-6 text-xs text-slate-700 font-medium">
+                <span className="flex items-center gap-1.5">
+                  <FolderOpen className="w-3.5 h-3.5 text-brand-indigo" />
+                  <span className="font-bold text-brand-deep">{stats.appsCount}</span> Tailored Applications
+                </span>
+                <span className="text-slate-300">•</span>
+                <span className="flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5 text-brand-indigo" />
+                  <span className="font-bold text-brand-deep">{stats.certsCount}</span> Loaded Credentials
+                </span>
+                <span className="text-slate-300">•</span>
+                <span className="flex items-center gap-1.5">
+                  <BarChart3 className="w-3.5 h-3.5 text-brand-indigo" />
+                  <span className="font-bold text-brand-deep">{stats.avgAts}%</span> Average ATS Match Rate
+                </span>
+              </div>
+            </div>
 
                 <div className="space-y-4">
                   <div>
@@ -2042,8 +2170,8 @@ function DashboardContent() {
 
             {/* TAB 2: MY CV & DOCUMENTS */}
             {activeTab === "mycv" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="glass-panel p-6 rounded-xl space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start animate-in fade-in slide-in-from-right-4 duration-150 ease-out w-full">
+                <div className="space-y-6">
                   <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
                     <Upload className="w-5 h-5 text-brand-indigo" />
                     Load Master CV & Documents
@@ -2122,7 +2250,7 @@ function DashboardContent() {
                   </div>
                 </div>
 
-                <div className="glass-panel p-6 rounded-xl space-y-6">
+                <div className="space-y-6">
                   <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
                     <Award className="w-5 h-5 text-brand-indigo" />
                     Credentials & Certificates Vault
@@ -2709,7 +2837,7 @@ function DashboardContent() {
 
             {/* TAB C: BATCH AUTOPILOT */}
             {activeTab === "batch" && (
-              <div className="glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-150 ease-out w-full">
                 <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
                   <Globe className="w-5 h-5 text-brand-indigo" />
                   Batch Auto-Pilot Mode
@@ -2839,7 +2967,7 @@ function DashboardContent() {
 
             {/* TAB E: RESUME BUILDER WIZARD (COMING SOON) */}
             {activeTab === "builder" && (
-              <div className="glass-panel p-12 rounded-xl flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
+              <div className="flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in slide-in-from-right-4 duration-150 ease-out w-full py-12">
                 <div className="w-16 h-16 rounded-full bg-brand-indigo/10 border border-brand-indigo/20 flex items-center justify-center text-brand-indigo animate-bounce">
                   <Construction className="w-8 h-8" />
                 </div>
@@ -2874,7 +3002,7 @@ function DashboardContent() {
 
             {/* TAB D: SAVED ARCHIVES */}
             {activeTab === "archive" && (
-              <div className="glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-150 ease-out w-full">
                 <div className="flex justify-between items-center border-b border-brand-navy/15 pb-3 flex-wrap gap-2">
                   <h3 className="text-base font-bold text-brand-deep flex items-center gap-2">
                     <FolderOpen className="w-5 h-5 text-brand-indigo" />
@@ -2929,7 +3057,7 @@ function DashboardContent() {
                     {applications.map((app) => (
                       <div
                         key={app.id}
-                        className="glass-panel p-5 rounded-xl border border-brand-navy/10 hover:border-brand-indigo/30 transition-all flex flex-col justify-between"
+                        className="py-4 border-b border-brand-navy/15 flex flex-col justify-between space-y-3"
                       >
                         <div className="space-y-2">
                           <div className="flex justify-between items-start">
