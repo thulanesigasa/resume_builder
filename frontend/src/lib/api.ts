@@ -135,7 +135,7 @@ export const api = {
   async previewHtml(templateName: string, jsonData: any): Promise<{ html_content: string }> {
     const res = await fetch(`${API_BASE_URL}/api/preview-html`, {
       method: 'POST',
-      headers: await getHeaders(),
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ template_name: templateName, json_data: jsonData }),
     });
     if (!res.ok) {
