@@ -1873,7 +1873,7 @@ function DashboardContent() {
                       : "text-brand-deep hover:bg-brand-navy/5"
                   }`}
                 >
-                  <Construction className="w-4 h-4" />
+                  <FileText className="w-4 h-4" />
                   Resume Builder
                 </button>
               </div>
@@ -3151,40 +3151,24 @@ function DashboardContent() {
               </div>
             )}
 
-            {/* TAB E: RESUME BUILDER WIZARD (COMING SOON) */}
+            {/* TAB E: RESUME BUILDER WIZARD */}
             {activeTab === "builder" && (
-              <div className="flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in slide-in-from-right-4 duration-150 ease-out w-full py-12">
-                <div className="w-16 h-16 rounded-full bg-brand-indigo/10 border border-brand-indigo/20 flex items-center justify-center text-brand-indigo animate-bounce">
-                  <Construction className="w-8 h-8" />
-                </div>
-                <div className="space-y-2 max-w-md">
-                  <span className="px-3.5 py-1.5 bg-brand-indigo/15 text-brand-indigo border border-brand-indigo/25 text-[11px] uppercase font-bold rounded-md tracking-wider">
-                    Coming Soon
-                  </span>
-                  <h3 className="text-2xl font-black text-brand-deep">Interactive Resume Builder</h3>
-                  <p className="text-sm text-brand-navy/70 leading-relaxed pt-2">
-                    We are currently perfecting the step-by-step wizard to give you the most flawless and beautiful CV builder experience possible.
-                  </p>
-                  <p className="text-xs text-brand-navy/50 leading-relaxed italic">
-                    In the meantime, you can upload your master CV in the <strong>My Profile & CV</strong> tab, then use our <strong>Tailor</strong> and <strong>Batch Autopilot</strong> tools to generate tailored applications instantly!
-                  </p>
-                </div>
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={() => setActiveTab("profile")}
-                    className="px-5 py-2.5 btn-primary text-xs cursor-pointer"
-                  >
-                    Go to My Profile
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("generate")}
-                    className="px-5 py-2.5 btn-secondary text-xs cursor-pointer"
-                  >
-                    Try Single-Job Tailoring
-                  </button>
-                </div>
+              <div className="w-full animate-in fade-in duration-300">
+                <ResumeBuilderWizard
+                  selectedTemplate="ats_resume_template.html"
+                  onSave={async (compiledMarkdown) => {
+                    setActiveTab("mycv");
+                  }}
+                  onCancel={() => {
+                    setActiveTab("welcome");
+                  }}
+                  onComplete={() => {
+                    setActiveTab("mycv");
+                  }}
+                />
               </div>
             )}
+
 
             {/* TAB D: SAVED ARCHIVES */}
             {activeTab === "archive" && (
