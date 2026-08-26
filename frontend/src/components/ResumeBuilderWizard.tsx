@@ -1305,12 +1305,12 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   if (!isLoaded) return null; // Prevent hydration mismatch on load
 
   return (
-    <div className="flex w-full h-[85vh] bg-transparent rounded-2xl overflow-hidden shadow-2xl border border-brand-navy/10 relative">
+    <div className="flex w-full h-[85vh] bg-white rounded-2xl overflow-hidden shadow-xl border border-slate-200 relative">
       
       {/* Fullscreen Compiling Loader */}
       {isCompiling && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-all animate-in fade-in">
-          <div className="bg-white shadow-2xl rounded-2xl p-8 flex flex-col items-center gap-4 max-w-sm text-center border border-brand-navy/10">
+          <div className="bg-white shadow-2xl rounded-2xl p-8 flex flex-col items-center gap-4 max-w-sm text-center border border-slate-200">
             <Loader2 className="w-12 h-12 text-brand-indigo animate-spin" />
             <h3 className="text-lg font-bold text-brand-deep">Compiling...</h3>
             <p className="text-sm text-brand-navy/70">Generating final PDF and saving to Saved Archives...</p>
@@ -1319,10 +1319,10 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       )}
       
       {/* LEFT COLUMN: WIZARD */}
-      <div className="w-full lg:w-[50%] xl:w-[50%] flex flex-col h-full bg-white/30 backdrop-blur-xl overflow-y-auto relative">
+      <div className="w-full lg:w-[50%] xl:w-[50%] flex flex-col h-full bg-white overflow-y-auto relative">
         
         {/* Progress Bar — auto-centering sliding steps */}
-        <div className="w-full border-b border-brand-navy/10 bg-white/40 backdrop-blur-xl sticky top-0 z-20">
+        <div className="w-full border-b border-slate-200 bg-white sticky top-0 z-20">
           <div ref={stepBarRef} className="relative w-full overflow-hidden" style={{ height: '72px' }}>
 
             {/* Connector line — fixed behind the dots */}
@@ -2263,7 +2263,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         </div>
 
         {/* BOTTOM NAVIGATION ACTIONS */}
-        <div className="p-8 border-t border-brand-navy/10 bg-white/40 backdrop-blur-xl sticky bottom-0 z-20 flex justify-between items-center max-w-4xl mx-auto w-full">
+        <div className="p-8 border-t border-slate-200 bg-white sticky bottom-0 z-20 flex justify-between items-center max-w-4xl mx-auto w-full">
           {currentStep > 0 ? (
             <button onClick={handleBack} className="group flex items-center justify-center gap-2 px-6 py-2.5 rounded-full border-2 border-brand-indigo/20 text-brand-indigo font-bold text-sm hover:border-brand-indigo hover:bg-brand-indigo hover:text-white transition-all duration-300">
               <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
@@ -2288,7 +2288,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
       </div>
 
       {/* RIGHT COLUMN: LIVE API PREVIEW */}
-      <div ref={previewContainerRef} className="hidden lg:flex flex-1 h-full bg-brand-navy/5 relative overflow-hidden border-l border-brand-navy/10">
+      <div ref={previewContainerRef} className="hidden lg:flex flex-1 h-full bg-slate-50/70 relative overflow-hidden border-l border-slate-200">
         
         {/* Loading Overlay */}
         {isPreviewLoading && (
