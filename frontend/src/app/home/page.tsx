@@ -2242,19 +2242,30 @@ function DashboardContent() {
                   </h3>
 
                   <div className="space-y-4">
-                    <div className="p-4 border border-dashed border-brand-navy/20 rounded-xl bg-brand-navy/[0.01] hover:bg-brand-navy/[0.03] transition-colors relative flex flex-col items-center justify-center text-center">
+                    <div className="p-6 border-2 border-dashed border-slate-300 hover:border-purple-600 rounded-2xl bg-slate-50/70 hover:bg-purple-50/40 transition-all relative flex flex-col items-center justify-center text-center space-y-3 group cursor-pointer">
                       <input
                         type="file"
                         accept=".pdf"
                         ref={cvFileInputRef}
                         onChange={handleParseCvPdf}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                         disabled={parsingCv}
                       />
-                      <FileText className="w-8 h-8 text-brand-indigo mb-2" />
-                      <span className="text-xs font-semibold text-brand-deep">Parse Master CV from PDF</span>
-                      <span className="text-[10px] text-brand-navy/60 mt-1">Upload PDF to overwrite text history</span>
-                      {parsingCv && <span className="text-xs text-brand-indigo animate-pulse mt-2">Reading PDF text...</span>}
+                      <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
+                        <Upload className="w-6 h-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-xs font-extrabold text-slate-900 group-hover:text-purple-600 transition-colors block">
+                          Upload Master CV (PDF)
+                        </span>
+                        <span className="text-[11px] text-slate-500 font-medium block">
+                          Upload your latest CV PDF to extract experience & text
+                        </span>
+                      </div>
+                      <span className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-purple-700 transition-colors inline-flex items-center gap-2">
+                        <Upload className="w-3.5 h-3.5" />
+                        {parsingCv ? "Parsing PDF..." : "Browse PDF File"}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-4 text-xs font-semibold text-brand-navy/40">
@@ -2321,19 +2332,30 @@ function DashboardContent() {
                   </h3>
 
                   <div className="space-y-4">
-                    <div className="p-4 border border-dashed border-brand-navy/20 rounded-xl bg-brand-navy/[0.01] hover:bg-brand-navy/[0.03] transition-colors relative flex flex-col items-center justify-center text-center">
+                    <div className="p-6 border-2 border-dashed border-slate-300 hover:border-purple-600 rounded-2xl bg-slate-50/70 hover:bg-purple-50/40 transition-all relative flex flex-col items-center justify-center text-center space-y-3 group cursor-pointer">
                       <input
                         type="file"
                         accept=".pdf"
-                        ref={cvFileInputRef}
-                        onChange={handleParseCvPdf}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        disabled={parsingCv}
+                        ref={certFileInputRef}
+                        onChange={handleUploadCert}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        disabled={uploadingCert}
                       />
-                      <FileText className="w-8 h-8 text-brand-indigo mb-2" />
-                      <span className="text-xs font-semibold text-brand-deep">Parse Master CV from PDF</span>
-                      <span className="text-[10px] text-brand-navy/60 mt-1">Upload PDF to overwrite text history</span>
-                      {parsingCv && <span className="text-xs text-brand-indigo animate-pulse mt-2">Reading PDF text...</span>}
+                      <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
+                        <Upload className="w-6 h-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-xs font-extrabold text-slate-900 group-hover:text-purple-600 transition-colors block">
+                          Upload Certificate (PDF)
+                        </span>
+                        <span className="text-[11px] text-slate-500 font-medium block">
+                          Upload certificate PDF to store in vault & enhance resume ATS match
+                        </span>
+                      </div>
+                      <span className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-purple-700 transition-colors inline-flex items-center gap-2">
+                        <Upload className="w-3.5 h-3.5" />
+                        {uploadingCert ? "Uploading..." : "Browse Certificate PDF"}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-4 text-xs font-semibold text-brand-navy/40">
@@ -2912,15 +2934,34 @@ function DashboardContent() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-brand-navy/70 uppercase mb-2">
-                      Upload Links file (.txt)
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
+                      Upload Links File (.txt)
                     </label>
-                    <input
-                      type="file"
-                      accept=".txt"
-                      className="w-full text-sm text-brand-navy/60"
-                      onChange={(e) => setBatchFile(e.target.files?.[0] || null)}
-                    />
+                    <div className="relative group cursor-pointer">
+                      <input
+                        type="file"
+                        accept=".txt"
+                        onChange={(e) => setBatchFile(e.target.files?.[0] || null)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      />
+                      <div className="p-6 border-2 border-dashed border-slate-300 hover:border-purple-600 rounded-2xl bg-slate-50/70 hover:bg-purple-50/40 transition-all flex flex-col items-center justify-center text-center space-y-3">
+                        <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold shadow-xs group-hover:scale-110 transition-transform">
+                          <Upload className="w-6 h-6" />
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-xs font-extrabold text-slate-900 group-hover:text-purple-600 transition-colors block">
+                            {batchFile ? batchFile.name : "Click or Drag & Drop .txt file here"}
+                          </span>
+                          <span className="text-[11px] text-slate-500 font-medium block">
+                            {batchFile ? `${(batchFile.size / 1024).toFixed(1)} KB file loaded` : "Plain text file containing job URLs (1 URL per line)"}
+                          </span>
+                        </div>
+                        <span className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-purple-700 transition-colors inline-flex items-center gap-2">
+                          <Upload className="w-3.5 h-3.5" />
+                          {batchFile ? "Change Selected File" : "Browse & Upload .txt File"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   {!batchScrapedJobs ? (
