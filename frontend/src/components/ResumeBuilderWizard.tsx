@@ -1305,7 +1305,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   if (!isLoaded) return null; // Prevent hydration mismatch on load
 
   return (
-    <div className="flex w-full h-[85vh] bg-white rounded-2xl overflow-hidden shadow-xl border border-slate-200 relative">
+    <div className="flex w-full min-h-[calc(100vh-2rem)] bg-white relative">
       
       {/* Fullscreen Compiling Loader */}
       {isCompiling && (
