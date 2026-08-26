@@ -27,8 +27,11 @@ import {
   Download,
   Eye,
   ChevronDown,
+  ChevronRight,
   Key,
-  Construction
+  Construction,
+  PanelLeftClose,
+  PanelLeftOpen
 } from "lucide-react";
 
 function DashboardContent() {
@@ -37,6 +40,8 @@ function DashboardContent() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"profile" | "mycv" | "parameters" | "generate" | "batch" | "archive" | "builder">("profile");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+  const [settingsSubmenuOpen, setSettingsSubmenuOpen] = useState<boolean>(true);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [deleteCertId, setDeleteCertId] = useState<string | null>(null);
 
@@ -1617,123 +1622,305 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Workspace Layout with Spacious Left Navigation Side Panel */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Workspace Layout with Collapsible/Expandable Left Side Navigation Bar */}
+        <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
           
-          {/* Left Side Navigation Panel (Spacious Vertical Sidebar) */}
-          <div className="lg:col-span-3 lg:sticky lg:top-24 space-y-4">
-            <div className="glass-panel p-4 rounded-xl space-y-4 shadow-sm border border-brand-navy/15">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-brand-navy/70 px-2 flex items-center gap-2 border-b border-brand-navy/10 pb-2">
-                <Settings className="w-3.5 h-3.5 text-brand-indigo" />
-                Navigation & Settings
-              </h3>
-
-              {/* Group 1: PROFILE & DOCUMENTS */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-widest px-2 block mb-1">
-                  Profile & Documents
+          {/* Collapsible Left Side Navigation Panel */}
+          <aside
+            className={`glass-panel rounded-2xl shadow-lg border border-brand-navy/15 transition-all duration-450 ease-in-out lg:sticky lg:top-24 overflow-hidden shrink-0 bg-white ${
+              sidebarCollapsed ? "w-16 p-2" : "w-64 p-4"
+            }`}
+          >
+            {/* Header & Toggle Activation Button */}
+            <div className="flex items-center justify-between pb-3 border-b border-brand-navy/10 mb-3">
+              {!sidebarCollapsed && (
+                <span className="text-xs font-black uppercase tracking-wider text-brand-deep flex items-center gap-2 px-1">
+                  <Settings className="w-4 h-4 text-brand-indigo animate-spin-slow" />
+                  Navigation
                 </span>
-                <button
-                  onClick={() => setActiveTab("profile")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === "profile"
-                      ? "bg-brand-indigo text-white shadow-sm"
-                      : "text-brand-deep hover:bg-brand-navy/5"
-                  }`}
-                >
-                  <User className="w-4 h-4" />
-                  My Profile
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("mycv")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === "mycv"
-                      ? "bg-brand-indigo text-white shadow-sm"
-                      : "text-brand-deep hover:bg-brand-navy/5"
-                  }`}
-                >
-                  <FileText className="w-4 h-4" />
-                  My CV & Documents
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("parameters")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === "parameters"
-                      ? "bg-brand-indigo text-white shadow-sm"
-                      : "text-brand-deep hover:bg-brand-navy/5"
-                  }`}
-                >
-                  <Settings className="w-4 h-4" />
-                  Parameters & Templates
-                </button>
-              </div>
-
-              {/* Group 2: AI APPLICATION TOOLS */}
-              <div className="space-y-1 pt-2 border-t border-brand-navy/10">
-                <span className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-widest px-2 block mb-1">
-                  AI Tailoring Tools
-                </span>
-                <button
-                  onClick={() => setActiveTab("generate")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === "generate"
-                      ? "bg-brand-indigo text-white shadow-sm"
-                      : "text-brand-deep hover:bg-brand-navy/5"
-                  }`}
-                >
-                  <Zap className="w-4 h-4" />
-                  Tailor (Single Job)
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("batch")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === "batch"
-                      ? "bg-brand-indigo text-white shadow-sm"
-                      : "text-brand-deep hover:bg-brand-navy/5"
-                  }`}
-                >
-                  <Briefcase className="w-4 h-4" />
-                  Batch Autopilot
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("builder")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === "builder"
-                      ? "bg-brand-indigo text-white shadow-sm"
-                      : "text-brand-deep hover:bg-brand-navy/5"
-                  }`}
-                >
-                  <Construction className="w-4 h-4" />
-                  Resume Builder
-                </button>
-              </div>
-
-              {/* Group 3: HISTORY */}
-              <div className="space-y-1 pt-2 border-t border-brand-navy/10">
-                <span className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-widest px-2 block mb-1">
-                  Archives
-                </span>
-                <button
-                  onClick={() => setActiveTab("archive")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === "archive"
-                      ? "bg-brand-indigo text-white shadow-sm"
-                      : "text-brand-deep hover:bg-brand-navy/5"
-                  }`}
-                >
-                  <FolderOpen className="w-4 h-4" />
-                  Saved Archives
-                </button>
-              </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                title={sidebarCollapsed ? "Activate / Expand Sidebar" : "Deactivate / Collapse Sidebar"}
+                className="p-2 rounded-xl bg-slate-100 hover:bg-brand-indigo/10 text-brand-deep hover:text-brand-indigo transition-all duration-300 mx-auto lg:mx-0 cursor-pointer shadow-xs"
+              >
+                {sidebarCollapsed ? (
+                  <PanelLeftOpen className="w-5 h-5 text-brand-indigo" />
+                ) : (
+                  <PanelLeftClose className="w-5 h-5 text-brand-indigo" />
+                )}
+              </button>
             </div>
-          </div>
 
-          {/* Main Workspace Content Area (Spacious 9/12 Columns) */}
-          <div className="lg:col-span-9 space-y-6">
+            {/* COLLAPSED MODE: Sleek Icon Panel (Uiverse-inspired) */}
+            {sidebarCollapsed ? (
+              <div className="flex flex-col gap-2 items-center py-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("profile")}
+                  title="My Profile"
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group cursor-pointer ${
+                    activeTab === "profile"
+                      ? "bg-brand-indigo text-white shadow-md scale-110"
+                      : "bg-slate-50 text-slate-700 hover:bg-brand-indigo/10 hover:text-brand-indigo hover:scale-110"
+                  }`}
+                >
+                  <User className="w-5 h-5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("parameters")}
+                  title="Parameters & Templates"
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group cursor-pointer ${
+                    activeTab === "parameters"
+                      ? "bg-brand-indigo text-white shadow-md scale-110"
+                      : "bg-slate-50 text-slate-700 hover:bg-brand-indigo/10 hover:text-brand-indigo hover:scale-110"
+                  }`}
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("mycv")}
+                  title="My CV & Documents"
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group cursor-pointer ${
+                    activeTab === "mycv"
+                      ? "bg-brand-indigo text-white shadow-md scale-110"
+                      : "bg-slate-50 text-slate-700 hover:bg-brand-indigo/10 hover:text-brand-indigo hover:scale-110"
+                  }`}
+                >
+                  <FileText className="w-5 h-5" />
+                </button>
+
+                <hr className="w-8 border-brand-navy/10 my-1" />
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("generate")}
+                  title="Tailor (Single Job)"
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group cursor-pointer ${
+                    activeTab === "generate"
+                      ? "bg-brand-indigo text-white shadow-md scale-110"
+                      : "bg-slate-50 text-slate-700 hover:bg-brand-indigo/10 hover:text-brand-indigo hover:scale-110"
+                  }`}
+                >
+                  <Zap className="w-5 h-5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("batch")}
+                  title="Batch Autopilot"
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group cursor-pointer ${
+                    activeTab === "batch"
+                      ? "bg-brand-indigo text-white shadow-md scale-110"
+                      : "bg-slate-50 text-slate-700 hover:bg-brand-indigo/10 hover:text-brand-indigo hover:scale-110"
+                  }`}
+                >
+                  <Briefcase className="w-5 h-5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("builder")}
+                  title="Resume Builder"
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group cursor-pointer ${
+                    activeTab === "builder"
+                      ? "bg-brand-indigo text-white shadow-md scale-110"
+                      : "bg-slate-50 text-slate-700 hover:bg-brand-indigo/10 hover:text-brand-indigo hover:scale-110"
+                  }`}
+                >
+                  <Construction className="w-5 h-5" />
+                </button>
+
+                <hr className="w-8 border-brand-navy/10 my-1" />
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("archive")}
+                  title="Saved Archives"
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group cursor-pointer ${
+                    activeTab === "archive"
+                      ? "bg-brand-indigo text-white shadow-md scale-110"
+                      : "bg-slate-50 text-slate-700 hover:bg-brand-indigo/10 hover:text-brand-indigo hover:scale-110"
+                  }`}
+                >
+                  <FolderOpen className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              /* EXPANDED MODE: Full Menu with Categories & Sub-items */
+              <div className="space-y-4">
+                
+                {/* SETTINGS MENU GROUP */}
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => setSettingsSubmenuOpen(!settingsSubmenuOpen)}
+                    className="w-full flex items-center justify-between px-2 py-1.5 text-[10px] font-bold text-brand-navy/60 uppercase tracking-widest hover:text-brand-deep cursor-pointer"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Settings className="w-3.5 h-3.5 text-brand-indigo" />
+                      Settings & Profile
+                    </span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${settingsSubmenuOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {settingsSubmenuOpen && (
+                    <div className="pl-2 space-y-1 border-l-2 border-brand-indigo/20 ml-2 animate-in fade-in duration-200">
+                      <button
+                        onClick={() => setActiveTab("profile")}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          activeTab === "profile"
+                            ? "bg-brand-indigo text-white shadow-sm"
+                            : "text-brand-deep hover:bg-brand-navy/5"
+                        }`}
+                      >
+                        <User className="w-4 h-4" />
+                        My Profile
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab("parameters")}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          activeTab === "parameters"
+                            ? "bg-brand-indigo text-white shadow-sm"
+                            : "text-brand-deep hover:bg-brand-navy/5"
+                        }`}
+                      >
+                        <Settings className="w-4 h-4" />
+                        Parameters
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab("mycv")}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          activeTab === "mycv"
+                            ? "bg-brand-indigo text-white shadow-sm"
+                            : "text-brand-deep hover:bg-brand-navy/5"
+                        }`}
+                      >
+                        <FileText className="w-4 h-4" />
+                        My CV
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* AI TAILORING TOOLS GROUP */}
+                <div className="space-y-1 pt-2 border-t border-brand-navy/10">
+                  <span className="text-[10px] font-bold text-brand-navy/60 uppercase tracking-widest px-2 block mb-1">
+                    AI Tailoring Tools
+                  </span>
+                  <button
+                    onClick={() => setActiveTab("generate")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      activeTab === "generate"
+                        ? "bg-brand-indigo text-white shadow-sm"
+                        : "text-brand-deep hover:bg-brand-navy/5"
+                    }`}
+                  >
+                    <Zap className="w-4 h-4" />
+                    Tailor (Single Job)
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab("batch")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      activeTab === "batch"
+                        ? "bg-brand-indigo text-white shadow-sm"
+                        : "text-brand-deep hover:bg-brand-navy/5"
+                    }`}
+                  >
+                    <Briefcase className="w-4 h-4" />
+                    Batch Autopilot
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab("builder")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      activeTab === "builder"
+                        ? "bg-brand-indigo text-white shadow-sm"
+                        : "text-brand-deep hover:bg-brand-navy/5"
+                    }`}
+                  >
+                    <Construction className="w-4 h-4" />
+                    Resume Builder
+                  </button>
+                </div>
+
+                {/* ARCHIVES GROUP */}
+                <div className="space-y-1 pt-2 border-t border-brand-navy/10">
+                  <span className="text-[10px] font-bold text-brand-navy/60 uppercase tracking-widest px-2 block mb-1">
+                    Archives
+                  </span>
+                  <button
+                    onClick={() => setActiveTab("archive")}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      activeTab === "archive"
+                        ? "bg-brand-indigo text-white shadow-sm"
+                        : "text-brand-deep hover:bg-brand-navy/5"
+                    }`}
+                  >
+                    <FolderOpen className="w-4 h-4" />
+                    Saved Archives
+                  </button>
+                </div>
+              </div>
+            )}
+          </aside>
+
+          {/* Main Workspace Content Area (Expands Dynamically) */}
+          <div className="flex-1 min-w-0 space-y-6">
+
+            {/* SETTINGS SUB-HEADER NAVIGATION BAR (Shown whenever on Profile, Parameters, or My CV) */}
+            {(activeTab === "profile" || activeTab === "parameters" || activeTab === "mycv") && (
+              <div className="glass-panel p-4 rounded-xl border border-brand-navy/15 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs animate-in fade-in duration-300">
+                <div className="flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-brand-indigo" />
+                  <div>
+                    <h3 className="text-sm font-extrabold text-brand-deep leading-tight">Settings & Workspace Config</h3>
+                    <p className="text-[11px] text-brand-navy/60">Manage your profile details, template parameters, and master CV</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl w-full sm:w-auto justify-center">
+                  <button
+                    onClick={() => setActiveTab("profile")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === "profile"
+                        ? "bg-white text-brand-indigo shadow-sm"
+                        : "text-brand-navy/70 hover:text-brand-deep"
+                    }`}
+                  >
+                    👤 My Profile
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("parameters")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === "parameters"
+                        ? "bg-white text-brand-indigo shadow-sm"
+                        : "text-brand-navy/70 hover:text-brand-deep"
+                    }`}
+                  >
+                    ⚙️ Parameters
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("mycv")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === "mycv"
+                        ? "bg-white text-brand-indigo shadow-sm"
+                        : "text-brand-navy/70 hover:text-brand-deep"
+                    }`}
+                  >
+                    📄 My CV
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* TAB 1: MY PROFILE */}
             {activeTab === "profile" && (
@@ -2862,7 +3049,6 @@ function DashboardContent() {
             )}
           </div>
         </div>
-      </main>
 
       {/* Preview Certificate Modal */}
       {previewCert && (
@@ -3083,6 +3269,7 @@ function DashboardContent() {
 
 
 
+    </main>
     </div>
     <MarketingFooter />
     </>
