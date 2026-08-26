@@ -1890,16 +1890,16 @@ function DashboardContent() {
       {/* Main Workspace Container (With Left Padding for Fixed Sidebar) */}
       <main className={`flex-1 ${activeTab === 'builder' ? 'max-w-[1700px]' : 'max-w-7xl'} w-full mx-auto p-6 md:p-8 space-y-8 transition-all duration-300 ${sidebarCollapsed ? "pl-20" : "pl-72"}`}>
 
-        {/* TAB 0: WELCOME OVERVIEW (DEFAULT LANDING PAGE ON LOGIN) */}
+        {/* TAB 0: WELCOME OVERVIEW (60-30-10 RULE: WHITE - BLACK/GRAY - PURPLE) */}
         {activeTab === "welcome" && (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-150 ease-out w-full">
             
             {/* Frameless Hero Welcome Section */}
-            <div className="space-y-2 border-b border-brand-navy/15 pb-6">
-              <h2 className="text-3xl font-black text-brand-deep tracking-tight">
+            <div className="space-y-2 border-b border-slate-200 pb-6">
+              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                 Welcome back, {firstName || username || user?.email?.split("@")[0]}
               </h2>
-              <p className="text-sm text-brand-navy/70 max-w-2xl leading-relaxed">
+              <p className="text-sm text-slate-600 max-w-2xl leading-relaxed font-medium">
                 Select an option below to start compiling tailored resumes, managing master documents, or setting up bulk application workflows.
               </p>
             </div>
@@ -1910,16 +1910,16 @@ function DashboardContent() {
                 onClick={() => setActiveTab("generate")}
                 className="space-y-3 cursor-pointer group"
               >
-                <h3 className="text-lg font-bold text-brand-deep group-hover:text-brand-indigo transition-colors flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-900 group-hover:text-purple-600 transition-colors flex items-center gap-2">
                   Tailor Resume (Single Job)
-                  <span className="text-brand-indigo opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">&rarr;</span>
+                  <span className="text-purple-600 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">&rarr;</span>
                 </h3>
-                <p className="text-xs text-brand-navy/70 leading-relaxed">
+                <p className="text-xs text-slate-600 leading-relaxed font-medium">
                   Extract requirements from a job URL or description text and instantly compile an ATS-optimized CV and cover letter.
                 </p>
                 <button
                   type="button"
-                  className="px-4 py-2 rounded-xl bg-brand-indigo text-white text-xs font-bold hover:bg-brand-deep transition-colors cursor-pointer shadow-xs"
+                  className="px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-700 transition-colors cursor-pointer shadow-xs"
                 >
                   Start Single Tailoring
                 </button>
@@ -1929,16 +1929,16 @@ function DashboardContent() {
                 onClick={() => setActiveTab("batch")}
                 className="space-y-3 cursor-pointer group"
               >
-                <h3 className="text-lg font-bold text-brand-deep group-hover:text-brand-indigo transition-colors flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-900 group-hover:text-purple-600 transition-colors flex items-center gap-2">
                   Batch Autopilot
-                  <span className="text-brand-indigo opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">&rarr;</span>
+                  <span className="text-purple-600 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">&rarr;</span>
                 </h3>
-                <p className="text-xs text-brand-navy/70 leading-relaxed">
+                <p className="text-xs text-slate-600 leading-relaxed font-medium">
                   Upload job description links in bulk to automatically generate, score, and store multiple application packages.
                 </p>
                 <button
                   type="button"
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-brand-deep hover:bg-brand-indigo hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-800 hover:bg-purple-600 hover:text-white text-xs font-bold transition-colors cursor-pointer"
                 >
                   Start Batch Autopilot
                 </button>
@@ -1948,16 +1948,16 @@ function DashboardContent() {
                 onClick={() => setActiveTab("builder")}
                 className="space-y-3 cursor-pointer group"
               >
-                <h3 className="text-lg font-bold text-brand-deep group-hover:text-brand-indigo transition-colors flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-900 group-hover:text-purple-600 transition-colors flex items-center gap-2">
                   Interactive Resume Builder
-                  <span className="text-brand-indigo opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">&rarr;</span>
+                  <span className="text-purple-600 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">&rarr;</span>
                 </h3>
-                <p className="text-xs text-brand-navy/70 leading-relaxed">
+                <p className="text-xs text-slate-600 leading-relaxed font-medium">
                   Step-by-step interactive resume creator to format experience, skills, and layout structure from scratch.
                 </p>
                 <button
                   type="button"
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-brand-deep hover:bg-brand-indigo hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-800 hover:bg-purple-600 hover:text-white text-xs font-bold transition-colors cursor-pointer"
                 >
                   Open Resume Builder
                 </button>
@@ -1965,28 +1965,92 @@ function DashboardContent() {
             </div>
 
             {/* Quick Navigation Links */}
-            <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-brand-navy/15 text-xs text-brand-navy/70">
-              <span className="font-bold text-brand-deep">Quick Links:</span>
+            <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-slate-200 text-xs text-slate-600">
+              <span className="font-bold text-slate-900">Quick Links:</span>
               <button 
                 onClick={() => setActiveTab("mycv")}
-                className="text-brand-indigo hover:underline font-semibold cursor-pointer"
+                className="text-purple-600 hover:underline font-semibold cursor-pointer"
               >
                 My CV & Master Data
               </button>
               <span className="text-slate-300">•</span>
               <button 
                 onClick={() => setActiveTab("archive")}
-                className="text-brand-indigo hover:underline font-semibold cursor-pointer"
+                className="text-purple-600 hover:underline font-semibold cursor-pointer"
               >
                 Applications Archives ({stats.appsCount})
               </button>
               <span className="text-slate-300">•</span>
               <button 
                 onClick={() => setActiveTab("profile")}
-                className="text-brand-indigo hover:underline font-semibold cursor-pointer"
+                className="text-purple-600 hover:underline font-semibold cursor-pointer"
               >
                 Account Settings
               </button>
+            </div>
+
+            {/* Recent Tailored Applications Preview (Utilizes lower workspace space framelessly) */}
+            <div className="pt-6 border-t border-slate-200 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                  <FolderOpen className="w-4 h-4 text-purple-600" />
+                  Recent Tailored Applications ({applications.length})
+                </h3>
+                {applications.length > 0 && (
+                  <button
+                    onClick={() => setActiveTab("archive")}
+                    className="text-xs font-bold text-purple-600 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    View All Archives &rarr;
+                  </button>
+                )}
+              </div>
+
+              {applications.length === 0 ? (
+                <p className="text-xs text-slate-500 italic py-4">
+                  No applications generated yet. Click "Start Single Tailoring" above to tailor your first resume!
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {applications.slice(0, 4).map((app) => (
+                    <div 
+                      key={app.id}
+                      className="py-3 px-4 border border-slate-200 hover:border-purple-300 hover:bg-slate-50 transition-colors rounded-xl flex items-center justify-between gap-4"
+                    >
+                      <div className="min-w-0 space-y-0.5">
+                        <div className="text-[10px] text-slate-500 font-mono">
+                          {app.created_at ? new Date(app.created_at).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }) : "Recent"}
+                        </div>
+                        <h4 className="text-xs font-bold text-slate-900 truncate">
+                          {app.job_title} <span className="text-purple-600 font-medium">at {app.company_name}</span>
+                        </h4>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {app.pdf_url && (
+                          <a
+                            href={app.pdf_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-1.5 px-2.5 rounded-lg bg-slate-100 hover:bg-purple-600 hover:text-white text-slate-800 text-[11px] font-semibold transition-colors flex items-center gap-1"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>PDF</span>
+                          </a>
+                        )}
+                        <button
+                          onClick={() => {
+                            if (app.pdf_url) window.open(`/editor?pdf=${encodeURIComponent(app.pdf_url)}`, '_blank');
+                          }}
+                          className="p-1.5 px-2.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white text-[11px] font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <Zap className="w-3.5 h-3.5" />
+                          <span>Editor</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
