@@ -41,39 +41,45 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 app = FastAPI(title="AI Resume Builder API", description="FastAPI Backend serving AI Tailoring and PDF Compilers")
 
-limiter = Limiter(key_func=get_remote_address)
+def safe_remote_address(request: Request):
+    try:
+        return get_remote_address(request) or "127.0.0.1"
+    except Exception:
+        return "127.0.0.1"
+
+limiter = Limiter(key_func=safe_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-class LoggingMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        start_time = time.time()
-        logger.info(f"Incoming Request: {request.method} {request.url.path}")
-        response = await call_next(request)
-        process_time = (time.time() - start_time) * 1000
-        logger.info(f"Response: {response.status_code} | Time: {process_time:.2f}ms | Path: {request.url.path}")
-        return response
-
-app.add_middleware(LoggingMiddleware)
-
 # Configure CORS for decoupled frontend communication
-# Only allow known trusted origins — no wildcard (*) to achieve A+ security rating
-ALLOWED_ORIGINS = [
-    origin.strip()
-    for origin in os.getenv(
-        "ALLOWED_ORIGINS",
-        "https://rbptech.co.za,https://www.rbptech.co.za,http://localhost:3000,http://localhost:3001",
-    ).split(",")
-    if origin.strip()
-]
+env_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+default_origins = ["https://rbptech.co.za", "https://www.rbptech.co.za", "http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"]
+ALLOWED_ORIGINS = list(set(env_origins + default_origins))
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=False,  # We use Authorization headers, not cookies
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+from fastapi import Response
+
+@app.options("/{full_path:path}")
+async def options_handler(request: Request, full_path: str):
+    return Response(status_code=200)
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    start_time = time.time()
+    logger.info(f"Incoming Request: {request.method} {request.url.path}")
+    response = await call_next(request)
+    process_time = (time.time() - start_time) * 1000
+    logger.info(f"Response: {response.status_code} | Time: {process_time:.2f}ms | Path: {request.url.path}")
+    return response
 
 # Pydantic request models
 class ScrapeRequest(BaseModel):
@@ -312,7 +318,6 @@ class PreviewRequest(BaseModel):
     template_name: str
 
 @app.post("/api/preview-html")
-@limiter.limit("60/minute")
 async def preview_html(payload: PreviewRequest, request: Request):
     logger.info(f"API Preview HTML request received for: {payload.template_name}")
     try:
