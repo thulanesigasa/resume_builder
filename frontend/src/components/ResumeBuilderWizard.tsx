@@ -1429,8 +1429,8 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
       <div className="w-full lg:w-[50%] xl:w-[50%] flex flex-col h-full bg-white overflow-y-auto relative">
         
         {/* Progress Bar — Clean responsive horizontal stepper */}
-        <div className="w-full border-b border-slate-200 bg-white px-3 sm:px-4 py-2.5 sm:py-3 sticky top-0 z-20 shadow-2xs flex items-center justify-between gap-2 sm:gap-3">
-          <div className="flex items-center justify-start lg:justify-between min-w-0 flex-1 overflow-x-auto gap-1 sm:gap-1.5 py-1 px-1 no-scrollbar">
+        <div className="w-full border-b border-slate-200 bg-white px-2 sm:px-4 py-2.5 sm:py-3 sticky top-0 z-20 shadow-2xs">
+          <div className="flex items-center justify-start lg:justify-between min-w-max lg:min-w-0 overflow-x-auto gap-1 sm:gap-1.5 py-1 px-1 no-scrollbar">
             {STEPS.map((step, idx) => {
               const isActive = idx === currentStep;
               const isCompleted = idx < currentStep;
@@ -1491,16 +1491,6 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
               );
             })}
           </div>
-
-          {/* TOP RIGHT: Themed Mobile Live Preview Button (No Green, No Oval) */}
-          <button 
-            onClick={() => setShowMobilePreview(true)}
-            className="lg:hidden shrink-0 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer border border-purple-500"
-          >
-            <Eye className="w-3.5 h-3.5 text-white" />
-            <span className="hidden min-[400px]:inline">Live Preview</span>
-            <span className="min-[400px]:hidden">Preview</span>
-          </button>
         </div>
 
         {/* Validation Error Toast */}
@@ -1518,10 +1508,20 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
           {currentStep === 0 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
-                <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
-                  Please enter your <span className="text-brand-indigo">contact</span> info
-                </h2>
-                <p className="text-brand-navy/70 font-medium">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-brand-deep tracking-tight">
+                    Please enter your <span className="text-brand-indigo">contact</span> info
+                  </h2>
+                  <button 
+                    type="button"
+                    onClick={() => setShowMobilePreview(true)}
+                    className="lg:hidden shrink-0 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer border border-purple-500 mt-1"
+                  >
+                    <Eye className="w-4 h-4 text-white" />
+                    <span>Preview</span>
+                  </button>
+                </div>
+                <p className="text-brand-navy/70 font-medium text-xs sm:text-sm">
                   Add your phone number and email so recruiters can reach you.
                 </p>
               </div>
@@ -1563,11 +1563,21 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
           {currentStep === 1 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
-                <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
-                  <span className="text-brand-indigo">Tell us</span> about your experience
-                </h2>
-                <p className="text-brand-navy/70 font-medium">
-                  Tell us about your experience should just be 2 lines or just 2 sentences
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-brand-deep tracking-tight">
+                    <span className="text-brand-indigo">Tell us</span> about your experience
+                  </h2>
+                  <button 
+                    type="button"
+                    onClick={() => setShowMobilePreview(true)}
+                    className="lg:hidden shrink-0 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer border border-purple-500 mt-1"
+                  >
+                    <Eye className="w-4 h-4 text-white" />
+                    <span>Preview</span>
+                  </button>
+                </div>
+                <p className="text-brand-navy/70 font-medium text-xs sm:text-sm">
+                  Write down your previous job roles, employers, and achievements.
                 </p>
               </div>
 
@@ -1671,10 +1681,20 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
           {currentStep === 2 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                <div>
-                <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
-                  <span className="text-brand-indigo">Please enter</span> your education information
-                </h2>
-                <p className="text-brand-navy/70 font-medium">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-brand-deep tracking-tight">
+                    <span className="text-brand-indigo">Please enter</span> your education information
+                  </h2>
+                  <button 
+                    type="button"
+                    onClick={() => setShowMobilePreview(true)}
+                    className="lg:hidden shrink-0 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer border border-purple-500 mt-1"
+                  >
+                    <Eye className="w-4 h-4 text-white" />
+                    <span>Preview</span>
+                  </button>
+                </div>
+                <p className="text-brand-navy/70 font-medium text-xs sm:text-sm">
                   Write your schools or courses you finished.
                 </p>
               </div>
@@ -1778,10 +1798,20 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
           {currentStep === 5 && (
              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
-                <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
-                  <span className="text-brand-indigo">Write down</span> your professional summary
-                </h2>
-                <p className="text-brand-navy/70 font-medium">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-brand-deep tracking-tight">
+                    <span className="text-brand-indigo">Write down</span> your professional summary
+                  </h2>
+                  <button 
+                    type="button"
+                    onClick={() => setShowMobilePreview(true)}
+                    className="lg:hidden shrink-0 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer border border-purple-500 mt-1"
+                  >
+                    <Eye className="w-4 h-4 text-white" />
+                    <span>Preview</span>
+                  </button>
+                </div>
+                <p className="text-brand-navy/70 font-medium text-xs sm:text-sm">
                   Provide a brief summary, or use AI to generate options of 2 to 3 lines, or perfect your text into 1 impactful sentence.
                 </p>
               </div>
@@ -1853,10 +1883,20 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
           {currentStep === 3 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
-                <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
-                  <span className="text-brand-indigo">Upload</span> your credentials & certificates
-                </h2>
-                <p className="text-brand-navy/70 font-medium text-sm">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-brand-deep tracking-tight">
+                    <span className="text-brand-indigo">Upload</span> your credentials & certificates
+                  </h2>
+                  <button 
+                    type="button"
+                    onClick={() => setShowMobilePreview(true)}
+                    className="lg:hidden shrink-0 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer border border-purple-500 mt-1"
+                  >
+                    <Eye className="w-4 h-4 text-white" />
+                    <span>Preview</span>
+                  </button>
+                </div>
+                <p className="text-brand-navy/70 font-medium text-xs sm:text-sm">
                   Add certificates, transcripts, or awards. These will be saved in your profile credentials but won't print directly on this resume.
                 </p>
               </div>
@@ -2168,11 +2208,21 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
           {currentStep === 4 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div>
-                <h2 className="text-4xl font-extrabold text-brand-deep mb-3 tracking-tight">
-                  <span className="text-brand-indigo">Tell us</span> about your skills
-                </h2>
-                <p className="text-brand-navy/70 font-medium">
-                  Pick 6 skills that match the job ad. Drag and drop to reorder.
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-brand-deep tracking-tight">
+                    <span className="text-brand-indigo">Tell us</span> about your skills
+                  </h2>
+                  <button 
+                    type="button"
+                    onClick={() => setShowMobilePreview(true)}
+                    className="lg:hidden shrink-0 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer border border-purple-500 mt-1"
+                  >
+                    <Eye className="w-4 h-4 text-white" />
+                    <span>Preview</span>
+                  </button>
+                </div>
+                <p className="text-brand-navy/70 font-medium text-xs sm:text-sm">
+                  Pick skills that match the job ad. Drag and drop to reorder.
                 </p>
               </div>
 
@@ -2263,17 +2313,24 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
           {/* STEP 7: FINISH IT */}
           {currentStep === 6 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-              <div className="relative group max-w-lg">
-                <input 
-                  type="text"
-                  value={documentTitle}
-                  onChange={(e) => setDocumentTitle(e.target.value)}
-                  className="text-3xl font-extrabold text-brand-deep bg-transparent border-b-2 border-transparent hover:border-brand-indigo/30 focus:border-brand-indigo focus:outline-none px-0 py-2 w-full transition-colors"
-                  placeholder="Name your resume..."
-                />
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 text-brand-navy/30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  Click to edit
+              <div className="flex items-center justify-between gap-3">
+                <div className="relative group max-w-lg flex-1">
+                  <input 
+                    type="text"
+                    value={documentTitle}
+                    onChange={(e) => setDocumentTitle(e.target.value)}
+                    className="text-2xl sm:text-3xl font-extrabold text-brand-deep bg-transparent border-b-2 border-transparent hover:border-brand-indigo/30 focus:border-brand-indigo focus:outline-none px-0 py-2 w-full transition-colors"
+                    placeholder="Name your resume..."
+                  />
                 </div>
+                <button 
+                  type="button"
+                  onClick={() => setShowMobilePreview(true)}
+                  className="lg:hidden shrink-0 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer border border-purple-500"
+                >
+                  <Eye className="w-4 h-4 text-white" />
+                  <span>Preview</span>
+                </button>
               </div>
 
               <div className="space-y-6 glass-panel p-8 rounded-xl border border-brand-navy/10 shadow-sm">
@@ -2352,13 +2409,23 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
               </div>
             ) : (
               <div className="space-y-8 flex flex-col items-center justify-center text-center h-full animate-in fade-in zoom-in-95">
-                <div className="w-24 h-24 bg-brand-indigo/10 rounded-full flex items-center justify-center mb-4">
+                <div className="w-24 h-24 bg-brand-indigo/10 rounded-full flex items-center justify-center mb-4 relative">
                   <Check className="w-12 h-12 text-brand-indigo" />
                 </div>
-                <h2 className="text-4xl font-extrabold text-brand-deep tracking-tight">
-                  You're all set!
-                </h2>
-                <p className="text-brand-navy/70 font-medium max-w-md">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-deep tracking-tight">
+                    You're all set!
+                  </h2>
+                  <button 
+                    type="button"
+                    onClick={() => setShowMobilePreview(true)}
+                    className="lg:hidden shrink-0 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer border border-purple-500"
+                  >
+                    <Eye className="w-4 h-4 text-white" />
+                    <span>Preview</span>
+                  </button>
+                </div>
+                <p className="text-brand-navy/70 font-medium max-w-md text-xs sm:text-sm">
                   Your resume data has been structured perfectly. Click below to compile it into the Master CV format and prepare for AI tailoring.
                 </p>
               </div>
