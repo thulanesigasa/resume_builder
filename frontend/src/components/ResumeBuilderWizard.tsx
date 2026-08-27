@@ -19,7 +19,9 @@ import {
   Loader2,
   AlertCircle,
   FileText,
-  RefreshCw
+  RefreshCw,
+  Eye,
+  X
 } from "lucide-react";
 import { api, API_BASE_URL } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
@@ -290,6 +292,9 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   // --- Step Bar ref for accurate centering ---
   const stepBarRef = useRef<HTMLDivElement>(null);
   const [stepBarWidth, setStepBarWidth] = useState(0);
+
+  // --- Mobile Preview Drawer State ---
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
 
   // --- Custom Confirm Modal State ---
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -1407,15 +1412,15 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
   if (!isLoaded) return null; // Prevent hydration mismatch on load
 
   return (
-    <div className="flex w-full h-[calc(100vh-3rem)] bg-white relative">
+    <div className="flex flex-col lg:flex-row w-full min-h-[calc(100vh-3.5rem)] lg:h-[calc(100vh-3rem)] bg-white relative overflow-x-hidden">
       
       {/* Fullscreen Compiling Loader */}
       {isCompiling && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-all animate-in fade-in">
-          <div className="bg-white shadow-2xl rounded-2xl p-8 flex flex-col items-center gap-4 max-w-sm text-center border border-slate-200">
-            <Loader2 className="w-12 h-12 text-brand-indigo animate-spin" />
-            <h3 className="text-lg font-bold text-brand-deep">Compiling...</h3>
-            <p className="text-sm text-brand-navy/70">Generating final PDF and saving to Saved Archives...</p>
+          <div className="bg-white shadow-2xl rounded-2xl p-6 sm:p-8 flex flex-col items-center gap-4 max-w-sm text-center border border-slate-200 m-4">
+            <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 text-brand-indigo animate-spin" />
+            <h3 className="text-base sm:text-lg font-bold text-brand-deep">Compiling...</h3>
+            <p className="text-xs sm:text-sm text-brand-navy/70">Generating final PDF and saving to Saved Archives...</p>
           </div>
         </div>
       )}
@@ -1424,8 +1429,8 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
       <div className="w-full lg:w-[50%] xl:w-[50%] flex flex-col h-full bg-white overflow-y-auto relative">
         
         {/* Progress Bar — Clean responsive horizontal stepper */}
-        <div className="w-full border-b border-slate-200 bg-white px-4 py-3 sticky top-0 z-20 shadow-2xs">
-          <div className="flex items-center justify-between max-w-full overflow-x-auto gap-1.5 py-1 px-1">
+        <div className="w-full border-b border-slate-200 bg-white px-2 sm:px-4 py-2.5 sm:py-3 sticky top-0 z-20 shadow-2xs">
+          <div className="flex items-center justify-start lg:justify-between min-w-max lg:min-w-0 overflow-x-auto gap-1 sm:gap-1.5 py-1 px-1 no-scrollbar">
             {STEPS.map((step, idx) => {
               const isActive = idx === currentStep;
               const isCompleted = idx < currentStep;
@@ -1461,26 +1466,26 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                       setCurrentStep(idx);
                     }
                   }}
-                  className={`flex items-center gap-1.5 shrink-0 cursor-pointer transition-all px-2 py-1 rounded-md ${
+                  className={`flex items-center gap-1.5 shrink-0 cursor-pointer transition-all px-1.5 sm:px-2 py-1 rounded-md ${
                     isActive ? "bg-purple-50" : "hover:bg-slate-50"
                   }`}
                 >
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black transition-all ${
+                  <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-black transition-all ${
                     isActive
                       ? "bg-purple-600 text-white shadow-sm ring-2 ring-purple-200"
                       : isCompleted
                       ? "bg-purple-600 text-white"
                       : "bg-slate-100 text-slate-400"
                   }`}>
-                    {isCompleted ? <Check className="w-3.5 h-3.5" /> : idx + 1}
+                    {isCompleted ? <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : idx + 1}
                   </div>
-                  <span className={`text-[11px] font-bold tracking-tight whitespace-nowrap ${
+                  <span className={`text-[10px] sm:text-[11px] font-bold tracking-tight whitespace-nowrap ${
                     isActive ? "text-purple-600 font-extrabold" : isCompleted ? "text-slate-800" : "text-slate-400"
                   }`}>
                     {step}
                   </span>
                   {idx < STEPS.length - 1 && (
-                    <div className={`h-0.5 w-3 sm:w-5 ml-1 transition-colors ${isCompleted ? "bg-purple-600" : "bg-slate-200"}`} />
+                    <div className={`h-0.5 w-2 sm:w-4 ml-0.5 sm:ml-1 transition-colors ${isCompleted ? "bg-purple-600" : "bg-slate-200"}`} />
                   )}
                 </div>
               );
@@ -1490,14 +1495,14 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
 
         {/* Validation Error Toast */}
         {validationError && (
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 animate-in slide-in-from-top-4 fade-in">
-            <div className="bg-red-500 text-white px-4 py-2 rounded-full shadow-lg font-bold text-sm flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" /> {validationError}
+          <div className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-30 animate-in slide-in-from-top-4 fade-in w-11/12 max-w-md text-center">
+            <div className="bg-red-500 text-white px-3 sm:px-4 py-2 rounded-full shadow-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" /> <span className="truncate">{validationError}</span>
             </div>
           </div>
         )}
 
-        <div className="flex-1 p-8 md:p-12 max-w-3xl mx-auto w-full">
+        <div className="flex-1 p-4 sm:p-6 md:p-10 lg:p-12 max-w-3xl mx-auto w-full">
           
           {/* STEP 1: CONTACT */}
           {currentStep === 0 && (
@@ -2448,6 +2453,44 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
         )}
 
       </div>
+
+      {/* MOBILE / TABLET FLOATING LIVE PREVIEW BUTTON */}
+      <button 
+        onClick={() => setShowMobilePreview(true)}
+        className="lg:hidden fixed bottom-6 right-4 z-40 bg-slate-900 hover:bg-purple-700 text-white px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 text-xs font-black transition-all border border-slate-700 active:scale-95 cursor-pointer"
+      >
+        <Eye className="w-4 h-4 text-emerald-400 animate-pulse" />
+        <span>Live Preview</span>
+      </button>
+
+      {/* MOBILE / TABLET LIVE PREVIEW MODAL DRAWER */}
+      {showMobilePreview && (
+        <div className="lg:hidden fixed inset-0 z-50 flex flex-col bg-slate-900/90 backdrop-blur-md animate-in fade-in">
+          <div className="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between z-10 shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-black text-white uppercase tracking-wider">Live Document Preview</span>
+            </div>
+            <button 
+              onClick={() => setShowMobilePreview(false)}
+              className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 relative overflow-hidden bg-slate-100 flex items-center justify-center p-2">
+            {previewHtml ? (
+              <iframe 
+                srcDoc={previewHtml}
+                className="w-full h-full border-none bg-white shadow-2xl rounded-sm"
+                title="Live Resume Preview Mobile"
+              />
+            ) : (
+              <div className="text-slate-500 font-bold text-sm">Loading Live Preview...</div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Soft-Confirm Skip Modal */}
       {confirmSkipModal && (
