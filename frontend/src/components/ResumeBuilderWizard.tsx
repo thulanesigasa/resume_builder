@@ -382,6 +382,15 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   }, [currentStep]);
 
+  // Auto-redirect to PayFast when user reaches Step 7 with no credits
+  useEffect(() => {
+    if (currentStep === 7 && !isStep7Preparing && userCredits < 1) {
+      if (onPaymentRequired) {
+        onPaymentRequired();
+      }
+    }
+  }, [currentStep, isStep7Preparing, userCredits, onPaymentRequired]);
+
   // Soft-confirm skip modal
   const [confirmSkipModal, setConfirmSkipModal] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
@@ -2433,53 +2442,20 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                 <p className="text-brand-navy/60 text-sm font-medium">Preparing download package</p>
               </div>
             ) : userCredits < 1 ? (
-              /* ── No-credits gate ── */
-              <div className="space-y-6 flex flex-col items-center justify-center text-center h-full animate-in fade-in zoom-in-95 px-4">
-                {/* Lock icon */}
-                <div className="w-20 h-20 bg-purple-50 border-2 border-purple-200 rounded-full flex items-center justify-center">
-                  <svg className="w-9 h-9 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-
-                <div className="space-y-2">
-                  <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                    Credits Required
-                  </h2>
-                  <p className="text-brand-navy/70 font-medium max-w-sm text-xs sm:text-sm">
-                    Compiling your Master CV costs <span className="font-extrabold text-slate-900">1 credit (R15)</span>. You currently have <span className="font-extrabold text-purple-600">0 credits</span>. Top up to continue.
-                  </p>
-                </div>
-
-                {/* Pricing pills */}
-                <div className="flex flex-wrap justify-center gap-3">
-                  <div className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white shadow-sm text-center">
-                    <p className="text-xs font-bold text-slate-900">Resume only</p>
-                    <p className="text-lg font-extrabold text-purple-600">R15</p>
-                    <p className="text-[10px] text-slate-400">1 credit</p>
-                  </div>
-                  <div className="px-4 py-2.5 rounded-xl border-2 border-purple-600 bg-purple-50 shadow-sm text-center">
-                    <p className="text-xs font-bold text-slate-900">Resume + Cover Letter</p>
-                    <p className="text-lg font-extrabold text-purple-600">R25</p>
-                    <p className="text-[10px] text-slate-400">2 credits</p>
-                  </div>
-                </div>
-
-                {/* PayFast CTA */}
+              /* Auto-redirecting — show a brief spinner while PayFast loads */
+              <div className="space-y-6 flex flex-col items-center justify-center text-center h-full animate-in fade-in">
+                <Loader2 className="w-12 h-12 text-purple-600 animate-spin mb-2" />
+                <h3 className="text-xl font-bold text-slate-900">Redirecting to payment...</h3>
+                <p className="text-slate-500 text-sm font-medium max-w-xs">
+                  Compiling requires <span className="font-extrabold text-slate-900">1 credit (R15)</span>. Taking you to secure PayFast checkout.
+                </p>
                 <button
                   id="wizard-topup-btn"
                   onClick={() => onPaymentRequired && onPaymentRequired()}
-                  className="px-8 py-3.5 bg-purple-600 hover:bg-purple-700 active:scale-[0.98] text-white font-extrabold text-sm rounded-xl transition-all shadow-md shadow-purple-300/30 flex items-center gap-2 cursor-pointer"
+                  className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Top Up Credits via PayFast
+                  Continue to PayFast
                 </button>
-
-                <p className="text-[11px] text-slate-400">
-                  Secure ZAR payment — EFT, Capitec Pay, Credit/Debit Card
-                </p>
               </div>
             ) : (
               <div className="space-y-8 flex flex-col items-center justify-center text-center h-full animate-in fade-in zoom-in-95">
