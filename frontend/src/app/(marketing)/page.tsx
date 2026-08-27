@@ -44,7 +44,7 @@ export default function LandingPage() {
       {/* 6. 6 Core Superpowers Feature Grid */}
       <FeatureSuperpowerMatrix />
 
-      {/* 7. rbptech vs $29/mo Subscription Builders Comparison Matrix */}
+      {/* 7. rbptech vs R350/mo Subscription Builders Comparison Matrix */}
       <ComparisonMatrix />
 
       {/* 8. Expandable FAQ Accordion */}
