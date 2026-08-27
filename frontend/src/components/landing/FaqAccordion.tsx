@@ -10,7 +10,7 @@ const FAQS = [
   },
   {
     question: "Is rbptech really pay-as-you-go with no recurring monthly subscriptions?",
-    answer: "Yes! Unlike traditional resume builders that silently bill your card $29 every month, rbptech operates strictly on a pay-per-document model. You can generate a single tailored resume for R15, or a Resume + Cover Letter combo for R25. You only pay when you actually generate a document.",
+    answer: "Yes! Unlike traditional resume builders that silently bill your card R350 every month, rbptech operates strictly on a pay-per-document model. You can generate a single tailored resume for R15, or a Resume + Cover Letter combo for R25. You only pay when you actually generate a document.",
   },
   {
     question: "What payment methods are supported in South Africa?",

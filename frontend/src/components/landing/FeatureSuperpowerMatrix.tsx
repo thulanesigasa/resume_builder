@@ -30,7 +30,7 @@ const FEATURES = [
   {
     iconSrc: "/pay-svgrepo-com.svg",
     title: "Pay-As-You-Go Transparency",
-    desc: "No sneaky $29/mo recurring subscriptions that charge your card secretly. Pay R15 per tailored resume or R25 per combo via PayFast.",
+    desc: "No sneaky R350/mo recurring subscriptions that charge your card secretly. Pay R15 per tailored resume or R25 per combo via PayFast.",
     highlight: "Local ZAR pricing with zero traps",
   },
   {

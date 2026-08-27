@@ -99,7 +99,7 @@ export default function TemplateShowcase() {
             Top professional templates for a perfect CV
           </h2>
           <p className="text-sm md:text-base text-slate-600 font-normal leading-relaxed">
-            30+ expert-designed CV templates to choose from. Optimised to impress recruiters and pass ATS. One-click layouts – no formatting necessary.
+            10+ expert-designed CV templates to choose from. Optimised to impress recruiters and pass ATS. One-click layouts – no formatting necessary.
           </p>
         </header>
 
