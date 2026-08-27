@@ -414,10 +414,17 @@ function DashboardContent() {
         const checkoutCancel = searchParams.get("checkout_cancel");
         
         if (checkoutSuccess) {
-          triggerToast("Payment successful! Credits have been added to your account. You can now generate documents.", "success");
+          triggerToast("Payment successful! Credits have been added to your account. Compiling your resume...", "success");
+          const returnTab = localStorage.getItem("wizard_return_tab");
+          if (returnTab) {
+            setActiveTab(returnTab as any);
+            localStorage.removeItem("wizard_return_tab");
+          }
           router.replace("/home");
         } else if (checkoutCancel) {
           triggerToast("Payment was cancelled or unsuccessful. Please verify your payment details.", "error");
+          localStorage.removeItem("wizard_return_tab");
+          localStorage.removeItem("wizard_auto_compile");
           router.replace("/home");
         }
       }
@@ -3158,11 +3165,15 @@ function DashboardContent() {
                   selectedTemplate="ats_resume_template.html"
                   userCredits={userCredits}
                   onPaymentRequired={async () => {
+                    localStorage.setItem("wizard_return_tab", "builder");
+                    localStorage.setItem("wizard_auto_compile", "true");
                     setIsRedirectingToPayfast(true);
                     try {
                       await api.createPayfastCheckout(15, "Master CV Compilation Credit (R15)");
                     } catch (e: any) {
                       setIsRedirectingToPayfast(false);
+                      localStorage.removeItem("wizard_return_tab");
+                      localStorage.removeItem("wizard_auto_compile");
                       triggerToast("Error connecting to PayFast: " + e.message, "error");
                     }
                   }}

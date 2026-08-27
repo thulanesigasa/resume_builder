@@ -391,6 +391,20 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   }, [currentStep, isStep7Preparing, userCredits, onPaymentRequired]);
 
+  // Auto-compile when returning from PayFast payment with credits available
+  const hasAutoCompiled = useRef(false);
+  useEffect(() => {
+    if (isLoaded && userCredits >= 1 && currentStep === 7 && !hasAutoCompiled.current) {
+      const shouldAutoCompile = localStorage.getItem("wizard_auto_compile");
+      if (shouldAutoCompile === "true") {
+        localStorage.removeItem("wizard_auto_compile");
+        hasAutoCompiled.current = true;
+        console.log("[Payment Return] Auto-compiling document after successful payment...");
+        handleDownload();
+      }
+    }
+  }, [isLoaded, userCredits, currentStep]);
+
   // Soft-confirm skip modal
   const [confirmSkipModal, setConfirmSkipModal] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
@@ -433,6 +447,9 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           setSummary(parsed.about);
         }
         if (parsed.documentTitle) setDocumentTitle(parsed.documentTitle);
+        if (typeof parsed.currentStep === 'number' && parsed.currentStep >= 0 && parsed.currentStep <= 7) {
+          setCurrentStep(parsed.currentStep);
+        }
         if (parsed.format) {
           // Backward compatibility check for old template names
           const validTemplates = [
@@ -466,10 +483,10 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   // --- Save Draft on Change ---
   useEffect(() => {
     if (isLoaded) {
-      console.log("[DEBUG DRAFT SAVE] Saving draft with format.template =", format.template);
-      localStorage.setItem("resume_wizard_draft", JSON.stringify({ contact, experiences, educations, skills, summary, documentTitle, format }));
+      console.log("[DEBUG DRAFT SAVE] Saving draft with format.template =", format.template, "currentStep =", currentStep);
+      localStorage.setItem("resume_wizard_draft", JSON.stringify({ contact, experiences, educations, skills, summary, documentTitle, format, currentStep }));
     }
-  }, [contact, experiences, educations, skills, summary, documentTitle, format, isLoaded]);
+  }, [contact, experiences, educations, skills, summary, documentTitle, format, currentStep, isLoaded]);
 
   const hasAppliedInitialTemplate = useRef(false);
   useEffect(() => {
