@@ -1954,8 +1954,8 @@ function DashboardContent() {
 
       {/* Main Workspace Container (With Dynamic Left Padding for Sidebar) */}
       <main 
-        style={{ paddingLeft: sidebarCollapsed ? "5rem" : "17.5rem" }}
-        className={`flex-1 w-full transition-all duration-300 ease-in-out ${activeTab === "builder" ? "p-0 space-y-0" : "p-6 md:p-8 space-y-8"}`}
+        style={{ paddingLeft: sidebarCollapsed ? "4.5rem" : "16.5rem" }}
+        className={`flex-1 w-full transition-all duration-300 ease-in-out ${activeTab === "builder" ? "p-0 space-y-0" : "p-4 sm:p-6 md:p-8 space-y-8"}`}
       >
 
         {/* TAB 0: WELCOME OVERVIEW (60-30-10 RULE: WHITE - BLACK/GRAY - PURPLE) */}
@@ -3527,9 +3527,10 @@ function DashboardContent() {
 
 
 
-    </main>
+        {/* Footer inside main container so sidebar left padding is respected */}
+        {activeTab !== "builder" && <MarketingFooter />}
+      </main>
     </div>
-    <MarketingFooter />
     </>
   );
 }

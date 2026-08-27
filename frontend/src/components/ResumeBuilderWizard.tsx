@@ -2358,25 +2358,38 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
         </div>
 
         {/* BOTTOM NAVIGATION ACTIONS */}
-        <div className="p-8 border-t border-slate-200 bg-white sticky bottom-0 z-20 flex justify-between items-center max-w-4xl mx-auto w-full">
+        <div className="px-4 py-3 sm:px-8 sm:py-4 border-t border-slate-200 bg-white sticky bottom-0 z-30 flex justify-between items-center max-w-4xl mx-auto w-full gap-2">
+          {/* LEFT: BACK or CANCEL */}
           {currentStep > 0 ? (
-            <button onClick={handleBack} className="group flex items-center justify-center gap-2 px-6 py-2.5 rounded-full border-2 border-brand-indigo/20 text-brand-indigo font-bold text-sm hover:border-brand-indigo hover:bg-brand-indigo hover:text-white transition-all duration-300">
-              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
-              Back
+            <button onClick={handleBack} className="group flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full border-2 border-brand-indigo/20 text-brand-indigo font-bold text-xs sm:text-sm hover:border-brand-indigo hover:bg-brand-indigo hover:text-white transition-all duration-300 cursor-pointer shrink-0">
+              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> 
+              <span>Back</span>
             </button>
           ) : (
-            <button onClick={onCancel} className="text-brand-navy/50 font-bold text-sm hover:text-brand-deep transition-colors">
+            <button onClick={onCancel} className="px-3 sm:px-4 py-2 text-brand-navy/60 hover:text-brand-deep font-bold text-xs sm:text-sm transition-colors cursor-pointer shrink-0">
               Cancel
             </button>
           )}
 
+          {/* CENTER: MOBILE LIVE PREVIEW BUTTON (Only visible on Mobile/Tablet <1024px) */}
+          <button 
+            onClick={() => setShowMobilePreview(true)}
+            className="lg:hidden px-3 sm:px-4 py-2 sm:py-2.5 rounded-full bg-slate-900 hover:bg-purple-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer shrink-0 border border-slate-700"
+          >
+            <Eye className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            <span className="hidden min-[380px]:inline">Preview Sheet</span>
+            <span className="min-[380px]:hidden">Preview</span>
+          </button>
+
+          {/* RIGHT: NEXT or SAVE */}
           {currentStep < 7 ? (
-            <button onClick={handleNext} className="btn-primary text-sm shadow-lg shadow-brand-indigo/20 flex items-center gap-2 px-8 py-3.5">
-              Next to {STEPS[currentStep + 1] === 'FINISH IT' ? 'Finish it' : STEPS[currentStep + 1] === 'PROFESSIONAL SUMMARY' ? 'Professional Summary' : STEPS[currentStep + 1].charAt(0) + STEPS[currentStep + 1].slice(1).toLowerCase()} <ChevronRight className="w-4 h-4" />
+            <button onClick={handleNext} className="btn-primary text-xs sm:text-sm shadow-lg shadow-brand-indigo/20 flex items-center gap-1.5 px-4 sm:px-8 py-2.5 sm:py-3.5 shrink-0">
+              <span>Next <span className="hidden sm:inline">to {STEPS[currentStep + 1] === 'FINISH IT' ? 'Finish it' : STEPS[currentStep + 1] === 'PROFESSIONAL SUMMARY' ? 'Professional Summary' : STEPS[currentStep + 1].charAt(0) + STEPS[currentStep + 1].slice(1).toLowerCase()}</span></span>
+              <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
-            <button onClick={handleDownload} className="btn-primary text-sm shadow-lg shadow-brand-indigo/20 flex items-center gap-2 px-10 py-3.5">
-              Compile & Save <Check className="w-4 h-4" />
+            <button onClick={handleDownload} className="btn-primary text-xs sm:text-sm shadow-lg shadow-brand-indigo/20 flex items-center gap-2 px-6 sm:px-10 py-2.5 sm:py-3.5 shrink-0">
+              <span>Compile & Save</span> <Check className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -2404,12 +2417,14 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                 width: '800px',
                 height: '1131px',
                 transform: `scale(${previewScale})`,
+                filter: 'blur(3.5px)',
                 flexShrink: 0,
               }}
             >
               <iframe 
                 srcDoc={previewHtml || undefined}
                 className="w-full h-full border-none bg-white shadow-2xl"
+                style={{ filter: 'blur(3.5px)' }}
                 title="Live Resume Preview"
               />
             </div>
@@ -2454,15 +2469,6 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
 
       </div>
 
-      {/* MOBILE / TABLET FLOATING LIVE PREVIEW BUTTON */}
-      <button 
-        onClick={() => setShowMobilePreview(true)}
-        className="lg:hidden fixed bottom-6 right-4 z-40 bg-slate-900 hover:bg-purple-700 text-white px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 text-xs font-black transition-all border border-slate-700 active:scale-95 cursor-pointer"
-      >
-        <Eye className="w-4 h-4 text-emerald-400 animate-pulse" />
-        <span>Live Preview</span>
-      </button>
-
       {/* MOBILE / TABLET LIVE PREVIEW MODAL DRAWER */}
       {showMobilePreview && (
         <div className="lg:hidden fixed inset-0 z-50 flex flex-col bg-slate-900/90 backdrop-blur-md animate-in fade-in">
@@ -2483,6 +2489,7 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
               <iframe 
                 srcDoc={previewHtml}
                 className="w-full h-full border-none bg-white shadow-2xl rounded-sm"
+                style={{ filter: 'blur(3.5px)' }}
                 title="Live Resume Preview Mobile"
               />
             ) : (
