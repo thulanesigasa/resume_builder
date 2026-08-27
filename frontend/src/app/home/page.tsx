@@ -3156,6 +3156,16 @@ function DashboardContent() {
               <div className="w-full animate-in fade-in duration-300">
                 <ResumeBuilderWizard
                   selectedTemplate="ats_resume_template.html"
+                  userCredits={userCredits}
+                  onPaymentRequired={async () => {
+                    setIsRedirectingToPayfast(true);
+                    try {
+                      await api.createPayfastCheckout(15, "Master CV Compilation Credit (R15)");
+                    } catch (e: any) {
+                      setIsRedirectingToPayfast(false);
+                      triggerToast("Error connecting to PayFast: " + e.message, "error");
+                    }
+                  }}
                   onSave={async (compiledMarkdown) => {
                     setActiveTab("mycv");
                   }}
