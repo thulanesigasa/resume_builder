@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { api, API_BASE_URL } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
+import ThemedDropdown from "@/components/ThemedDropdown";
 
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -2339,22 +2340,26 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
-                  <div className="relative">
-                    <label className="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider rounded-md">Template</label>
-                    <select className="w-full px-4 py-3.5 glass-input text-brand-deep font-bold focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 appearance-none" value={format.template} onChange={e => setFormat({...format, template: e.target.value})}>
-                      <option value="ats_resume_template.html">Standard ATS (Default)</option>
-                      <option value="ui_ux_pro_max_resume.html">UI/UX Pro Max</option>
-                      <option value="amy_stein_resume.html">Amy Stein (Modern)</option>
-                      <option value="ava_martinez_resume.html">Ava Martinez (Creative)</option>
-                      <option value="david_turner_resume.html">David Turner (Classic)</option>
-                      <option value="base_resume_template_black.html">Base Blueprint</option>
-                      <option value="noma_resume_template_black.html">Noma Clean</option>
-                      <option value="note_resume_template_black.html">Note Serif</option>
-                      <option value="page_resume_template_black.html">Page Minimalist</option>
-                    </select>
-                    <ChevronRight className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-brand-navy/40 rotate-90 pointer-events-none" />
-                  </div>
+                  {/* Template picker */}
+                  <ThemedDropdown
+                    id="format-template"
+                    label="Template"
+                    value={format.template}
+                    onChange={(val) => setFormat({ ...format, template: val })}
+                    options={[
+                      { value: "ats_resume_template.html",        label: "Standard ATS (Default)",   description: "Optimised for applicant tracking systems" },
+                      { value: "ui_ux_pro_max_resume.html",        label: "UI/UX Pro Max",             description: "Bold layout for design professionals" },
+                      { value: "amy_stein_resume.html",            label: "Amy Stein (Modern)",       description: "Clean contemporary two-column design" },
+                      { value: "ava_martinez_resume.html",         label: "Ava Martinez (Creative)",  description: "Expressive layout with colour accents" },
+                      { value: "david_turner_resume.html",         label: "David Turner (Classic)",   description: "Traditional single-column format" },
+                      { value: "base_resume_template_black.html",  label: "Base Blueprint",           description: "Minimal black-and-white starter" },
+                      { value: "noma_resume_template_black.html",  label: "Noma Clean",               description: "Spacious Scandinavian-inspired layout" },
+                      { value: "note_resume_template_black.html",  label: "Note Serif",               description: "Elegant serif typeface layout" },
+                      { value: "page_resume_template_black.html",  label: "Page Minimalist",          description: "Ultra-minimal single-page format" },
+                    ]}
+                  />
 
+                  {/* Accent Color swatches — keep as-is */}
                   <div>
                     <label className="block text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider mb-3">Accent Color</label>
                     <div className="flex gap-3">
@@ -2371,29 +2376,35 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                     </div>
                   </div>
 
-                  <div className="relative">
-                    <label className="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider rounded-md">Title Font</label>
-                    <select className="w-full px-4 py-3.5 glass-input text-brand-deep font-bold focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 appearance-none" value={format.titleFont} onChange={e => setFormat({...format, titleFont: e.target.value})}>
-                      <option>BEBAS NEUE (DEFAULT)</option>
-                      <option>Inter</option>
-                      <option>Roboto</option>
-                      <option>Calibri</option>
-                      <option>Poppins</option>
-                    </select>
-                    <ChevronRight className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-brand-navy/40 rotate-90 pointer-events-none" />
-                  </div>
+                  {/* Title Font picker */}
+                  <ThemedDropdown
+                    id="format-title-font"
+                    label="Title Font"
+                    value={format.titleFont}
+                    onChange={(val) => setFormat({ ...format, titleFont: val })}
+                    options={[
+                      { value: "BEBAS NEUE (DEFAULT)", label: "BEBAS NEUE (DEFAULT)", description: "Bold condensed display typeface" },
+                      { value: "Inter",                label: "Inter",               description: "Clean modern humanist sans-serif" },
+                      { value: "Roboto",               label: "Roboto",              description: "Geometric Google sans-serif" },
+                      { value: "Calibri",              label: "Calibri",             description: "Microsoft Office classic" },
+                      { value: "Poppins",              label: "Poppins",             description: "Rounded geometric sans-serif" },
+                    ]}
+                  />
 
-                  <div className="relative">
-                    <label className="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider rounded-md">Body Font</label>
-                    <select className="w-full px-4 py-3.5 glass-input text-brand-deep font-bold focus:outline-none focus:ring-2 focus:ring-brand-indigo/50 appearance-none" value={format.bodyFont} onChange={e => setFormat({...format, bodyFont: e.target.value})}>
-                      <option>Lato (default)</option>
-                      <option>Open Sans</option>
-                      <option>Inter</option>
-                      <option>Calibri</option>
-                      <option>Poppins</option>
-                    </select>
-                    <ChevronRight className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-brand-navy/40 rotate-90 pointer-events-none" />
-                  </div>
+                  {/* Body Font picker */}
+                  <ThemedDropdown
+                    id="format-body-font"
+                    label="Body Font"
+                    value={format.bodyFont}
+                    onChange={(val) => setFormat({ ...format, bodyFont: val })}
+                    options={[
+                      { value: "Lato (default)", label: "Lato (default)", description: "Humanist sans-serif, highly readable" },
+                      { value: "Open Sans",      label: "Open Sans",     description: "Legible & widely supported" },
+                      { value: "Inter",          label: "Inter",         description: "Clean modern humanist sans-serif" },
+                      { value: "Calibri",        label: "Calibri",       description: "Microsoft Office classic" },
+                      { value: "Poppins",        label: "Poppins",       description: "Rounded geometric sans-serif" },
+                    ]}
+                  />
                 </div>
               </div>
             </div>
