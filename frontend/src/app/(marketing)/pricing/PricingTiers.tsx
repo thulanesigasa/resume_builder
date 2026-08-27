@@ -87,7 +87,7 @@ export default function PricingTiers() {
             <div className="space-y-4">
               <div className="text-xs uppercase font-bold text-brand-navy/50">Resume Only</div>
               <div className="flex items-baseline text-brand-deep">
-                <span className="text-4xl font-extrabold">R18</span>
+                <span className="text-4xl font-extrabold">R15</span>
                 <span className="text-xs text-brand-navy/60 ml-1">/ generation</span>
               </div>
               <p className="text-xs text-brand-navy/70">Tailor your base background and details for one specific job.</p>
@@ -107,7 +107,7 @@ export default function PricingTiers() {
               </ul>
             </div>
             <button
-              onClick={() => handleSelectPlan("Resume Only Plan", "R18")}
+              onClick={() => handleSelectPlan("Resume Only Plan", "R15")}
               className="w-full py-2.5 btn-secondary text-xs cursor-pointer"
             >
               Get Resume Only
@@ -119,7 +119,7 @@ export default function PricingTiers() {
             <div className="space-y-4">
               <div className="text-xs uppercase font-bold text-brand-navy/50">Resume Building</div>
               <div className="flex items-baseline text-brand-deep">
-                <span className="text-4xl font-extrabold">R25</span>
+                <span className="text-4xl font-extrabold">R15</span>
                 <span className="text-xs text-brand-navy/60 ml-1">/ generation</span>
               </div>
               <p className="text-xs text-brand-navy/70">Create a brand new professional ATS-optimized resume from scratch.</p>
@@ -140,7 +140,7 @@ export default function PricingTiers() {
               </ul>
             </div>
             <button
-              onClick={() => handleSelectPlan("Resume Building Plan", "R25")}
+              onClick={() => handleSelectPlan("Resume Building Plan", "R15")}
               className="w-full py-2.5 btn-secondary text-xs cursor-pointer"
             >
               Get Resume Building
@@ -205,7 +205,7 @@ export default function PricingTiers() {
                         batchType === "resume" ? "bg-brand-indigo text-white shadow-sm" : "text-brand-navy hover:text-brand-indigo"
                       }`}
                     >
-                      Resume (R18)
+                      Resume (R15)
                     </button>
                     <button
                       type="button"
@@ -249,15 +249,15 @@ export default function PricingTiers() {
                     // Resume: 18 * 50^power = 350 => power = log(350/18) / log(50)
                     // Combo: 25 * 50^power = 500 => power = log(500/25) / log(50)
                     const getFinalPrice = (jobs: number, type: "resume" | "combo") => {
-                      if (jobs <= 1) return type === "resume" ? 18 : 25;
+                      if (jobs <= 1) return type === "resume" ? 15 : 25;
                       const power = type === "resume" 
-                        ? Math.log(350 / 18) / Math.log(50) 
+                        ? Math.log(350 / 15) / Math.log(50) 
                         : Math.log(500 / 25) / Math.log(50);
-                      const baseUnit = type === "resume" ? 18 : 25;
+                      const baseUnit = type === "resume" ? 15 : 25;
                       return baseUnit * Math.pow(jobs, power);
                     };
 
-                    const basePrice = numJobs * (batchType === "resume" ? 18 : 25);
+                    const basePrice = numJobs * (batchType === "resume" ? 15 : 25);
                     const finalPrice = getFinalPrice(numJobs, batchType);
                     const discountAmount = basePrice - finalPrice;
                     const rate = discountAmount / basePrice;
@@ -284,11 +284,11 @@ export default function PricingTiers() {
             <button
               onClick={() => {
                 const getFinalPrice = (jobs: number, type: "resume" | "combo") => {
-                  if (jobs <= 1) return type === "resume" ? 18 : 25;
+                  if (jobs <= 1) return type === "resume" ? 15 : 25;
                   const power = type === "resume" 
-                    ? Math.log(350 / 18) / Math.log(50) 
+                    ? Math.log(350 / 15) / Math.log(50) 
                     : Math.log(500 / 25) / Math.log(50);
-                  const baseUnit = type === "resume" ? 18 : 25;
+                  const baseUnit = type === "resume" ? 15 : 25;
                   return baseUnit * Math.pow(jobs, power);
                 };
                 const finalPrice = getFinalPrice(numJobs, batchType);

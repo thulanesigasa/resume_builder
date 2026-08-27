@@ -1179,7 +1179,7 @@ function DashboardContent() {
 
     // Check credits
     const isCombo = includeCoverLetter;
-    const price = isCombo ? 25 : 18;
+    const price = isCombo ? 25 : 15;
     const desc = isCombo ? "Tailored Resume & Cover Letter Combo" : "Tailored Resume Only";
     const costInCredits = isCombo ? 2 : 1;
 
