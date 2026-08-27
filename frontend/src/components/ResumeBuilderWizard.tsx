@@ -1429,8 +1429,8 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
       <div className="w-full lg:w-[50%] xl:w-[50%] flex flex-col h-full bg-white overflow-y-auto relative">
         
         {/* Progress Bar — Clean responsive horizontal stepper */}
-        <div className="w-full border-b border-slate-200 bg-white px-2 sm:px-4 py-2.5 sm:py-3 sticky top-0 z-20 shadow-2xs">
-          <div className="flex items-center justify-start lg:justify-between min-w-max lg:min-w-0 overflow-x-auto gap-1 sm:gap-1.5 py-1 px-1 no-scrollbar">
+        <div className="w-full border-b border-slate-200 bg-white px-3 sm:px-4 py-2.5 sm:py-3 sticky top-0 z-20 shadow-2xs flex items-center justify-between gap-2 sm:gap-3">
+          <div className="flex items-center justify-start lg:justify-between min-w-0 flex-1 overflow-x-auto gap-1 sm:gap-1.5 py-1 px-1 no-scrollbar">
             {STEPS.map((step, idx) => {
               const isActive = idx === currentStep;
               const isCompleted = idx < currentStep;
@@ -1491,6 +1491,16 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
               );
             })}
           </div>
+
+          {/* TOP RIGHT: Themed Mobile Live Preview Button (No Green, No Oval) */}
+          <button 
+            onClick={() => setShowMobilePreview(true)}
+            className="lg:hidden shrink-0 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer border border-purple-500"
+          >
+            <Eye className="w-3.5 h-3.5 text-white" />
+            <span className="hidden min-[400px]:inline">Live Preview</span>
+            <span className="min-[400px]:hidden">Preview</span>
+          </button>
         </div>
 
         {/* Validation Error Toast */}
@@ -2358,38 +2368,28 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
         </div>
 
         {/* BOTTOM NAVIGATION ACTIONS */}
-        <div className="px-4 py-3 sm:px-8 sm:py-4 border-t border-slate-200 bg-white sticky bottom-0 z-30 flex justify-between items-center max-w-4xl mx-auto w-full gap-2">
+        <div className="px-4 py-3 sm:px-8 sm:py-4 border-t border-slate-200 bg-white sticky bottom-0 z-20 flex justify-between items-center max-w-4xl mx-auto w-full gap-4">
           {/* LEFT: BACK or CANCEL */}
           {currentStep > 0 ? (
-            <button onClick={handleBack} className="group flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full border-2 border-brand-indigo/20 text-brand-indigo font-bold text-xs sm:text-sm hover:border-brand-indigo hover:bg-brand-indigo hover:text-white transition-all duration-300 cursor-pointer shrink-0">
+            <button onClick={handleBack} className="group flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-xs sm:text-sm hover:border-purple-600 hover:bg-purple-50 hover:text-purple-600 transition-all duration-200 cursor-pointer shrink-0">
               <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" /> 
               <span>Back</span>
             </button>
           ) : (
-            <button onClick={onCancel} className="px-3 sm:px-4 py-2 text-brand-navy/60 hover:text-brand-deep font-bold text-xs sm:text-sm transition-colors cursor-pointer shrink-0">
+            <button onClick={onCancel} className="px-4 py-2.5 text-slate-500 hover:text-slate-900 font-bold text-xs sm:text-sm transition-colors cursor-pointer shrink-0">
               Cancel
             </button>
           )}
 
-          {/* CENTER: MOBILE LIVE PREVIEW BUTTON (Only visible on Mobile/Tablet <1024px) */}
-          <button 
-            onClick={() => setShowMobilePreview(true)}
-            className="lg:hidden px-3 sm:px-4 py-2 sm:py-2.5 rounded-full bg-slate-900 hover:bg-purple-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer shrink-0 border border-slate-700"
-          >
-            <Eye className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-            <span className="hidden min-[380px]:inline">Preview Sheet</span>
-            <span className="min-[380px]:hidden">Preview</span>
-          </button>
-
           {/* RIGHT: NEXT or SAVE */}
           {currentStep < 7 ? (
-            <button onClick={handleNext} className="btn-primary text-xs sm:text-sm shadow-lg shadow-brand-indigo/20 flex items-center gap-1.5 px-4 sm:px-8 py-2.5 sm:py-3.5 shrink-0">
+            <button onClick={handleNext} className="bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-bold shadow-lg shadow-slate-900/10 flex items-center gap-1.5 px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-xl transition-all active:scale-95 cursor-pointer shrink-0">
               <span>Next <span className="hidden sm:inline">to {STEPS[currentStep + 1] === 'FINISH IT' ? 'Finish it' : STEPS[currentStep + 1] === 'PROFESSIONAL SUMMARY' ? 'Professional Summary' : STEPS[currentStep + 1].charAt(0) + STEPS[currentStep + 1].slice(1).toLowerCase()}</span></span>
               <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
-            <button onClick={handleDownload} className="btn-primary text-xs sm:text-sm shadow-lg shadow-brand-indigo/20 flex items-center gap-2 px-6 sm:px-10 py-2.5 sm:py-3.5 shrink-0">
-              <span>Compile & Save</span> <Check className="w-4 h-4" />
+            <button onClick={handleDownload} className="bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-bold shadow-lg shadow-slate-900/10 flex items-center gap-2 px-6 sm:px-10 py-2.5 sm:py-3.5 rounded-xl transition-all active:scale-95 cursor-pointer shrink-0">
+              <span>Compile & Save</span> <Check className="w-4 h-4 text-purple-400" />
             </button>
           )}
         </div>
@@ -2474,7 +2474,7 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
         <div className="lg:hidden fixed inset-0 z-50 flex flex-col bg-slate-900/90 backdrop-blur-md animate-in fade-in">
           <div className="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between z-10 shrink-0">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
               <span className="text-xs font-black text-white uppercase tracking-wider">Live Document Preview</span>
             </div>
             <button 
