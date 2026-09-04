@@ -1364,21 +1364,7 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
       return;
     }
 
-    if (currentStep === 4) {
-      const validSkills = skills.filter(s => s.name.trim());
-      const techCount = validSkills.filter(s => s.type === "Technical").length;
-      const softCount = validSkills.filter(s => s.type === "Soft").length;
-      if ((techCount > 0 || softCount > 0) && techCount !== softCount) {
-        setConfirmSkipModal({
-          message: `You have an uneven ratio of Technical (${techCount}) to Soft (${softCount}) skills. For best ATS results, we recommend a 1:1 ratio. Do you want to continue anyway?`,
-          onConfirm: () => {
-            setConfirmSkipModal(null);
-            if (currentStep < STEPS.length - 1) setCurrentStep(currentStep + 1);
-          }
-        });
-        return;
-      }
-    }
+
 
     if (currentStep < STEPS.length - 1) setCurrentStep(currentStep + 1);
   };
@@ -1619,18 +1605,7 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                     } else {
                       for (let i = currentStep; i < idx; i++) {
                         if (!validateStep(i)) { setCurrentStep(i); return; }
-                        if (i === 4) {
-                          const validSkills = skills.filter(s => s.name.trim());
-                          const techCount = validSkills.filter(s => s.type === "Technical").length;
-                          const softCount = validSkills.filter(s => s.type === "Soft").length;
-                          if ((techCount > 0 || softCount > 0) && techCount !== softCount) {
-                            setConfirmSkipModal({
-                              message: `You have an uneven ratio of Technical (${techCount}) to Soft (${softCount}) skills. For best ATS results, we recommend a 1:1 ratio. Do you want to continue anyway?`,
-                              onConfirm: () => { setConfirmSkipModal(null); setCurrentStep(idx); }
-                            });
-                            return;
-                          }
-                        }
+
                         if ([1, 2, 4].includes(i) && !stepHasData(i)) {
                           setConfirmSkipModal({
                             message: STEP_EMPTY_MESSAGES[i],
