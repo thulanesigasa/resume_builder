@@ -135,8 +135,10 @@
         <h2>{{ contact_info.target_role }}</h2>
         {% elif contact_info.title %}
         <h2>{{ contact_info.title }}</h2>
-        {% else %}
-        <h2>End User & Chromebook Support Engineer</h2>
+        {% elif target_role %}
+        <h2>{{ target_role }}</h2>
+        {% elif job_title %}
+        <h2>{{ job_title }}</h2>
         {% endif %}
         <div class="contact-bar">
             {% if contact_info.location %}<span>{{ contact_info.location }}</span>{% endif %}
@@ -154,13 +156,30 @@
     </div>
     {% endif %}
 
-    {% if core_competencies %}
+    {% if skills or technical_skills or soft_skills or core_competencies %}
     <div class="section">
         <div class="section-header">Core Competencies</div>
         <ul>
-            {% for comp in core_competencies %}
-            <li>{{ comp }}</li>
-            {% endfor %}
+            {% if core_competencies %}
+                {% for comp in core_competencies %}
+                <li>{{ comp }}</li>
+                {% endfor %}
+            {% elif skills %}
+                {% for skill in skills %}
+                <li>{{ skill }}</li>
+                {% endfor %}
+            {% else %}
+                {% if technical_skills %}
+                    {% for skill in technical_skills %}
+                    <li>{{ skill }}</li>
+                    {% endfor %}
+                {% endif %}
+                {% if soft_skills %}
+                    {% for skill in soft_skills %}
+                    <li>{{ skill }}</li>
+                    {% endfor %}
+                {% endif %}
+            {% endif %}
         </ul>
     </div>
     {% endif %}
@@ -198,8 +217,12 @@
             {% for edu in education %}
             <li>
                 <strong>{{ edu.degree }}</strong>
-                {% if edu.institution %} - {{ edu.institution }}{% endif %}
-                {% if edu.dates %} ({{ edu.dates }}){% endif %}
+                {% if edu.institution %} – {{ edu.institution }}{% endif %}
+                {% if edu.endDate %}
+                ({{ edu.endDate }})
+                {% elif edu.dates %}
+                ({{ edu.dates.split('-')[-1].strip() }})
+                {% endif %}
             </li>
             {% endfor %}
         </ul>

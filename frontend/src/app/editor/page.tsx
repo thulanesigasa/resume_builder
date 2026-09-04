@@ -15,6 +15,13 @@ import {
   Settings,
   Flame,
   Eye,
+  Wand2,
+  Sparkles,
+  RefreshCw,
+  Award,
+  Upload,
+  FileText,
+  Check,
 } from "lucide-react";
 
 export default function EditorPage() {
@@ -39,6 +46,22 @@ export default function EditorPage() {
   const [previewTemplate, setPreviewTemplate] = useState<{name: string, type: string} | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+
+  // AI Feature States
+  const [improvingSummary, setImprovingSummary] = useState(false);
+  const [summaryOptions, setSummaryOptions] = useState<string[]>([]);
+  const [isGeneratingSummaryOptions, setIsGeneratingSummaryOptions] = useState(false);
+  const [isGeneratingSkills, setIsGeneratingSkills] = useState(false);
+  const [suggestedSkills, setSuggestedSkills] = useState<{ name: string; type: "Technical" | "Soft" }[]>([]);
+  const [improvingBulletKey, setImprovingBulletKey] = useState<string | null>(null);
+
+  // Certificate / Credential States
+  const [newCertName, setNewCertName] = useState("");
+  const [newCertIssuer, setNewCertIssuer] = useState("");
+  const [newCertDate, setNewCertDate] = useState("");
+  const [newCertDetails, setNewCertDetails] = useState("");
+  const [uploadingCert, setUploadingCert] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
 
   // App-specific compile tracking
   const [appId, setAppId] = useState<string | null>(null);
@@ -308,6 +331,152 @@ export default function EditorPage() {
     persistChanges({ ...resumeJson, experience: expList }, null);
   };
 
+  // --- AI Handlers for Editor ---
+  const handleAiImproveSummary = async () => {
+    if (!resumeJson) return;
+    setImprovingSummary(true);
+    try {
+      const current = resumeJson.professional_summary || "";
+      const context = `Target Job Title: ${jobTitle || "Professional"}, Company: ${company || ""}`;
+      const res = await api.improveText(current || "Results-driven professional.", context);
+      if (res?.improved_text) {
+        persistChanges({ ...resumeJson, professional_summary: res.improved_text }, null);
+        triggerToast("Summary enhanced with AI!", "success");
+      }
+    } catch (e: any) {
+      triggerToast("Failed to improve summary: " + e.message, "error");
+    } finally {
+      setImprovingSummary(false);
+    }
+  };
+
+  const handleAiGenerateSummaryOptions = async () => {
+    if (!resumeJson) return;
+    setIsGeneratingSummaryOptions(true);
+    try {
+      const res = await api.generateSummary(resumeJson);
+      if (res?.options && res.options.length > 0) {
+        setSummaryOptions(res.options);
+        triggerToast("Generated 3 AI summary options!", "success");
+      }
+    } catch (e: any) {
+      triggerToast("Failed to generate summary options: " + e.message, "error");
+    } finally {
+      setIsGeneratingSummaryOptions(false);
+    }
+  };
+
+  const handleAiGenerateSkills = async () => {
+    if (!resumeJson) return;
+    setIsGeneratingSkills(true);
+    try {
+      const res = await api.generateSkills(resumeJson);
+      if (res?.skills && res.skills.length > 0) {
+        setSuggestedSkills(res.skills);
+        triggerToast("Suggested AI skills ready!", "success");
+      }
+    } catch (e: any) {
+      triggerToast("Failed to generate AI skills: " + e.message, "error");
+    } finally {
+      setIsGeneratingSkills(false);
+    }
+  };
+
+  const handleAddSuggestedSkill = (skillName: string) => {
+    if (!resumeJson) return;
+    const currentSkills = resumeJson.skills || [];
+    if (!currentSkills.includes(skillName)) {
+      persistChanges({ ...resumeJson, skills: [...currentSkills, skillName] }, null);
+      triggerToast(`Added ${skillName} to skills!`, "success");
+    }
+  };
+
+  const handleAiImproveBullet = async (roleIdx: number, bulletIdx: number) => {
+    if (!resumeJson) return;
+    const expList = [...(resumeJson.experience || [])];
+    const role = expList[roleIdx];
+    const bulletText = role?.achievements?.[bulletIdx] || "";
+    if (!bulletText.trim()) return;
+
+    const key = `${roleIdx}-${bulletIdx}`;
+    setImprovingBulletKey(key);
+    try {
+      const context = `Role Title: ${role.title || ""}, Company: ${role.company || ""}`;
+      const res = await api.improveText(bulletText, context);
+      if (res?.improved_text) {
+        expList[roleIdx].achievements[bulletIdx] = res.improved_text;
+        persistChanges({ ...resumeJson, experience: expList }, null);
+        triggerToast("Bullet point rephrased with AI!", "success");
+      }
+    } catch (e: any) {
+      triggerToast("Failed to rephrase bullet point: " + e.message, "error");
+    } finally {
+      setImprovingBulletKey(null);
+    }
+  };
+
+  // --- Certificate Handlers ---
+  const handleAddCertificate = () => {
+    if (!resumeJson || !newCertName.trim()) return;
+    const certList = [...(resumeJson.certifications || [])];
+    certList.push({
+      name: newCertName.trim(),
+      issuer: newCertIssuer.trim(),
+      date: newCertDate.trim(),
+      details: newCertDetails.trim(),
+    });
+    persistChanges({ ...resumeJson, certifications: certList }, null);
+    setNewCertName("");
+    setNewCertIssuer("");
+    setNewCertDate("");
+    setNewCertDetails("");
+    triggerToast("Certificate added to resume!", "success");
+  };
+
+  const handleRemoveCertificate = (idx: number) => {
+    if (!resumeJson) return;
+    const certList = [...(resumeJson.certifications || [])];
+    certList.splice(idx, 1);
+    persistChanges({ ...resumeJson, certifications: certList }, null);
+    triggerToast("Certificate removed.", "info");
+  };
+
+  const handleUploadCertPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !resumeJson) return;
+
+    setUploadingCert(true);
+    setUploadProgress("Parsing certificate PDF...");
+    try {
+      const res = await api.parseCv(file, user.id);
+      const extractedText = res.extracted_text || "";
+
+      let certName = file.name.replace(/\.[^/.]+$/, "");
+      if (extractedText) {
+        try {
+          const nameRes = await api.autoNameDocument(extractedText);
+          if (nameRes?.document_name) certName = nameRes.document_name;
+        } catch (err) { /* fallback to file name */ }
+      }
+
+      const certList = [...(resumeJson.certifications || [])];
+      certList.push({
+        name: certName,
+        issuer: "PDF Credential",
+        date: new Date().getFullYear().toString(),
+        details: extractedText.slice(0, 150),
+      });
+
+      persistChanges({ ...resumeJson, certifications: certList }, null);
+      triggerToast("Certificate PDF uploaded & parsed successfully!", "success");
+    } catch (err: any) {
+      triggerToast("Failed to upload certificate: " + err.message, "error");
+    } finally {
+      setUploadingCert(false);
+      setUploadProgress("");
+    }
+  };
+
   // CL edit modifiers
   const handleClContactChange = (field: string, value: string) => {
     if (!clJson) return;
@@ -459,31 +628,97 @@ export default function EditorPage() {
                 </div>
               </div>
 
-              {/* Professional Summary card */}
+              {/* Professional Summary card with AI assistance */}
               <div className="glass-panel p-6 rounded-xl space-y-4">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-brand-indigo border-b border-brand-navy/10 pb-2">
-                  Professional Summary
-                </h3>
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-navy/10 pb-2">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-brand-indigo">
+                    Professional Summary
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleAiImproveSummary}
+                      disabled={improvingSummary}
+                      className="px-2.5 py-1 btn-secondary text-[10px] font-bold flex items-center gap-1.5 text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors"
+                    >
+                      {improvingSummary ? (
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Wand2 className="w-3 h-3" />
+                      )}
+                      AI Enhance
+                    </button>
+                    <button
+                      onClick={handleAiGenerateSummaryOptions}
+                      disabled={isGeneratingSummaryOptions}
+                      className="px-2.5 py-1 btn-secondary text-[10px] font-bold flex items-center gap-1.5 text-brand-indigo bg-brand-indigo/5 hover:bg-brand-indigo/10 transition-colors"
+                    >
+                      {isGeneratingSummaryOptions ? (
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-3 h-3" />
+                      )}
+                      AI Options
+                    </button>
+                  </div>
+                </div>
                 <textarea
                   className="w-full h-24 px-3 py-2 glass-input text-xs leading-relaxed"
                   value={resumeJson.professional_summary || ""}
                   onChange={(e) => persistChanges({ ...resumeJson, professional_summary: e.target.value }, null)}
                 />
+
+                {/* AI Summary Options cards if generated */}
+                {summaryOptions.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-brand-navy/10 animate-in fade-in">
+                    <p className="text-[10px] font-bold uppercase text-brand-navy/60">AI Suggested Variations (Click to Apply):</p>
+                    <div className="space-y-2">
+                      {summaryOptions.map((opt, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => {
+                            persistChanges({ ...resumeJson, professional_summary: opt }, null);
+                            triggerToast("Applied selected AI summary!", "success");
+                          }}
+                          className="p-3 bg-purple-50/50 hover:bg-purple-50 border border-purple-100 hover:border-purple-300 rounded-lg cursor-pointer transition-all text-xs text-brand-deep flex justify-between items-start gap-2 group"
+                        >
+                          <p className="flex-1 leading-relaxed">{opt}</p>
+                          <span className="text-[10px] font-bold text-purple-700 opacity-0 group-hover:opacity-100 transition-opacity bg-white px-2 py-0.5 rounded shadow-xs">
+                            Apply
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Skills Editor with reorder */}
+              {/* Skills Editor with AI suggestions and reorder */}
               <div className="glass-panel p-6 rounded-xl space-y-4">
-                <div className="flex justify-between items-center border-b border-brand-navy/10 pb-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-navy/10 pb-2">
                   <h3 className="text-sm font-bold uppercase tracking-wider text-brand-indigo">
                     Core Skills (Drag & Drop to Rank)
                   </h3>
-                  <button
-                    onClick={handleAddSkill}
-                    className="p-1 btn-secondary text-[10px] font-bold flex items-center gap-1"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Add Skill
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleAiGenerateSkills}
+                      disabled={isGeneratingSkills}
+                      className="px-2.5 py-1 btn-secondary text-[10px] font-bold flex items-center gap-1.5 text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors"
+                    >
+                      {isGeneratingSkills ? (
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-3 h-3" />
+                      )}
+                      AI Suggest Skills
+                    </button>
+                    <button
+                      onClick={handleAddSkill}
+                      className="p-1 btn-secondary text-[10px] font-bold flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add Skill
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2.5">
@@ -512,9 +747,29 @@ export default function EditorPage() {
                     </div>
                   ))}
                 </div>
+
+                {/* AI Suggested Skill Tags */}
+                {suggestedSkills.length > 0 && (
+                  <div className="space-y-2 pt-3 border-t border-brand-navy/10 animate-in fade-in">
+                    <p className="text-[10px] font-bold uppercase text-brand-navy/60">AI Suggested Skills (Click to Add):</p>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestedSkills.map((s, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleAddSuggestedSkill(s.name)}
+                          className="px-2.5 py-1 bg-purple-100 hover:bg-purple-200 text-purple-800 text-[11px] font-semibold rounded-md flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" />
+                          {s.name} ({s.type})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Work Experience Editor with inline achievements */}
+              {/* Work Experience Editor with AI rephraser */}
               <div className="glass-panel p-6 rounded-xl space-y-6">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-brand-indigo border-b border-brand-navy/10 pb-2">
                   Work Experience
@@ -568,34 +823,157 @@ export default function EditorPage() {
                         </div>
 
                         <div className="space-y-2">
-                          {(exp.achievements || []).map((bullet: string, bulletIdx: number) => (
-                            <div
-                              key={bulletIdx}
-                              draggable
-                              onDragStart={() => handleBulletDragStart(roleIdx, bulletIdx)}
-                              onDragOver={(e) => e.preventDefault()}
-                              onDrop={() => handleBulletDrop(roleIdx, bulletIdx)}
-                              className="flex items-start gap-2 bg-brand-navy/[0.02] border border-brand-navy/10 p-2 rounded-lg cursor-grab active:cursor-grabbing hover:border-brand-indigo/30"
-                            >
-                              <MoveVertical className="w-3.5 h-3.5 text-brand-navy/60 mt-1 flex-shrink-0" />
-                              <textarea
-                                className="flex-1 bg-transparent border-none p-0 m-0 outline-none text-xs text-brand-deep placeholder-brand-navy/30 resize-none h-auto focus:text-brand-deep leading-normal"
-                                rows={2}
-                                value={bullet}
-                                onChange={(e) => handleBulletEdit(roleIdx, bulletIdx, e.target.value)}
-                              />
-                              <button
-                                onClick={() => handleRemoveBullet(roleIdx, bulletIdx)}
-                                className="text-brand-navy/50 hover:text-red-500 p-1 flex-shrink-0"
+                          {(exp.achievements || []).map((bullet: string, bulletIdx: number) => {
+                            const bulletKey = `${roleIdx}-${bulletIdx}`;
+                            const isImproving = improvingBulletKey === bulletKey;
+                            return (
+                              <div
+                                key={bulletIdx}
+                                draggable
+                                onDragStart={() => handleBulletDragStart(roleIdx, bulletIdx)}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={() => handleBulletDrop(roleIdx, bulletIdx)}
+                                className="flex items-start gap-2 bg-brand-navy/[0.02] border border-brand-navy/10 p-2 rounded-lg cursor-grab active:cursor-grabbing hover:border-brand-indigo/30"
                               >
-                                <Trash className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
+                                <MoveVertical className="w-3.5 h-3.5 text-brand-navy/60 mt-1 flex-shrink-0" />
+                                <textarea
+                                  className="flex-1 bg-transparent border-none p-0 m-0 outline-none text-xs text-brand-deep placeholder-brand-navy/30 resize-none h-auto focus:text-brand-deep leading-normal"
+                                  rows={2}
+                                  value={bullet}
+                                  onChange={(e) => handleBulletEdit(roleIdx, bulletIdx, e.target.value)}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleAiImproveBullet(roleIdx, bulletIdx)}
+                                  disabled={isImproving}
+                                  title="Rephrase & enhance bullet with AI"
+                                  className="p-1 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded transition-colors flex-shrink-0 font-bold"
+                                >
+                                  {isImproving ? (
+                                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" />
+                                  ) : (
+                                    <Wand2 className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => handleRemoveBullet(roleIdx, bulletIdx)}
+                                  className="text-brand-navy/50 hover:text-red-500 p-1 flex-shrink-0"
+                                >
+                                  <Trash className="w-3 h-3" />
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Certificates & Credentials Section */}
+              <div className="glass-panel p-6 rounded-xl space-y-6">
+                <div className="flex items-center justify-between border-b border-brand-navy/10 pb-2">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-brand-indigo flex items-center gap-2">
+                    <Award className="w-4 h-4" />
+                    Certificates & Credentials
+                  </h3>
+                  <label className="px-3 py-1 btn-secondary text-[10px] font-bold flex items-center gap-1.5 cursor-pointer bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200">
+                    <Upload className="w-3 h-3" />
+                    {uploadingCert ? uploadProgress || "Uploading..." : "Upload Certificate (PDF)"}
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleUploadCertPdf}
+                      disabled={uploadingCert}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {/* List of existing certificates */}
+                {resumeJson.certifications && resumeJson.certifications.length > 0 ? (
+                  <div className="space-y-3">
+                    {resumeJson.certifications.map((cert: any, idx: number) => {
+                      const isObj = typeof cert === "object" && cert !== null;
+                      const cName = isObj ? cert.name : cert;
+                      const cIssuer = isObj ? cert.issuer : "";
+                      const cDate = isObj ? cert.date : "";
+                      const cDetails = isObj ? cert.details : "";
+
+                      return (
+                        <div
+                          key={idx}
+                          className="p-3 bg-brand-navy/[0.02] border border-brand-navy/10 hover:border-brand-indigo/30 rounded-lg flex items-start justify-between gap-3 transition-colors"
+                        >
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <h5 className="text-xs font-bold text-brand-deep truncate">{cName}</h5>
+                            {(cIssuer || cDate) && (
+                              <p className="text-[10px] text-brand-navy/60 font-semibold">
+                                {cIssuer}{cIssuer && cDate ? " • " : ""}{cDate}
+                              </p>
+                            )}
+                            {cDetails && (
+                              <p className="text-[11px] text-brand-navy/70 leading-snug line-clamp-2">{cDetails}</p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCertificate(idx)}
+                            className="text-brand-navy/40 hover:text-red-500 p-1"
+                          >
+                            <Trash className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-brand-navy/50 italic">No certificates added yet. Use the form below or upload a PDF.</p>
+                )}
+
+                {/* Add Manual Certificate Form */}
+                <div className="p-4 bg-brand-navy/[0.01] border border-brand-navy/10 rounded-xl space-y-3">
+                  <p className="text-[10px] font-bold uppercase text-brand-navy/60">Add Credential Manually</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input
+                      type="text"
+                      placeholder="Certificate Name (e.g. CCNA)"
+                      className="px-3 py-1.5 glass-input text-xs"
+                      value={newCertName}
+                      onChange={(e) => setNewCertName(e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Issuer (e.g. Cisco / TVET)"
+                      className="px-3 py-1.5 glass-input text-xs"
+                      value={newCertIssuer}
+                      onChange={(e) => setNewCertIssuer(e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Date / Year (e.g. 2026)"
+                      className="px-3 py-1.5 glass-input text-xs"
+                      value={newCertDate}
+                      onChange={(e) => setNewCertDate(e.target.value)}
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Credential details or description (optional)"
+                    className="w-full px-3 py-1.5 glass-input text-xs"
+                    value={newCertDetails}
+                    onChange={(e) => setNewCertDetails(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCertificate}
+                    disabled={!newCertName.trim()}
+                    className="px-4 py-2 btn-primary text-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Save Certificate
+                  </button>
                 </div>
               </div>
             </div>
