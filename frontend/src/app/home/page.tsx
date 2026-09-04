@@ -2826,6 +2826,7 @@ function DashboardContent() {
                       <option value="noma_resume_template_black.html">Noma Clean (Modern)</option>
                       <option value="note_resume_template_black.html">Note Serif (Classic)</option>
                       <option value="page_resume_template_black.html">Page Minimalist (Modern Border)</option>
+                      <option value="corporate_it_support_resume.html">Corporate IT Support Pro</option>
                     </select>
                     <p className="text-[10px] text-brand-navy/60">Selected layout format applied during single and batch resume generation.</p>
                   </div>

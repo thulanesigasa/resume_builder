@@ -34,3 +34,8 @@ ehthumbs.db
 Thumbs.db
 # Private Keys & Certificates
 *.pem
+
+# Scratch & Temporary Test Artifacts
+scratch/
+pdf_page_*.png
+

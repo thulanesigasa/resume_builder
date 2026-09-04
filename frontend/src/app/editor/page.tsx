@@ -732,6 +732,7 @@ export default function EditorPage() {
                       <option value="david_turner_resume.html">David Turner (Modern Classic)</option>
                       <option value="amy_stein_resume.html">Amy Stein (Elegant Design)</option>
                       <option value="ava_martinez_resume.html">Ava Martinez (Minimalist)</option>
+                      <option value="corporate_it_support_resume.html">Corporate IT Support Pro</option>
                     </>
                   ) : (
                     <>
