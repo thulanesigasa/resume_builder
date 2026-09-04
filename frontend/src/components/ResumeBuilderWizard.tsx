@@ -21,7 +21,9 @@ import {
   FileText,
   RefreshCw,
   Eye,
-  X
+  X,
+  Zap,
+  Sparkles
 } from "lucide-react";
 import { api, API_BASE_URL } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
@@ -183,18 +185,13 @@ function SortableSkillItem({ id, skill, index, onChangeName, onChangeLevel, onCh
 
       {/* Type, Level, Actions - stack horizontally on mobile if possible, or wrap */}
       <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-4 w-full md:w-auto">
-        {/* Skill type — compact vertical stack */}
-        <div className="flex flex-col gap-1.5 w-24 shrink-0">
-        <span className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Type</span>
-        <select 
-          className="w-full text-xs font-semibold px-2 py-1.5 border border-brand-navy/10 rounded focus:outline-none glass-input text-brand-deep"
-          value={skill.type || "Technical"}
-          onChange={(e) => onChangeType(e.target.value)}
-        >
-          <option value="Technical">Technical</option>
-          <option value="Soft">Soft</option>
-        </select>
-      </div>
+        {/* Skill type — Competency badge */}
+        <div className="flex flex-col gap-1.5 w-28 shrink-0">
+          <span className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Type</span>
+          <div className="w-full text-xs font-bold px-2 py-1.5 border border-brand-indigo/20 rounded glass-input text-brand-indigo bg-brand-indigo/5 flex items-center justify-center">
+            Competency
+          </div>
+        </div>
 
       {/* Skill level — compact vertical stack */}
       <div className="flex flex-col gap-1.5 w-36 shrink-0">
@@ -267,7 +264,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const [contact, setContact] = useState({ firstName: "", lastName: "", city: "", postalCode: "", phone: "", email: "" });
   const [experiences, setExperiences] = useState([{ id: "1", title: "", employer: "", startDate: "", endDate: "", city: "", current: false, description: "" }]);
   const [educations, setEducations] = useState([{ id: "1", school: "", degree: "", course: "", startDate: "", endDate: "", city: "", current: false, description: "" }]);
-  const [skills, setSkills] = useState<{id: string, name: string, level: string, type: "Technical" | "Soft"}[]>([{ id: "1", name: "", level: "Expert", type: "Technical" }]);
+  const [skills, setSkills] = useState<{id: string, name: string, level: string, type: "Competency"}[]>([{ id: "1", name: "", level: "Expert", type: "Competency" }]);
   const [summary, setSummary] = useState("");
   const [documentTitle, setDocumentTitle] = useState("Untitled Resume");
   const [format, setFormat] = useState({ template: "ats_resume_template.html", accentColor: "#4f46e5", titleFont: "BEBAS NEUE (DEFAULT)", bodyFont: "Lato (default)", language: "English" });
@@ -292,6 +289,9 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const [certUrls, setCertUrls] = useState<Record<string, string>>({});
   const [manualSaveSuccess, setManualSaveSuccess] = useState(false);
 
+  const [isSelectingCerts, setIsSelectingCerts] = useState(false);
+  const [autoSelectNotice, setAutoSelectNotice] = useState<string | null>(null);
+
   const [resumeCertificates, setResumeCertificates] = useState<Array<{
     id: string;
     name: string;
@@ -300,10 +300,11 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     selected: boolean;
     isEditing?: boolean;
   }>>([
-    { id: "cert-1", name: "Certificate of Completion in Technology", issuer: "Google / Coursera", date: "2024", selected: true },
-    { id: "cert-2", name: "English for IT Completion Certificate", issuer: "Pearson Academic", date: "2023", selected: true },
-    { id: "cert-3", name: "Digital Awareness Completion Certificate", issuer: "CISCO Networking Academy", date: "2023", selected: true },
-    { id: "cert-4", name: "Digital Content Creation Certificate", issuer: "Meta Blueprint", date: "2022", selected: true }
+    { id: "cert-1", name: "HCIA - Datacom Certification", issuer: "Huawei", date: "2024", selected: true },
+    { id: "cert-2", name: "Cisco Certified Network Associate (CCNA)", issuer: "Cisco Networking Academy", date: "2023", selected: true },
+    { id: "cert-3", name: "Responsive Web Design & Algorithms", issuer: "FreeCodeCamp", date: "2023", selected: true },
+    { id: "cert-4", name: "Certified Artificial Intelligence Practitioner (CAIP)", issuer: "AI CERTs", date: "2024", selected: true },
+    { id: "cert-5", name: "Innovation Campus Engineering Certificate", issuer: "Samsung Engineering", date: "2023", selected: true }
   ]);
 
   // --- New Advanced Upload States ---
@@ -351,7 +352,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
 
   // --- AI Skills State ---
   const [isGeneratingSkills, setIsGeneratingSkills] = useState(false);
-  const [skillsOptions, setSkillsOptions] = useState<{name: string, type: "Technical" | "Soft"}[]>([]);
+  const [skillsOptions, setSkillsOptions] = useState<{name: string, type: "Competency"}[]>([]);
 
   useEffect(() => {
     const fetchCerts = async () => {
@@ -658,8 +659,9 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
           },
           professional_summary: summary || "Results-driven professional with expertise in technical strategy and execution.",
           skills: skills.filter(s => s.name).map(s => s.name),
-          technical_skills: skills.filter(s => s.name && s.type === "Technical").map(s => s.name),
-          soft_skills: skills.filter(s => s.name && s.type === "Soft").map(s => s.name),
+          competencies: skills.filter(s => s.name).map(s => s.name),
+          technical_skills: [],
+          soft_skills: [],
           experience: experiences.filter(e => e.title || e.employer).map(e => ({
             company: e.employer || "Employer",
             title: e.title || "Job Title",
@@ -783,6 +785,78 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
       setValidationError("Failed to generate summary options. Make sure your profile has some data first.");
     } finally {
       setIsGeneratingSummary(false);
+    }
+  };
+
+  const handleAutoSelectTopCertificates = async () => {
+    if (resumeCertificates.length === 0) return;
+    setIsSelectingCerts(true);
+    setAutoSelectNotice(null);
+
+    try {
+      // Gather target role and domain context
+      const targetRole = experiences[0]?.title || documentTitle || "IT Support Engineer";
+      const targetText = `${targetRole} ${summary} ${skills.map(s => s.name).join(' ')}`.toLowerCase();
+
+      // Score each certificate
+      const scored = resumeCertificates.map(cert => {
+        const certText = `${cert.name} ${cert.issuer}`.toLowerCase();
+        let score = 0;
+
+        // Token matches
+        const certWords = certText.split(/\s+/).filter(w => w.length > 2);
+        certWords.forEach(w => {
+          if (targetText.includes(w)) score += 3;
+        });
+
+        // High priority institution matches (Huawei, Cisco, FreeCodeCamp, AI CERTs, Samsung Engineering)
+        const topInstitutions = [
+          'huawei', 'cisco', 'freecodecamp', 'freecode camp', 'ai certs', 'ai cert', 'samsung engineering', 'samsung'
+        ];
+        topInstitutions.forEach(inst => {
+          if (certText.includes(inst)) score += 8;
+        });
+
+        // Key domain keywords
+        const domainKeywords = [
+          'support', 'technician', 'engineer', 'comptia', 'aws', 'cloud', 'google', 
+          'cisco', 'huawei', 'freecodecamp', 'ai certs', 'samsung', 'network', 'security', 
+          'system', 'operating', 'it', 'cyber', 'developer', 'administrator', 'certified', 
+          'professional', 'expert', 'digital', 'hardware', 'datacom', 'ai'
+        ];
+        domainKeywords.forEach(kw => {
+          if (certText.includes(kw) && targetText.includes(kw)) score += 5;
+        });
+
+        // Recency bonus
+        const yrMatch = cert.date?.match(/\b(20\d\d)\b/);
+        if (yrMatch) {
+          const yr = parseInt(yrMatch[1], 10);
+          score += (yr - 2000) * 0.1;
+        }
+
+        return { ...cert, score };
+      });
+
+      // Sort descending by score
+      scored.sort((a, b) => b.score - a.score);
+
+      // Top 4 items selected
+      const maxCount = Math.min(4, scored.length);
+      const topIds = new Set(scored.slice(0, maxCount).map(c => c.id));
+
+      const updated = resumeCertificates.map(c => ({
+        ...c,
+        selected: topIds.has(c.id)
+      }));
+
+      setResumeCertificates(updated);
+      setAutoSelectNotice(`AI selected the top ${maxCount} most relevant certificates for optimal ATS formatting!`);
+      setTimeout(() => setAutoSelectNotice(null), 5000);
+    } catch (e) {
+      console.error("AI cert selection error:", e);
+    } finally {
+      setIsSelectingCerts(false);
     }
   };
 
@@ -1172,7 +1246,11 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
       };
       
       const res = await api.generateSkills(resumeData);
-      setSkillsOptions(res.skills || []);
+      const mapped = (res.skills || []).map((s: any) => ({
+        name: typeof s === 'string' ? s : (s.name || ""),
+        type: "Competency" as const
+      }));
+      setSkillsOptions(mapped);
     } catch (e: any) {
       console.error(e);
       alert("Failed to generate skills suggestions: " + e.message);
@@ -1340,8 +1418,9 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
         },
         professional_summary: summary || "",
         skills: skills.filter(s => s.name).map(s => s.name),
-        technical_skills: skills.filter(s => s.name && s.type === "Technical").map(s => s.name),
-        soft_skills: skills.filter(s => s.name && s.type === "Soft").map(s => s.name),
+        competencies: skills.filter(s => s.name).map(s => s.name),
+        technical_skills: [],
+        soft_skills: [],
         experience: experiences.filter(e => e.title || e.employer).map(e => ({
           company: e.employer || "Employer",
           title: e.title || "Job Title",
@@ -2025,11 +2104,24 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Amazon Web Services / CompTIA"
+                      placeholder="e.g. Huawei / Cisco / freeCodeCamp"
                       className="w-full px-3.5 py-2.5 glass-input text-xs text-brand-deep font-semibold"
                       value={newCertIssuer}
                       onChange={(e) => setNewCertIssuer(e.target.value)}
                     />
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      <span className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Quick:</span>
+                      {["Huawei", "Cisco", "FreeCodeCamp", "AI CERTs", "Samsung Engineering"].map(inst => (
+                        <button
+                          key={inst}
+                          type="button"
+                          onClick={() => setNewCertIssuer(inst)}
+                          className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-indigo/10 text-brand-indigo hover:bg-brand-indigo hover:text-white transition-all cursor-pointer"
+                        >
+                          {inst}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="relative">
@@ -2071,6 +2163,68 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                   </button>
                 </div>
               </div>
+
+              {/* AI Auto-Select Control Bar */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-brand-indigo/20 bg-brand-indigo/5">
+                <div>
+                  <h4 className="text-xs font-bold text-brand-deep flex items-center gap-1.5">
+                    <Zap className="w-4 h-4 text-brand-indigo" />
+                    AI Certificate Selector
+                  </h4>
+                  <p className="text-[11px] text-brand-navy/70 mt-0.5 font-medium">
+                    Automatically filter and select the top 4 or 5 most relevant certificates for your target role.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleAutoSelectTopCertificates}
+                    disabled={isSelectingCerts || resumeCertificates.length === 0}
+                    className="w-full sm:w-auto px-4 py-2 bg-brand-indigo hover:bg-brand-indigo/90 text-white font-extrabold text-xs rounded-lg flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSelectingCerts ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="w-3.5 h-3.5" />
+                    )}
+                    <span>AI Select Top 4</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setResumeCertificates(prev => prev.map(c => ({ ...c, selected: true })))}
+                    className="px-2.5 py-2 text-xs font-bold text-brand-navy/70 hover:text-brand-deep hover:bg-white/80 rounded-lg transition-colors cursor-pointer"
+                  >
+                    Select All
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setResumeCertificates(prev => prev.map(c => ({ ...c, selected: false })))}
+                    className="px-2.5 py-2 text-xs font-bold text-brand-navy/70 hover:text-brand-deep hover:bg-white/80 rounded-lg transition-colors cursor-pointer"
+                  >
+                    Deselect All
+                  </button>
+                </div>
+              </div>
+
+              {/* Toast / Warning Notice */}
+              {autoSelectNotice && (
+                <div className="p-3 rounded-xl bg-brand-indigo/15 border border-brand-indigo/30 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 text-xs font-bold text-brand-deep">
+                  <Check className="w-4 h-4 text-brand-indigo shrink-0" />
+                  <span>{autoSelectNotice}</span>
+                </div>
+              )}
+
+              {resumeCertificates.filter(c => c.selected).length > 5 && (
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-2 text-xs font-medium text-amber-900">
+                  <span className="font-bold text-amber-700 shrink-0">Tip:</span>
+                  <span>
+                    You currently have <strong>{resumeCertificates.filter(c => c.selected).length}</strong> certificates selected. Selecting 4 to 5 highly targeted certificates ensures optimal 1-page ATS formatting.
+                  </span>
+                </div>
+              )}
 
               {/* Certificates List */}
               <div className="space-y-4">
@@ -2261,7 +2415,7 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                                 : 'bg-white border-brand-indigo/20 text-brand-indigo hover:bg-brand-indigo hover:text-white hover:border-brand-indigo hover:scale-105 shadow-sm'
                             }`}
                           >
-                            {opt.name} <span className="text-[9px] opacity-70 ml-1">({opt.type})</span>
+                            {opt.name}
                           </button>
                         );
                       })}
@@ -2290,7 +2444,7 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
               </div>
 
               <button 
-                onClick={() => setSkills([...skills, { id: Date.now().toString(), name: "", level: "Expert", type: "Technical" }])}
+                onClick={() => setSkills([...skills, { id: Date.now().toString(), name: "", level: "Expert", type: "Competency" as any }])}
                 className="flex items-center gap-2 text-brand-indigo font-bold text-sm hover:underline"
               >
                 <Plus className="w-4 h-4" /> Add Skill

@@ -316,19 +316,11 @@ function DashboardContent() {
            name = s.name;
         }
         
-        let type = "Technical";
-        // Deduce type from r.soft_skills if available (works for AI-tailored and older CVs)
-        if (r.soft_skills && Array.isArray(r.soft_skills) && r.soft_skills.includes(name)) {
-            type = "Soft";
-        } else if (typeof s === 'object' && s.type) {
-            type = s.type;
-        }
-        
         return {
           id: Date.now().toString() + i,
           name: name || "",
           level: "Expert",
-          type: type
+          type: "Competency"
         };
       });
       
