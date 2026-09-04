@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SessionTimeout from "@/components/SessionTimeout";
+import ScrollToTopBottom from "@/components/ScrollToTopBottom";
 import { headers } from "next/headers";
 
 const geistSans = {
@@ -74,6 +75,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
         <SessionTimeout />
+        <ScrollToTopBottom />
         {children}
       </body>
     </html>
