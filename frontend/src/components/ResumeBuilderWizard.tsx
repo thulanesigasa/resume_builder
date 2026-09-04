@@ -285,10 +285,26 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const [uploadingCert, setUploadingCert] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
   const [newCertName, setNewCertName] = useState("");
+  const [newCertIssuer, setNewCertIssuer] = useState("");
+  const [newCertDate, setNewCertDate] = useState("");
   const [manualCertText, setManualCertText] = useState("");
   const certFileInputRef = useRef<HTMLInputElement>(null);
   const [certUrls, setCertUrls] = useState<Record<string, string>>({});
   const [manualSaveSuccess, setManualSaveSuccess] = useState(false);
+
+  const [resumeCertificates, setResumeCertificates] = useState<Array<{
+    id: string;
+    name: string;
+    issuer: string;
+    date: string;
+    selected: boolean;
+    isEditing?: boolean;
+  }>>([
+    { id: "cert-1", name: "Certificate of Completion in Technology", issuer: "Google / Coursera", date: "2024", selected: true },
+    { id: "cert-2", name: "English for IT Completion Certificate", issuer: "Pearson Academic", date: "2023", selected: true },
+    { id: "cert-3", name: "Digital Awareness Completion Certificate", issuer: "CISCO Networking Academy", date: "2023", selected: true },
+    { id: "cert-4", name: "Digital Content Creation Certificate", issuer: "Meta Blueprint", date: "2022", selected: true }
+  ]);
 
   // --- New Advanced Upload States ---
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
@@ -345,8 +361,16 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         .from("certificates")
         .select("*")
         .eq("user_id", session.user.id);
-      if (data) {
+      if (data && data.length > 0) {
         setCertificates(data);
+        const mapped = data.map((cert: any) => ({
+          id: cert.id,
+          name: cert.name || "Certificate",
+          issuer: cert.issuer || cert.company || "Issuing Institution",
+          date: cert.date || cert.valid_until || "2024",
+          selected: true
+        }));
+        setResumeCertificates(mapped);
         const urls: Record<string, string> = {};
         for (const cert of data) {
           const { data: signData } = await supabase.storage
@@ -505,7 +529,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     }
   }, [selectedTemplate, isLoaded]);
 
-const generateClientFallbackHtml = (formatData: any, contactData: any, expData: any[], eduData: any[], skillsData: any[], summaryText: string) => {
+const generateClientFallbackHtml = (formatData: any, contactData: any, expData: any[], eduData: any[], skillsData: any[], summaryText: string, certsData: any[] = []) => {
   const name = `${contactData.firstName || 'Your'} ${contactData.lastName || 'Name'}`.trim();
   const email = contactData.email || 'email@example.com';
   const phone = contactData.phone || '+27 12 344 5678';
@@ -576,6 +600,19 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
       <div class="job-company">University of South Africa</div>
     </div>
   `}
+
+  ${certsData && certsData.length > 0 ? `
+  <div class="section-title">Certifications</div>
+  ${certsData.map(c => `
+    <div style="margin-bottom: 8px;">
+      <div style="display:flex; justify-content:space-between; align-items: baseline;">
+        <span class="job-title" style="font-size:13px;">${c.name}</span>
+        ${c.date ? `<span style="font-size:11px; font-weight:600; color:#64748b;">${c.date}</span>` : ''}
+      </div>
+      ${c.issuer ? `<div class="job-company">${c.issuer}</div>` : ''}
+    </div>
+  `).join('')}
+  ` : ''}
   
   <div class="section-title">Skills</div>
   <div>
@@ -589,8 +626,18 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
   useEffect(() => {
     if (!isLoaded) return;
 
+    const activeCerts = resumeCertificates
+      .filter(c => c.selected && c.name.trim())
+      .map(c => ({
+        name: c.name,
+        issuer: c.issuer || "",
+        company: c.issuer || "",
+        date: c.date || "",
+        dates: c.date || ""
+      }));
+
     // Immediately render instant client fallback so preview is NEVER blank
-    const fallbackHtml = generateClientFallbackHtml(format, contact, experiences, educations, skills, summary);
+    const fallbackHtml = generateClientFallbackHtml(format, contact, experiences, educations, skills, summary, activeCerts);
     setPreviewHtml((prev) => prev || fallbackHtml);
 
     const timeoutId = setTimeout(async () => {
@@ -627,7 +674,7 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
             dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`,
             _wizard: { degree: e.degree, course: e.course, startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
           })),
-          certifications: [],
+          certifications: activeCerts,
           professional_memberships: [],
           professional_development: [],
           languages: [],
@@ -641,17 +688,17 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
         if (res?.html_content) {
           setPreviewHtml(res.html_content);
         } else {
-          setPreviewHtml(generateClientFallbackHtml(format, contact, experiences, educations, skills, summary));
+          setPreviewHtml(generateClientFallbackHtml(format, contact, experiences, educations, skills, summary, activeCerts));
         }
       } catch (e) {
         console.warn("Failed to load live preview", e);
-        setPreviewHtml(generateClientFallbackHtml(format, contact, experiences, educations, skills, summary));
+        setPreviewHtml(generateClientFallbackHtml(format, contact, experiences, educations, skills, summary, activeCerts));
       } finally {
         setIsPreviewLoading(false);
       }
     }, 200); // 200ms quick response
     return () => clearTimeout(timeoutId);
-  }, [contact, experiences, educations, skills, summary, format, isLoaded]);
+  }, [contact, experiences, educations, skills, summary, resumeCertificates, format, isLoaded]);
 
   // --- AI Handlers ---
   const handleImproveExperience = async (id: string, text: string, employer: string, title: string) => {
@@ -1309,7 +1356,15 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
           dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`,
           _wizard: { degree: e.degree, course: e.course, startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
         })),
-        certifications: [],
+        certifications: resumeCertificates
+          .filter(c => c.selected && c.name.trim())
+          .map(c => ({
+            name: c.name,
+            issuer: c.issuer || "",
+            company: c.issuer || "",
+            date: c.date || "",
+            dates: c.date || ""
+          })),
         professional_memberships: [],
         professional_development: [],
         languages: [],
@@ -1927,7 +1982,7 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
               <div>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-brand-deep tracking-tight">
-                    <span className="text-brand-indigo">Upload</span> your credentials & certificates
+                    <span className="text-brand-indigo">Select & Add</span> your certificates
                   </h2>
                   <button 
                     type="button"
@@ -1939,305 +1994,196 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                   </button>
                 </div>
                 <p className="text-brand-navy/70 font-medium text-xs sm:text-sm">
-                  Add certificates, transcripts, or awards. These will be saved in your profile credentials but won't print directly on this resume.
+                  Add certificates with the issuing company or institution and completion date. Check the boxes to select which certificates appear on your resume.
                 </p>
               </div>
 
-              {/* Upload Form */}
-              <div className="glass-panel p-6 rounded-xl border border-brand-navy/10 space-y-6">
-                
-                {/* Drag-and-drop zone */}
-                <div 
-                  onDragEnter={handleDrag}
-                  onDragOver={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDrop={handleDrop}
-                  className={`flex flex-col gap-2 p-6 border-2 border-dashed rounded-xl relative items-center justify-center text-center transition-all duration-300 ${
-                    isDragActive 
-                      ? 'border-brand-indigo bg-brand-indigo/[0.04] shadow-[0_0_20px_rgba(79,70,229,0.15)] scale-[1.01]' 
-                      : 'border-brand-navy/20 bg-brand-navy/[0.01] hover:bg-brand-navy/[0.02]'
-                  }`}
-                >
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    multiple
-                    ref={certFileInputRef}
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      if (files.length > 0) addFilesToUploadQueue(files);
-                    }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <Plus className={`w-10 h-10 mb-2 transition-transform duration-300 ${isDragActive ? 'text-brand-indigo scale-110' : 'text-brand-indigo/60'}`} />
-                  <span className="text-sm font-bold text-brand-deep">
-                    {isDragActive ? "Drop files here!" : "Drag & Drop PDF Certificates"}
-                  </span>
-                  <span className="text-xs text-brand-navy/60 mt-1">Or click to select files (PDF transcripts, certificates, degrees)</span>
-                </div>
+              {/* Add New Certificate Form */}
+              <div className="glass-panel p-6 rounded-xl border border-brand-navy/10 space-y-4">
+                <h3 className="text-sm font-bold text-brand-deep flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-brand-indigo" />
+                  Add Certificate to Resume
+                </h3>
 
-                {/* Queue Card Indicators */}
-                {uploadingFiles.length > 0 && (
-                  <div className="space-y-3 pt-2 border-t border-brand-navy/5">
-                    <p className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Upload Queue</p>
-                    <div className="grid gap-3">
-                      {uploadingFiles.map((f) => (
-                        <div 
-                          key={f.id}
-                          className={`p-4 rounded-xl border bg-white shadow-sm flex flex-col gap-3 transition-all duration-300 w-full overflow-hidden ${
-                            f.status === 'error' 
-                              ? 'border-red-200 bg-red-50/10' 
-                              : f.status === 'success' 
-                                ? 'border-brand-indigo/35 bg-brand-indigo/[0.01]' 
-                                : 'border-brand-navy/10 hover:border-brand-indigo/20'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-4 w-full">
-                            {/* File Info */}
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                f.status === 'error' 
-                                  ? 'bg-red-100 text-red-500' 
-                                  : f.status === 'success' 
-                                    ? 'bg-brand-indigo/15 text-brand-indigo' 
-                                    : 'bg-brand-indigo/10 text-brand-indigo animate-pulse'
-                              }`}>
-                                <FileText className="w-5 h-5" />
-                              </div>
-                              <div className="truncate flex-1 min-w-0">
-                                <h5 className="text-xs font-bold text-brand-deep truncate mb-0.5">
-                                  {f.status === 'success' && f.aiName ? f.aiName : f.name}
-                                </h5>
-                                <p className="text-[10px] text-brand-navy/50 font-semibold uppercase flex items-center gap-2">
-                                  <span>PDF</span>
-                                  <span>•</span>
-                                  <span>{formatBytes(f.size)}</span>
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Status or Controls */}
-                            <div className="flex items-center gap-2">
-                              {f.status === "uploading" && (
-                                <span className="text-[10px] font-bold text-brand-indigo bg-brand-indigo/10 px-2 py-0.5 rounded-full">
-                                  {f.progress}%
-                                </span>
-                              )}
-                              {f.status === "success" && (
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, isEditing: !item.isEditing } : item));
-                                    }}
-                                    className="text-[10px] font-bold text-brand-indigo hover:underline px-2 py-1"
-                                  >
-                                    {f.isEditing ? "Close" : "Edit Details"}
-                                  </button>
-                                  <span className="text-[10px] font-bold text-brand-indigo bg-brand-indigo/15 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                                    <Check className="w-3 h-3" /> Done
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteQueueCert(f.id, f.dbRecordId)}
-                                    className="text-brand-navy/40 hover:text-red-500 transition-colors p-1"
-                                    title="Delete certificate"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              )}
-                              {f.status === "error" && (
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => uploadSingleFile(f.id, f.file)}
-                                    className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-600 font-bold text-[10px] rounded-full flex items-center gap-1 transition-colors"
-                                  >
-                                    <RefreshCw className="w-3 h-3" /> Retry
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setUploadingFiles(prev => prev.filter(item => item.id !== f.id))}
-                                    className="text-brand-navy/40 hover:text-red-500 transition-colors p-1"
-                                    title="Dismiss"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Progress bar and upload details */}
-                          {f.status === "uploading" && (
-                            <div className="space-y-1.5">
-                              <div className="w-full h-1.5 bg-brand-navy/5 rounded-full overflow-hidden">
-                                <div 
-                                  className="h-full bg-brand-indigo transition-all duration-300"
-                                  style={{ width: `${f.progress}%` }}
-                                ></div>
-                              </div>
-                              <div className="flex justify-between text-[9px] font-bold text-brand-navy/60">
-                                <span>{f.speed}</span>
-                                <span>{f.eta}</span>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Inline Edit Panel */}
-                          {f.status === "success" && f.isEditing && (
-                            <div className="space-y-3 pt-2 border-t border-brand-navy/5 animate-in fade-in">
-                              <div className="relative">
-                                <label className="absolute -top-2 left-2.5 bg-white px-1 text-[9px] font-bold text-brand-navy/50 uppercase">Certificate Name</label>
-                                <input
-                                  type="text"
-                                  className="w-full px-3 py-2 border border-brand-navy/10 rounded-lg text-xs font-medium text-brand-deep focus:outline-none focus:border-brand-indigo"
-                                  value={f.aiName || ""}
-                                  onChange={(e) => {
-                                    const val = e.target.value;
-                                    setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, aiName: val } : item));
-                                  }}
-                                />
-                              </div>
-                              <div className="relative">
-                                <label className="absolute -top-2 left-2.5 bg-white px-1 text-[9px] font-bold text-brand-navy/50 uppercase">Credential Description</label>
-                                <textarea
-                                  className="w-full h-20 px-3 py-2 border border-brand-navy/10 rounded-lg text-[11px] font-medium text-brand-deep focus:outline-none focus:border-brand-indigo resize-none"
-                                  value={f.aiDescription || ""}
-                                  onChange={(e) => {
-                                    const val = e.target.value;
-                                    setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, aiDescription: val } : item));
-                                  }}
-                                />
-                              </div>
-                              <div className="flex justify-end gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setUploadingFiles(prev => prev.map(item => item.id === f.id ? { ...item, isEditing: false } : item));
-                                  }}
-                                  className="px-3 py-1.5 text-xs text-brand-navy/60 hover:text-brand-deep font-bold"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => f.dbRecordId && handleUpdateQueueCert(f.id, f.dbRecordId, f.aiName || "", f.aiDescription || "")}
-                                  className="px-4 py-1.5 bg-brand-indigo text-white font-bold text-[10px] rounded-lg transition-colors hover:bg-brand-indigo/90"
-                                >
-                                  Save Changes
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Error message */}
-                          {f.status === "error" && f.errorMsg && (
-                            <p className="text-[10px] font-bold text-red-500/80 bg-red-50 p-2 rounded-lg leading-snug">
-                              Error: {f.errorMsg}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-4 text-xs font-semibold text-brand-navy/40">
-                  <hr className="flex-1 border-brand-navy/10" />
-                  <span>OR MANUAL ENTRY</span>
-                  <hr className="flex-1 border-brand-navy/10" />
-                </div>
-
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="relative">
-                    <label className="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider rounded-md">Certificate Name</label>
+                    <label className="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider rounded-md">
+                      Certificate Name
+                    </label>
                     <input
                       type="text"
                       placeholder="e.g. AWS Certified Solutions Architect"
-                      className="w-full px-4 py-3 glass-input text-sm text-brand-deep font-medium"
+                      className="w-full px-3.5 py-2.5 glass-input text-xs text-brand-deep font-semibold"
                       value={newCertName}
                       onChange={(e) => setNewCertName(e.target.value)}
                     />
                   </div>
-                  
+
                   <div className="relative">
-                    <label className="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider rounded-md">Credential Description</label>
-                    <textarea
-                      placeholder="Paste manual credential text or description here..."
-                      className="w-full h-24 px-4 py-3 glass-input text-xs text-brand-deep font-medium resize-none"
-                      value={manualCertText}
-                      onChange={(e) => setManualCertText(e.target.value)}
+                    <label className="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider rounded-md">
+                      Company / Institution
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Amazon Web Services / CompTIA"
+                      className="w-full px-3.5 py-2.5 glass-input text-xs text-brand-deep font-semibold"
+                      value={newCertIssuer}
+                      onChange={(e) => setNewCertIssuer(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <label className="absolute -top-2.5 left-3 bg-white px-1 text-[10px] font-bold text-brand-navy/60 uppercase tracking-wider rounded-md">
+                      Date Received / Valid Until Date
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 2024 or Valid until Dec 2026"
+                      className="w-full px-3.5 py-2.5 glass-input text-xs text-brand-deep font-semibold"
+                      value={newCertDate}
+                      onChange={(e) => setNewCertDate(e.target.value)}
                     />
                   </div>
                 </div>
 
-                {/* Manual save success toast */}
-                {manualSaveSuccess && (
-                  <div className="flex items-center gap-2 p-3 bg-brand-indigo/5 border border-brand-indigo/20 rounded-xl animate-in fade-in slide-in-from-bottom-2">
-                    <Check className="w-4 h-4 text-brand-indigo flex-shrink-0" />
-                    <span className="text-sm font-semibold text-brand-deep">Certificate saved to your Credentials & Certificates!</span>
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleSaveManualCertificate}
-                  disabled={uploadingCert || (!newCertName.trim() || !manualCertText.trim())}
-                  className={`w-full py-3 text-sm flex items-center justify-center gap-2 disabled:opacity-50 rounded-xl font-bold transition-all duration-300 ${manualSaveSuccess ? 'bg-brand-indigo text-white shadow-brand-indigo/20 shadow-lg' : 'btn-primary'}`}
-                >
-                  {uploadingCert ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{uploadProgress}</span>
-                    </>
-                  ) : manualSaveSuccess ? (
-                    <>
-                      <Check className="w-4 h-4" />
-                      <span>Saved!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      <span>Save Certificate</span>
-                    </>
-                  )}
-                </button>
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!newCertName.trim()) return;
+                      const newItem = {
+                        id: Date.now().toString(),
+                        name: newCertName.trim(),
+                        issuer: newCertIssuer.trim() || "Accredited Institution",
+                        date: newCertDate.trim() || new Date().getFullYear().toString(),
+                        selected: true
+                      };
+                      setResumeCertificates(prev => [newItem, ...prev]);
+                      setNewCertName("");
+                      setNewCertIssuer("");
+                      setNewCertDate("");
+                    }}
+                    disabled={!newCertName.trim()}
+                    className="px-5 py-2.5 btn-primary text-xs font-bold flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Certificate to Resume</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Saved Certificates List */}
+              {/* Certificates List */}
               <div className="space-y-4">
-                <h4 className="text-sm font-bold text-brand-navy/70 uppercase tracking-wider">Saved Certificates</h4>
-                {certificates.length === 0 ? (
-                  <p className="text-xs text-brand-navy/50 italic">No certificates saved to your profile yet.</p>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-brand-navy/70 uppercase tracking-wider">
+                    Certificates for Resume ({resumeCertificates.filter(c => c.selected).length} selected)
+                  </h4>
+                  <span className="text-[11px] text-brand-navy/50 font-medium">
+                    Check or uncheck items to include on printed resume
+                  </span>
+                </div>
+
+                {resumeCertificates.length === 0 ? (
+                  <div className="p-6 text-center border border-dashed border-brand-navy/15 rounded-xl bg-slate-50/50">
+                    <p className="text-xs text-brand-navy/60 font-medium">No certificates added yet. Use the form above to add your certifications.</p>
+                  </div>
                 ) : (
-                  <div className="grid gap-2 max-h-60 overflow-y-auto pr-1">
-                    {certificates.map((cert) => (
+                  <div className="grid gap-3 max-h-96 overflow-y-auto pr-1">
+                    {resumeCertificates.map((cert) => (
                       <div
                         key={cert.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-white border border-brand-navy/10 hover:border-brand-indigo/30 transition-colors shadow-sm"
+                        className={`p-4 rounded-xl border transition-all duration-200 flex flex-col gap-3 ${
+                          cert.selected 
+                            ? 'bg-white border-brand-indigo/35 shadow-xs' 
+                            : 'bg-slate-50/60 border-brand-navy/10 opacity-70'
+                        }`}
                       >
-                        <span className="text-xs font-bold text-brand-deep truncate max-w-[70%]">{cert.name}</span>
-                        <div className="flex items-center gap-2">
-                          {certUrls[cert.id] && (
-                            <a
-                              href={certUrls[cert.id]}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="px-2.5 py-1 btn-secondary text-[10px] font-bold flex items-center gap-1"
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <input
+                              type="checkbox"
+                              checked={cert.selected}
+                              onChange={() => {
+                                setResumeCertificates(prev => prev.map(item => item.id === cert.id ? { ...item, selected: !item.selected } : item));
+                              }}
+                              className="rounded accent-brand-indigo w-4 h-4 cursor-pointer shrink-0"
+                            />
+                            <div className="truncate flex-1">
+                              <h5 className="text-sm font-extrabold text-brand-deep truncate">
+                                {cert.name}
+                              </h5>
+                              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-brand-navy/70 font-semibold mt-0.5">
+                                {cert.issuer && <span className="text-brand-indigo font-bold">{cert.issuer}</span>}
+                                {cert.issuer && cert.date && <span>•</span>}
+                                {cert.date && <span>{cert.date}</span>}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setResumeCertificates(prev => prev.map(item => item.id === cert.id ? { ...item, isEditing: !item.isEditing } : item));
+                              }}
+                              className="text-[11px] font-bold text-brand-indigo hover:underline px-2 py-1"
                             >
-                              View PDF
-                            </a>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCertInWizard(cert.id)}
-                            className="text-brand-navy/60 hover:text-red-500 transition-colors p-1"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                              {cert.isEditing ? "Done" : "Edit"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setResumeCertificates(prev => prev.filter(c => c.id !== cert.id));
+                              }}
+                              className="p-1.5 text-brand-navy/40 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+                              title="Delete certificate"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
+
+                        {/* Inline Edit Panel */}
+                        {cert.isEditing && (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-brand-navy/10 animate-in fade-in">
+                            <div>
+                              <label className="block text-[10px] font-bold text-brand-navy/60 uppercase mb-1">Certificate Name</label>
+                              <input
+                                type="text"
+                                className="w-full px-3 py-1.5 border border-brand-navy/15 rounded-lg text-xs font-semibold text-brand-deep focus:outline-none focus:border-brand-indigo"
+                                value={cert.name}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setResumeCertificates(prev => prev.map(item => item.id === cert.id ? { ...item, name: val } : item));
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-brand-navy/60 uppercase mb-1">Company / Institution</label>
+                              <input
+                                type="text"
+                                className="w-full px-3 py-1.5 border border-brand-navy/15 rounded-lg text-xs font-semibold text-brand-deep focus:outline-none focus:border-brand-indigo"
+                                value={cert.issuer}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setResumeCertificates(prev => prev.map(item => item.id === cert.id ? { ...item, issuer: val } : item));
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-brand-navy/60 uppercase mb-1">Date Received / Expiry</label>
+                              <input
+                                type="text"
+                                className="w-full px-3 py-1.5 border border-brand-navy/15 rounded-lg text-xs font-semibold text-brand-deep focus:outline-none focus:border-brand-indigo"
+                                value={cert.date}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setResumeCertificates(prev => prev.map(item => item.id === cert.id ? { ...item, date: val } : item));
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
