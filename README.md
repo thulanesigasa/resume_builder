@@ -9,9 +9,9 @@ Featuring a premium **Editorial Typography & Glassmorphic UI**, this project is 
 ## ✨ Features
 
 - **Next-Gen AI Compiler:** Our proprietary AI engine (powered by `gpt-4o-mini`) scans target job descriptions and aligns your background seamlessly to the requirements, rewriting bullet points for maximum semantic impact.
-- **Interactive Editor:** Fine-tune layouts instantly with an interactive UI. Complete control over your documents before generating final PDFs.
+- **Interactive Resume Builder:** Step-by-step interactive resume creator with AI summary options, bullet rephrasing, and certificate management.
 - **ATS-Optimized Architecture:** Server-side compiled PDFs ensure 100% readability by Greenhouse, Workday, Taleo, and other enterprise systems.
-- **Batch Autopilot:** Configure target job parameters and let the system automatically generate up to 50 tailored resumes and cover letters in the background. Includes dynamic bulk discounting tiers.
+- **Single Job Tailor & Batch Autopilot (Under Construction):** Single job URL scraper and bulk background autopilot modes are under active maintenance for upgraded ATS compatibility. Users are seamlessly guided to the Interactive Resume Builder.
 - **Premium User Experience:** Built on Next.js App Router with smooth layout transitions, stunning typography-led editorial bento grids, and high-end animations.
 - **Secure Architecture:** JWT authentication via Supabase, API validation with Pydantic, and strict role-based data isolation.
 - **10+ Professional Templates:** Includes Standard ATS, UI/UX Pro Max, Amy Stein, Ava Martinez, David Turner, Base Blueprint, Noma Clean, Note Serif, Page Minimalist, and Corporate IT Support Pro (`corporate_it_support_resume.html`).

@@ -1850,26 +1850,32 @@ function DashboardContent() {
                 </span>
                 <button
                   onClick={() => setActiveTab("generate")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     activeTab === "generate"
                       ? "bg-brand-indigo text-white shadow-sm"
                       : "text-brand-deep hover:bg-brand-navy/5"
                   }`}
                 >
-                  <Zap className="w-4 h-4" />
-                  Tailor (Single Job)
+                  <div className="flex items-center gap-2.5">
+                    <Zap className="w-4 h-4" />
+                    <span>Tailor (Single Job)</span>
+                  </div>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 font-normal">Maint</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("batch")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     activeTab === "batch"
                       ? "bg-brand-indigo text-white shadow-sm"
                       : "text-brand-deep hover:bg-brand-navy/5"
                   }`}
                 >
-                  <Briefcase className="w-4 h-4" />
-                  Batch Autopilot
+                  <div className="flex items-center gap-2.5">
+                    <Briefcase className="w-4 h-4" />
+                    <span>Batch Autopilot</span>
+                  </div>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 font-normal">Maint</span>
                 </button>
 
                 <button
@@ -1985,18 +1991,22 @@ function DashboardContent() {
                 onClick={() => setActiveTab("generate")}
                 className="space-y-3 cursor-pointer group"
               >
-                <h3 className="text-lg font-bold text-slate-900 group-hover:text-purple-600 transition-colors flex items-center gap-2">
-                  Tailor Resume (Single Job)
-                  <span className="text-purple-600 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">&rarr;</span>
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-purple-600 transition-colors flex items-center gap-2">
+                    Tailor Resume (Single Job)
+                  </h3>
+                  <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-amber-500/10 text-amber-700 border border-amber-500/20">
+                    Under Construction
+                  </span>
+                </div>
                 <p className="text-xs text-slate-600 leading-relaxed font-medium">
                   Extract requirements from a job URL or description text and instantly compile an ATS-optimized CV and cover letter.
                 </p>
                 <button
                   type="button"
-                  className="px-4 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-700 transition-colors cursor-pointer shadow-xs"
+                  className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold hover:bg-purple-600 hover:text-white transition-colors cursor-pointer"
                 >
-                  Start Single Tailoring
+                  View Status
                 </button>
               </div>
 
@@ -2004,18 +2014,22 @@ function DashboardContent() {
                 onClick={() => setActiveTab("batch")}
                 className="space-y-3 cursor-pointer group"
               >
-                <h3 className="text-lg font-bold text-slate-900 group-hover:text-purple-600 transition-colors flex items-center gap-2">
-                  Batch Autopilot
-                  <span className="text-purple-600 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all">&rarr;</span>
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-purple-600 transition-colors flex items-center gap-2">
+                    Batch Autopilot
+                  </h3>
+                  <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-amber-500/10 text-amber-700 border border-amber-500/20">
+                    Under Construction
+                  </span>
+                </div>
                 <p className="text-xs text-slate-600 leading-relaxed font-medium">
                   Upload job description links in bulk to automatically generate, score, and store multiple application packages.
                 </p>
                 <button
                   type="button"
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-800 hover:bg-purple-600 hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold hover:bg-purple-600 hover:text-white transition-colors cursor-pointer"
                 >
-                  Start Batch Autopilot
+                  View Status
                 </button>
               </div>
 
@@ -2873,288 +2887,80 @@ function DashboardContent() {
               </div>
             )}
 
-            {/* TAB B: TAILOR (SINGLE JOB) */}
+            {/* TAB B: TAILOR (SINGLE JOB) - UNDER CONSTRUCTION */}
             {activeTab === "generate" && (
               <div className="space-y-6 animate-in fade-in duration-300 w-full">
                 <div className="flex items-center justify-between border-b border-brand-navy/15 pb-3">
                   <h3 className="text-base font-bold text-brand-deep flex items-center gap-2">
                     <Zap className="w-5 h-5 text-brand-indigo" />
-                    AI Resume Generation Pipeline
+                    Tailor (Single Job)
                   </h3>
-                  <div className="flex items-center gap-4 text-xs">
-                    <label className="flex items-center gap-1.5 text-brand-navy/70 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isGeneral}
-                        onChange={(e) => setIsGeneral(e.target.checked)}
-                        className="rounded accent-brand-indigo"
-                      />
-                      Generalize CV
-                    </label>
-                  </div>
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-500/10 text-amber-700 border border-amber-500/20 flex items-center gap-1.5">
+                    <Construction className="w-3.5 h-3.5 text-amber-600" />
+                    Under Construction
+                  </span>
                 </div>
 
-                {!isGeneral && (
-                  <div className="space-y-4">
-                    <div className="flex gap-4 border-b border-brand-navy/10 pb-2">
-                      <button
-                        type="button"
-                        onClick={() => setInputMethod("scrape")}
-                        className={`text-xs font-semibold pb-1 ${
-                          inputMethod === "scrape" ? "text-brand-indigo border-b-2 border-brand-indigo" : "text-brand-navy/50"
-                        }`}
-                      >
-                        Scrape Job URL
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setInputMethod("paste")}
-                        className={`text-xs font-semibold pb-1 ${
-                          inputMethod === "paste" ? "text-brand-indigo border-b-2 border-brand-indigo" : "text-brand-navy/50"
-                        }`}
-                      >
-                        Paste Job Text
-                      </button>
-                    </div>
-
-                    {inputMethod === "scrape" ? (
-                      <div>
-                        <label className="block text-xs font-semibold text-brand-navy/70 uppercase mb-2">
-                          Job Description Listing URL
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="url"
-                            placeholder="https://www.linkedin.com/jobs/view/..."
-                            className="w-full px-4 py-2.5 glass-input text-sm"
-                            value={jobUrl}
-                            onChange={(e) => setJobUrl(e.target.value)}
-                            onBlur={async () => {
-                              if (jobUrl) {
-                                try {
-                                  const scrapeRes = await api.scrapeJob(jobUrl);
-                                  if (scrapeRes.requirements?.cover_letter && !includeCoverLetter) {
-                                    setIncludeCoverLetter(true);
-                                    triggerToast("AI detected a Cover Letter is recommended. We've checked the box for you!", "info");
-                                  }
-                                } catch (e) { /* ignore */ }
-                              }
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <label className="block text-xs font-semibold text-brand-navy/70 uppercase mb-2">
-                          Paste Job Description Text
-                        </label>
-                        <textarea
-                          placeholder="Copy and paste the listing description here..."
-                          className="w-full h-40 px-3 py-2 glass-input text-sm"
-                          value={jobText}
-                          onChange={(e) => setJobText(e.target.value)}
-                        />
-                      </div>
-                    )}
-
-
-                    <div className="pt-2">
-                      <label className="flex items-center gap-1.5 text-xs text-brand-navy/70 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={includeCoverLetter}
-                          onChange={(e) => setIncludeCoverLetter(e.target.checked)}
-                          className="rounded accent-brand-indigo"
-                        />
-                        Include Tailored Cover Letter (Combo rate of R25 applies)
-                      </label>
-                    </div>
+                <div className="p-8 rounded-2xl border border-brand-navy/15 bg-white/70 backdrop-blur-md shadow-sm text-center max-w-2xl mx-auto space-y-5 my-4">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto border border-amber-500/20">
+                    <Construction className="w-8 h-8" />
                   </div>
-                )}
-
-                <button
-                  onClick={handleGenerateWorkflow}
-                  disabled={generating || isRedirectingToPayfast}
-                  className="w-full py-3.5 btn-primary text-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {generating || isRedirectingToPayfast ? (
-                    <>
-                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                      <span>{isRedirectingToPayfast ? "Connecting to Payfast..." : "Generating..."}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-4.5 h-4.5" />
-                      Compile & Tailor (AI)
-                    </>
-                  )}
-                </button>
-
-                {/* Loading status panel */}
-                {generating && (
-                  <div className="p-4 rounded-xl border border-brand-navy/15 bg-brand-navy/[0.03] space-y-2.5 font-mono text-xs">
-                    <div className="text-brand-navy/70 flex items-center justify-between border-b border-brand-navy/10 pb-2">
-                      <span>Pipeline execution log:</span>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-brand-indigo" />
-                    </div>
-                    <div className="space-y-1 max-h-40 overflow-y-auto text-brand-deep">
-                      {genSteps.map((step, idx) => (
-                        <div key={idx} className="flex gap-2 items-start">
-                          <span className="text-brand-indigo">›</span>
-                          <span>{step}</span>
-                        </div>
-                      ))}
-                    </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="text-lg font-bold text-brand-deep">Single Job Tailoring is Under Construction</h4>
+                    <p className="text-xs text-brand-navy/70 leading-relaxed max-w-md mx-auto">
+                      We are upgrading our direct job scraper and AI single-job tailoring engine for maximum ATS compatibility. In the meantime, please use our Interactive Resume Builder to customize and generate your resumes.
+                    </p>
                   </div>
-                )}
+
+                  <div className="pt-2">
+                    <button
+                      onClick={() => setActiveTab("builder")}
+                      className="px-6 py-3 btn-primary text-xs font-bold inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Use Interactive Builder Instead
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* TAB C: BATCH AUTOPILOT */}
+            {/* TAB C: BATCH AUTOPILOT - UNDER CONSTRUCTION */}
             {activeTab === "batch" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-150 ease-out w-full">
-                <h3 className="text-base font-bold text-brand-deep border-b border-brand-navy/15 pb-3 flex items-center gap-2">
-                  <Globe className="w-5 h-5 text-brand-indigo" />
-                  Batch Auto-Pilot Mode
-                </h3>
-                <p className="text-xs text-brand-navy/70">
-                  Upload a plain text `.txt` file containing job description URLs (one URL per line). The AI builder will read each URL, generate, score, compile, and upload PDFs directly to your history.
-                </p>
+                <div className="flex items-center justify-between border-b border-brand-navy/15 pb-3">
+                  <h3 className="text-base font-bold text-brand-deep flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-brand-indigo" />
+                    Batch Auto-Pilot Mode
+                  </h3>
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-500/10 text-amber-700 border border-amber-500/20 flex items-center gap-1.5">
+                    <Construction className="w-3.5 h-3.5 text-amber-600" />
+                    Under Construction
+                  </span>
+                </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
-                      Upload Links File (.txt)
-                    </label>
-                    <div className="relative group cursor-pointer">
-                      <input
-                        type="file"
-                        accept=".txt"
-                        onChange={(e) => setBatchFile(e.target.files?.[0] || null)}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                      />
-                      <div className="p-6 border-2 border-dashed border-slate-300 hover:border-purple-600 rounded-2xl bg-slate-50/70 hover:bg-purple-50/40 transition-all flex flex-col items-center justify-center text-center space-y-3">
-                        <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold shadow-xs group-hover:scale-110 transition-transform">
-                          <Upload className="w-6 h-6" />
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-xs font-extrabold text-slate-900 group-hover:text-purple-600 transition-colors block">
-                            {batchFile ? batchFile.name : "Click or Drag & Drop .txt file here"}
-                          </span>
-                          <span className="text-[11px] text-slate-500 font-medium block">
-                            {batchFile ? `${(batchFile.size / 1024).toFixed(1)} KB file loaded` : "Plain text file containing job URLs (1 URL per line)"}
-                          </span>
-                        </div>
-                        <span className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-purple-700 transition-colors inline-flex items-center gap-2">
-                          <Upload className="w-3.5 h-3.5" />
-                          {batchFile ? "Change Selected File" : "Browse & Upload .txt File"}
-                        </span>
-                      </div>
-                    </div>
+                <div className="p-8 rounded-2xl border border-brand-navy/15 bg-white/70 backdrop-blur-md shadow-sm text-center max-w-2xl mx-auto space-y-5 my-4">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto border border-amber-500/20">
+                    <Construction className="w-8 h-8" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="text-lg font-bold text-brand-deep">Batch Auto-Pilot is Under Construction</h4>
+                    <p className="text-xs text-brand-navy/70 leading-relaxed max-w-md mx-auto">
+                      Batch link scanning and bulk queue processing are undergoing scheduled performance enhancements. You can build, tailor, and export individual resumes using our Interactive Resume Builder.
+                    </p>
                   </div>
 
-                  {!batchScrapedJobs ? (
+                  <div className="pt-2">
                     <button
-                      onClick={handleAnalyzeBatch}
-                      disabled={isAnalyzingBatch || batchProcessing}
-                      className="w-full py-3 btn-primary text-sm flex items-center justify-center gap-2"
+                      onClick={() => setActiveTab("builder")}
+                      className="px-6 py-3 btn-primary text-xs font-bold inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all"
                     >
-                      {isAnalyzingBatch ? (
-                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                      ) : (
-                        <>
-                          <Zap className="w-4 h-4" />
-                          Analyze Jobs & Quote
-                        </>
-                      )}
+                      <FileText className="w-4 h-4" />
+                      Use Interactive Builder Instead
                     </button>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="space-y-2 max-h-60 overflow-y-auto pr-1 border border-brand-navy/10 p-2 rounded-lg bg-brand-navy/[0.01]">
-                        {batchScrapedJobs.map((job, idx) => (
-                          <div key={idx} className="p-3 border border-brand-navy/10 rounded-lg bg-white shadow-sm flex items-start justify-between gap-3">
-                            <div className="truncate">
-                              <h5 className="text-sm font-bold text-brand-deep truncate">{job.job_title}</h5>
-                              <p className="text-xs text-brand-indigo truncate">{job.company_name}</p>
-                            </div>
-                            <label className="flex items-center gap-2 cursor-pointer text-[11px] font-semibold text-brand-navy/80 shrink-0 mt-1">
-                              <input 
-                                type="checkbox" 
-                                checked={job.requirements.cover_letter}
-                                onChange={() => {
-                                  const updated = [...batchScrapedJobs];
-                                  updated[idx] = { 
-                                    ...updated[idx], 
-                                    requirements: { ...updated[idx].requirements, cover_letter: !updated[idx].requirements.cover_letter } 
-                                  };
-                                  setBatchScrapedJobs(updated);
-                                }}
-                                className="rounded accent-brand-indigo w-3.5 h-3.5"
-                              />
-                              Cover Letter (+R10)
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="p-4 rounded-xl border border-brand-indigo/30 bg-brand-indigo/5 mt-4 flex items-center justify-between">
-                        <div>
-                          <h4 className="text-sm font-bold text-brand-deep">Quote Summary</h4>
-                          <div className="text-xs text-brand-navy/70 space-y-0.5 mt-1">
-                            <p>Resumes (R15): {batchScrapedJobs.filter(j => !j.requirements.cover_letter).length}</p>
-                            <p>Combos (R25): {batchScrapedJobs.filter(j => j.requirements.cover_letter).length}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-brand-navy/50 line-through">
-                            R {((batchScrapedJobs.filter(j => !j.requirements.cover_letter).length * 15) + (batchScrapedJobs.filter(j => j.requirements.cover_letter).length * 25)).toFixed(2)}
-                          </p>
-                          <p className="text-lg font-black text-brand-indigo">
-                            R {(((batchScrapedJobs.filter(j => !j.requirements.cover_letter).length * 15) + (batchScrapedJobs.filter(j => j.requirements.cover_letter).length * 25)) * 0.922).toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={handleBatchAutoPilot}
-                        disabled={batchProcessing || isRedirectingToPayfast}
-                        className="w-full py-3 btn-primary text-sm flex items-center justify-center gap-2"
-                      >
-                        {batchProcessing || isRedirectingToPayfast ? (
-                          <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        ) : (
-                          <>
-                            <Zap className="w-4 h-4" />
-                            Pay & Generate
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  )}
-
-                  {batchProcessing && (
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center text-xs text-brand-navy/70">
-                        <span>Overall Progress</span>
-                        <span>{batchProgress}%</span>
-                      </div>
-                      <div className="w-full bg-brand-navy/5 border border-brand-navy/10 h-2.5 rounded-full overflow-hidden">
-                        <div
-                          className="bg-brand-indigo h-full rounded-full transition-all duration-300"
-                          style={{ width: `${batchProgress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {(batchProcessing || batchLogs.length > 0) && (
-                    <div className="p-4 rounded-xl border border-brand-navy/15 bg-brand-navy/[0.03] space-y-2 font-mono text-xs max-h-60 overflow-y-auto">
-                      {batchLogs.map((log, idx) => (
-                        <div key={idx} className="text-brand-deep">
-                          {log}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
             )}
