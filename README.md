@@ -14,6 +14,7 @@ Featuring a premium **Editorial Typography & Glassmorphic UI**, this project is 
 - **Batch Autopilot:** Configure target job parameters and let the system automatically generate up to 50 tailored resumes and cover letters in the background. Includes dynamic bulk discounting tiers.
 - **Premium User Experience:** Built on Next.js App Router with smooth layout transitions, stunning typography-led editorial bento grids, and high-end animations.
 - **Secure Architecture:** JWT authentication via Supabase, API validation with Pydantic, and strict role-based data isolation.
+- **10+ Professional Templates:** Includes Standard ATS, UI/UX Pro Max, Amy Stein, Ava Martinez, David Turner, Base Blueprint, Noma Clean, Note Serif, Page Minimalist, and Corporate IT Support Pro (`corporate_it_support_resume.html`).
 
 ---
 

@@ -461,7 +461,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
             'base_resume_template_black.html',
             'noma_resume_template_black.html',
             'note_resume_template_black.html',
-            'page_resume_template_black.html'
+            'page_resume_template_black.html',
+            'corporate_it_support_resume.html'
           ];
           if (!validTemplates.includes(parsed.format.template)) {
             parsed.format.template = 'ats_resume_template.html';
@@ -2396,6 +2397,7 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                       { value: "noma_resume_template_black.html",  label: "Noma Clean",               description: "Spacious Scandinavian-inspired layout" },
                       { value: "note_resume_template_black.html",  label: "Note Serif",               description: "Elegant serif typeface layout" },
                       { value: "page_resume_template_black.html",  label: "Page Minimalist",          description: "Ultra-minimal single-page format" },
+                      { value: "corporate_it_support_resume.html", label: "Corporate IT Support Pro", description: "Structured corporate layout for IT & Chromebook support" },
                     ]}
                   />
 
