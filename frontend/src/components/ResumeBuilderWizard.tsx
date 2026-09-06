@@ -2255,14 +2255,14 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                     <p className="text-xs text-brand-navy/60 font-medium">No certificates added yet. Use the form above to add your certifications.</p>
                   </div>
                 ) : (
-                  <div className="grid gap-3.5">
+                  <div className="grid gap-3 max-h-[380px] overflow-y-auto pr-2">
                     {resumeCertificates.map((cert) => (
                       <div
                         key={cert.id}
                         className={`p-4 rounded-xl border transition-all duration-200 flex flex-col gap-3 ${
                           cert.selected 
-                            ? 'bg-white border-brand-indigo/35 shadow-xs' 
-                            : 'bg-slate-50/60 border-brand-navy/10 opacity-70'
+                            ? 'bg-white border-brand-indigo/40 shadow-xs' 
+                            : 'bg-slate-50/70 border-brand-navy/10 opacity-70'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
