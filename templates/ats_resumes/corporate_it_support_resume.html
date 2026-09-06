@@ -246,33 +246,5 @@
     </div>
     {% endif %}
 
-    {% if professional_memberships %}
-    <div class="section">
-        <div class="section-header">Professional Memberships</div>
-        <ul>
-            {% for item in professional_memberships %}
-            <li>{{ item }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% elif languages %}
-    <div class="section">
-        <div class="section-header">Languages</div>
-        <ul>
-            {% for lang in languages %}
-            <li>{{ lang }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% elif projects %}
-    <div class="section">
-        <div class="section-header">Key Projects</div>
-        <ul>
-            {% for proj in projects %}
-            <li>{{ proj }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
 </body>
 </html>
