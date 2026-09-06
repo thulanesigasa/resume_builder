@@ -398,6 +398,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     const cleaned = raw
       .replace(/\bCertifications?\b/gi, '')
       .replace(/\bCertificates?\b/gi, '')
+      .replace(/\bCompletions?\b/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
 
