@@ -391,7 +391,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   }
 
   function formatCertName(cert: any): string {
-    let raw = cert.name || "Credential";
+    let raw = typeof cert === 'string' ? cert : (cert?.name || "Credential");
     if (raw === "CCNA Completion Certificate" || (raw.includes("CCNA") && raw.includes("Completion Certificate"))) {
       raw = "CCNA : Introduction to Networks";
     }
@@ -2255,7 +2255,7 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                     <p className="text-xs text-brand-navy/60 font-medium">No certificates added yet. Use the form above to add your certifications.</p>
                   </div>
                 ) : (
-                  <div className="grid gap-3 max-h-96 overflow-y-auto pr-1">
+                  <div className="grid gap-3.5">
                     {resumeCertificates.map((cert) => (
                       <div
                         key={cert.id}
@@ -2277,7 +2277,7 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                             />
                             <div className="truncate flex-1">
                               <h5 className="text-sm font-extrabold text-brand-deep truncate">
-                                {cert.name}
+                                {formatCertName(cert)}
                               </h5>
                               <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-brand-navy/70 font-semibold mt-0.5">
                                 {cert.issuer && <span className="text-brand-indigo font-bold">{cert.issuer}</span>}
