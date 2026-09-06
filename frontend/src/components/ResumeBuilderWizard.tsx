@@ -395,12 +395,16 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     if (raw === "CCNA Completion Certificate" || (raw.includes("CCNA") && raw.includes("Completion Certificate"))) {
       raw = "CCNA : Introduction to Networks";
     }
-    const cleaned = raw
+    let cleaned = raw
       .replace(/\bCertifications?\b/gi, '')
       .replace(/\bCertificates?\b/gi, '')
       .replace(/\bCompletions?\b/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
+
+    if (/^repairs?$/i.test(cleaned) || /\brepairs?\b/i.test(cleaned) || /home\s+appliance/i.test(cleaned) || /consumer\s+electronics/i.test(cleaned)) {
+      return "Repairs of Home Appliances & Consumer";
+    }
 
     return cleaned || raw;
   }
