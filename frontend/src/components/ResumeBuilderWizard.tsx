@@ -354,6 +354,48 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
   const [isGeneratingSkills, setIsGeneratingSkills] = useState(false);
   const [skillsOptions, setSkillsOptions] = useState<{name: string, type: "Competency"}[]>([]);
 
+  function extractIssuerFromCert(cert: any): string {
+    if (cert.issuer && cert.issuer.trim() && cert.issuer !== "Issuing Institution") return cert.issuer.trim();
+    if (cert.company && cert.company.trim() && cert.company !== "Issuing Institution") return cert.company.trim();
+    if (cert.institution && cert.institution.trim() && cert.institution !== "Issuing Institution") return cert.institution.trim();
+
+    const text = `${cert.name || ""} ${cert.extracted_text || ""}`;
+    
+    if (/cisco/i.test(text)) return "Cisco Networking Academy";
+    if (/huawei/i.test(text)) return "Huawei";
+    if (/freecodecamp/i.test(text)) return "freeCodeCamp";
+    if (/ai\s*certs/i.test(text)) return "AI CERTs";
+    if (/samsung/i.test(text)) return "Samsung Engineering";
+    if (/modern\s+centric/i.test(text)) return "Modern Centric Academy";
+    if (/ember\s+initiative/i.test(text)) return "The Ember Initiative";
+    if (/comptia/i.test(text)) return "CompTIA";
+    if (/aws|amazon/i.test(text)) return "Amazon Web Services";
+    if (/google/i.test(text)) return "Google";
+    if (/meta/i.test(text)) return "Meta Blueprint";
+    if (/microsoft/i.test(text)) return "Microsoft";
+    if (/coursera/i.test(text)) return "Coursera";
+    if (/pearson/i.test(text)) return "Pearson Academic";
+
+    const offeredMatch = text.match(/(?:offered|issued|provided)\s+by\s+([A-Z][A-Za-z0-9\s]+?)(?=\s+(?:through|on|in|at|date|instructor|program|\.|\n|$))/i);
+    if (offeredMatch && offeredMatch[1]) return offeredMatch[1].trim();
+
+    return "Accredited Institution";
+  }
+
+  function extractDateFromCert(cert: any): string {
+    if (cert.date && cert.date.trim()) return cert.date.trim();
+    if (cert.valid_until && cert.valid_until.trim()) return cert.valid_until.trim();
+
+    const text = `${cert.extracted_text || ""}`;
+    const fullDateMatch = text.match(/\b(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+20\d\d)\b/i);
+    if (fullDateMatch) return fullDateMatch[1];
+
+    const yearMatch = text.match(/\b(20\d\d)\b/);
+    if (yearMatch) return yearMatch[1];
+
+    return new Date().getFullYear().toString();
+  }
+
   useEffect(() => {
     const fetchCerts = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -367,8 +409,8 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         const mapped = data.map((cert: any) => ({
           id: cert.id,
           name: cert.name || "Certificate",
-          issuer: cert.issuer || cert.company || "Issuing Institution",
-          date: cert.date || cert.valid_until || "2024",
+          issuer: extractIssuerFromCert(cert),
+          date: extractDateFromCert(cert),
           selected: true
         }));
         setResumeCertificates(mapped);
@@ -2084,19 +2126,6 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                       value={newCertIssuer}
                       onChange={(e) => setNewCertIssuer(e.target.value)}
                     />
-                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                      <span className="text-[10px] font-bold text-brand-navy/50 uppercase tracking-wider">Quick:</span>
-                      {["Huawei", "Cisco", "FreeCodeCamp", "AI CERTs", "Samsung Engineering"].map(inst => (
-                        <button
-                          key={inst}
-                          type="button"
-                          onClick={() => setNewCertIssuer(inst)}
-                          className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-indigo/10 text-brand-indigo hover:bg-brand-indigo hover:text-white transition-all cursor-pointer"
-                        >
-                          {inst}
-                        </button>
-                      ))}
-                    </div>
                   </div>
 
                   <div className="relative">
