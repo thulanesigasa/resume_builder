@@ -299,13 +299,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     date: string;
     selected: boolean;
     isEditing?: boolean;
-  }>>([
-    { id: "cert-1", name: "HCIA - Datacom Certification", issuer: "Huawei", date: "2024", selected: true },
-    { id: "cert-2", name: "Cisco Certified Network Associate (CCNA)", issuer: "Cisco Networking Academy", date: "2023", selected: true },
-    { id: "cert-3", name: "Responsive Web Design & Algorithms", issuer: "FreeCodeCamp", date: "2023", selected: true },
-    { id: "cert-4", name: "Certified Artificial Intelligence Practitioner (CAIP)", issuer: "AI CERTs", date: "2024", selected: true },
-    { id: "cert-5", name: "Innovation Campus Engineering Certificate", issuer: "Samsung Engineering", date: "2023", selected: true }
-  ]);
+  }>>([]);
 
   // --- New Advanced Upload States ---
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
@@ -411,7 +405,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
           name: cert.name || "Certificate",
           issuer: extractIssuerFromCert(cert),
           date: extractDateFromCert(cert),
-          selected: true
+          selected: false
         }));
         setResumeCertificates(mapped);
         const urls: Record<string, string> = {};
@@ -2152,7 +2146,7 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
                         name: newCertName.trim(),
                         issuer: newCertIssuer.trim() || "Accredited Institution",
                         date: newCertDate.trim() || new Date().getFullYear().toString(),
-                        selected: true
+                        selected: false
                       };
                       setResumeCertificates(prev => [newItem, ...prev]);
                       setNewCertName("");
