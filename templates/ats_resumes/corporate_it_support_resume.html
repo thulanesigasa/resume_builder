@@ -246,45 +246,32 @@
     </div>
     {% endif %}
 
-    {% if skills or technical_skills or soft_skills %}
+    {% if professional_memberships %}
     <div class="section">
-        <div class="section-header">Core Competencies</div>
-        <div class="skills-grid">
-            <div class="skills-col">
-                {% if technical_skills %}
-                <h3>Technical Skills</h3>
-                <ul>
-                    {% for skill in technical_skills %}
-                    <li>{{ skill }}</li>
-                    {% endfor %}
-                </ul>
-                {% elif skills and not technical_skills and not soft_skills %}
-                <ul>
-                    {% set half = (skills|length / 2)|round(0, 'ceil')|int %}
-                    {% for skill in skills[:half] %}
-                    <li>{{ skill }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-            <div class="skills-col">
-                {% if soft_skills %}
-                <h3>Soft Skills</h3>
-                <ul>
-                    {% for skill in soft_skills %}
-                    <li>{{ skill }}</li>
-                    {% endfor %}
-                </ul>
-                {% elif skills and not technical_skills and not soft_skills %}
-                <ul>
-                    {% set half = (skills|length / 2)|round(0, 'ceil')|int %}
-                    {% for skill in skills[half:] %}
-                    <li>{{ skill }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-        </div>
+        <div class="section-header">Professional Memberships</div>
+        <ul>
+            {% for item in professional_memberships %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% elif languages %}
+    <div class="section">
+        <div class="section-header">Languages</div>
+        <ul>
+            {% for lang in languages %}
+            <li>{{ lang }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% elif projects %}
+    <div class="section">
+        <div class="section-header">Key Projects</div>
+        <ul>
+            {% for proj in projects %}
+            <li>{{ proj }}</li>
+            {% endfor %}
+        </ul>
     </div>
     {% endif %}
 </body>
