@@ -246,5 +246,21 @@
     </div>
     {% endif %}
 
+    {% if key_projects or projects %}
+    <div class="section">
+        <div class="section-header">Key Projects</div>
+        <ul>
+            {% for proj in key_projects or projects %}
+            <li>
+                {% if proj is mapping %}
+                <strong>{{ proj.title or proj.name }}</strong>{% if proj.tech or proj.technologies %} ({{ proj.tech or proj.technologies }}){% endif %}{% if proj.description %}: {{ proj.description }}{% endif %}
+                {% else %}
+                {{ proj }}
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 </body>
 </html>
