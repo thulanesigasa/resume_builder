@@ -355,11 +355,11 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
 
     const text = `${cert.name || ""} ${cert.extracted_text || ""}`;
     
+    if (/samsung|repair|home\s+appliance|consumer\s+electronics/i.test(text)) return "Samsung";
     if (/cisco/i.test(text)) return "Cisco Networking Academy";
     if (/huawei/i.test(text)) return "Huawei";
     if (/freecodecamp/i.test(text)) return "freeCodeCamp";
     if (/ai\s*certs/i.test(text)) return "AI CERTs";
-    if (/samsung/i.test(text)) return "Samsung Engineering";
     if (/modern\s+centric/i.test(text)) return "Modern Centric Academy";
     if (/ember\s+initiative/i.test(text)) return "The Ember Initiative";
     if (/comptia/i.test(text)) return "CompTIA";
@@ -390,6 +390,20 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     return new Date().getFullYear().toString();
   }
 
+  function formatCertName(cert: any): string {
+    let raw = cert.name || "Credential";
+    if (raw === "CCNA Completion Certificate" || (raw.includes("CCNA") && raw.includes("Completion Certificate"))) {
+      raw = "CCNA : Introduction to Networks";
+    }
+    const cleaned = raw
+      .replace(/\bCertifications?\b/gi, '')
+      .replace(/\bCertificates?\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return cleaned || raw;
+  }
+
   useEffect(() => {
     const fetchCerts = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -402,7 +416,7 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
         setCertificates(data);
         const mapped = data.map((cert: any) => ({
           id: cert.id,
-          name: cert.name || "Certificate",
+          name: formatCertName(cert),
           issuer: extractIssuerFromCert(cert),
           date: extractDateFromCert(cert),
           selected: false
