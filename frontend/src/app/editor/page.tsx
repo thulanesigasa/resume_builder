@@ -127,18 +127,58 @@ export default function EditorPage() {
       const cachedResCount = localStorage.getItem("edit_resume_compile_count");
       const cachedClCount = localStorage.getItem("edit_cl_compile_count");
 
-      if (cachedResume) setResumeJson(JSON.parse(cachedResume));
-      if (cachedCl) setClJson(JSON.parse(cachedCl));
-      if (cachedCompany) setCompany(cachedCompany);
-      if (cachedJobTitle) setJobTitle(cachedJobTitle);
-      if (cachedAts) setAtsScore(JSON.parse(cachedAts));
-      if (cachedResTemplate) setSelectedResume(cachedResTemplate);
-      if (cachedClTemplate) setSelectedCl(cachedClTemplate);
-      if (cachedAppId) setAppId(cachedAppId);
-      if (cachedResCount) setResumeCount(parseInt(cachedResCount, 10));
-      if (cachedClCount) setClCount(parseInt(cachedClCount, 10));
-
-      setLoading(false);
+      // Redirect /editor route seamlessly to the Interactive Resume Builder tab
+      if (cachedResume) {
+        try {
+          const r = JSON.parse(cachedResume);
+          const contact = {
+            firstName: r.contact_info?._wizard?.firstName || r.contact_info?.name?.split(" ")[0] || "",
+            lastName: r.contact_info?._wizard?.lastName || r.contact_info?.name?.split(" ").slice(1).join(" ") || "",
+            city: r.contact_info?._wizard?.city || r.contact_info?.location || "",
+            postalCode: r.contact_info?._wizard?.postalCode || "",
+            phone: r.contact_info?.phone || "",
+            email: r.contact_info?.email || ""
+          };
+          const experiences = (r.experience || r.experiences || []).map((e: any, i: number) => ({
+            id: Date.now().toString() + i,
+            title: e.title || e.jobTitle || "",
+            employer: e.company || e.employer || "",
+            city: e.city || "",
+            startDate: e.startDate || "",
+            endDate: e.endDate || "",
+            current: e.current || false,
+            description: Array.isArray(e.achievements) ? e.achievements.join("\n") : (e.description || "")
+          }));
+          const educations = (r.education || r.educations || []).map((e: any, i: number) => ({
+            id: Date.now().toString() + i,
+            school: e.institution || e.school || "",
+            degree: e.degree || e.qualification || "",
+            course: e.course || "",
+            city: e.city || "",
+            startDate: e.startDate || "",
+            endDate: e.endDate || "",
+            current: e.current || false,
+            description: ""
+          }));
+          const skills = (r.skills || []).map((s: any, i: number) => ({
+            id: Date.now().toString() + i,
+            name: typeof s === 'object' ? s.name : s,
+            level: "Expert",
+            type: "Competency"
+          }));
+          const draft = {
+            contact,
+            experiences,
+            educations,
+            skills,
+            summary: r.professional_summary || r.summary || r.about || "",
+            documentTitle: cachedJobTitle ? `${cachedJobTitle} at ${cachedCompany || "Company"}` : "My Resume",
+            format: { template: cachedResTemplate || "corporate_it_support_resume.html", accentColor: "#4f46e5", titleFont: "BEBAS NEUE (DEFAULT)", bodyFont: "Lato", language: "English" }
+          };
+          localStorage.setItem("resume_wizard_draft", JSON.stringify(draft));
+        } catch (e) {}
+      }
+      router.push("/home?tab=builder");
     };
 
     initEditor();

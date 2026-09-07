@@ -558,58 +558,57 @@ export default function ResumeBuilderWizard({ selectedTemplate, onSave, onCancel
     return () => observer.disconnect();
   }, [isLoaded]);
 
-  // --- Load Draft on Mount ---
+  // --- Load Draft on Mount & Event ---
   useEffect(() => {
-    const draft = localStorage.getItem("resume_wizard_draft");
-    if (draft) {
-      try {
-        const parsed = JSON.parse(draft);
-        if (parsed.contact) setContact(parsed.contact);
-        if (parsed.experiences) setExperiences(parsed.experiences);
-        if (parsed.educations) setEducations(parsed.educations);
-        if (parsed.skills) {
-          const typedSkills = parsed.skills.map((s: any) => ({ ...s, type: s.type || "Technical" }));
-          setSkills(typedSkills);
-        }
-        // Map old draft 'about' to summary if summary is empty
-        if (parsed.summary) {
-          setSummary(parsed.summary);
-        } else if (parsed.about) {
-          setSummary(parsed.about);
-        }
-        if (parsed.documentTitle) setDocumentTitle(parsed.documentTitle);
-        if (typeof parsed.currentStep === 'number' && parsed.currentStep >= 0 && parsed.currentStep <= 7) {
-          setCurrentStep(parsed.currentStep);
-        }
-        if (parsed.format) {
-          // Backward compatibility check for old template names
-          const validTemplates = [
-            'ats_resume_template.html', 
-            'ui_ux_pro_max_resume.html', 
-            'amy_stein_resume.html', 
-            'ava_martinez_resume.html', 
-            'david_turner_resume.html',
-            'base_resume_template_black.html',
-            'noma_resume_template_black.html',
-            'note_resume_template_black.html',
-            'page_resume_template_black.html',
-            'corporate_it_support_resume.html'
-          ];
-          if (!validTemplates.includes(parsed.format.template)) {
-            parsed.format.template = 'ats_resume_template.html';
+    const loadDraft = () => {
+      const draft = localStorage.getItem("resume_wizard_draft");
+      if (draft) {
+        try {
+          const parsed = JSON.parse(draft);
+          if (parsed.contact) setContact(parsed.contact);
+          if (parsed.experiences) setExperiences(parsed.experiences);
+          if (parsed.educations) setEducations(parsed.educations);
+          if (parsed.skills) {
+            const typedSkills = parsed.skills.map((s: any) => ({ ...s, type: s.type || "Competency" }));
+            setSkills(typedSkills);
           }
-          console.log("[DEBUG DRAFT LOAD] Setting format from draft:", JSON.stringify(parsed.format));
-          setFormat(parsed.format);
-        } else {
-          console.log("[DEBUG DRAFT LOAD] No format in draft, keeping default");
+          if (parsed.summary) {
+            setSummary(parsed.summary);
+          } else if (parsed.about) {
+            setSummary(parsed.about);
+          }
+          if (parsed.documentTitle) setDocumentTitle(parsed.documentTitle);
+          if (typeof parsed.currentStep === 'number' && parsed.currentStep >= 0 && parsed.currentStep <= 7) {
+            setCurrentStep(parsed.currentStep);
+          }
+          if (parsed.format) {
+            const validTemplates = [
+              'ats_resume_template.html', 
+              'ui_ux_pro_max_resume.html', 
+              'amy_stein_resume.html', 
+              'ava_martinez_resume.html', 
+              'david_turner_resume.html',
+              'base_resume_template_black.html',
+              'noma_resume_template_black.html',
+              'note_resume_template_black.html',
+              'page_resume_template_black.html',
+              'corporate_it_support_resume.html'
+            ];
+            if (!validTemplates.includes(parsed.format.template)) {
+              parsed.format.template = 'corporate_it_support_resume.html';
+            }
+            setFormat(parsed.format);
+          }
+        } catch (e) {
+          console.error("Failed to parse draft", e);
         }
-      } catch (e) {
-        console.error("Failed to parse draft");
       }
-    } else {
-      console.log("[DEBUG DRAFT LOAD] No draft found in localStorage");
-    }
-    setIsLoaded(true);
+      setIsLoaded(true);
+    };
+
+    loadDraft();
+    window.addEventListener("resume_wizard_draft_updated", loadDraft);
+    return () => window.removeEventListener("resume_wizard_draft_updated", loadDraft);
   }, []);
 
   // --- Save Draft on Change ---
