@@ -36,6 +36,57 @@ import { CSS } from '@dnd-kit/utilities';
 // --- MonthYearPicker Component ---
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+function formatEducationDateForDisplay(dateStr?: string, isCurrent?: boolean): string {
+  if (isCurrent) return 'Present';
+  if (!dateStr || !dateStr.trim()) return '';
+
+  const str = dateStr.trim();
+
+  if (/^[A-Za-z]{3}\s+\d{4}$/.test(str) || /^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$/.test(str)) {
+    return str;
+  }
+
+  if (str.includes(' - ')) {
+    const parts = str.split(' - ');
+    const endPart = parts[parts.length - 1].trim();
+    return formatEducationDateForDisplay(endPart, isCurrent);
+  }
+
+  const yyyyMmMatch = str.match(/^(\d{4})-(\d{1,2})$/);
+  if (yyyyMmMatch) {
+    const yyyy = yyyyMmMatch[1];
+    const mmIdx = parseInt(yyyyMmMatch[2], 10) - 1;
+    if (mmIdx >= 0 && mmIdx < 12) {
+      return `${MONTHS[mmIdx]} ${yyyy}`;
+    }
+    return yyyy;
+  }
+
+  const yyyyMmDdMatch = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (yyyyMmDdMatch) {
+    const yyyy = yyyyMmDdMatch[1];
+    const mmIdx = parseInt(yyyyMmDdMatch[2], 10) - 1;
+    const dd = parseInt(yyyyMmDdMatch[3], 10);
+    if (mmIdx >= 0 && mmIdx < 12) {
+      return `${dd} ${MONTHS[mmIdx]} ${yyyy}`;
+    }
+    return yyyy;
+  }
+
+  if (/^\d{4}$/.test(str)) {
+    return str;
+  }
+
+  if (/^\d{1,2}$/.test(str)) {
+    const mmIdx = parseInt(str, 10) - 1;
+    if (mmIdx >= 0 && mmIdx < 12) {
+      return `${MONTHS[mmIdx]} 2026`;
+    }
+  }
+
+  return str;
+}
+
 function MonthYearPicker({ value, onChange, label, disabled = false }: { value: string; onChange: (v: string) => void; label: string; disabled?: boolean }) {
   const [open, setOpen] = useState(false);
   // Open with year-first, then switch to month after year is chosen
@@ -638,23 +689,21 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
     </div>
   `}
   
-  <div class="section-title">Education</div>
-  ${eduData.length > 0 && eduData.some(e => e.school || e.degree) ? eduData.filter(e => e.school || e.degree).map(e => `
-    <div style="margin-bottom: 10px;">
-      <div style="display:flex; justify-content:space-between;">
-        <span class="job-title">${e.degree || 'Degree'} ${e.course ? '- ' + e.course : ''}</span>
-        <span style="font-size:11px; color:#64748b;">${e.startDate || '2017'} - ${e.endDate || '2021'}</span>
-      </div>
-      <div class="job-company">${e.school || 'University Name'}</div>
-    </div>
-  `).join('') : `
-    <div style="margin-bottom: 10px;">
-      <div style="display:flex; justify-content:space-between;">
-        <span class="job-title">Bachelor of Science in Information Technology</span>
-        <span style="font-size:11px; color:#64748b;">2017 - 2021</span>
-      </div>
-      <div class="job-company">University of South Africa</div>
-    </div>
+  <div class="section-title">Education & Professional Development</div>
+  ${eduData.length > 0 && eduData.some(e => e.school || e.degree || e.institution) ? `
+    <ul>
+      ${eduData.filter(e => e.school || e.degree || e.institution).map(e => {
+        const d = formatEducationDateForDisplay(e.endDate || e.startDate || e.dates || e.display_date, e.current);
+        const deg = e.degree || e.qualification || 'Degree';
+        const inst = e.school || e.institution ? ` – ${e.school || e.institution}` : '';
+        const dateStr = d ? ` (${d})` : '';
+        return `<li style="margin-bottom:4px;"><strong>${deg}</strong>${inst}${dateStr}</li>`;
+      }).join('')}
+    </ul>
+  ` : `
+    <ul>
+      <li style="margin-bottom:4px;"><strong>Bachelor of Science in Information Technology</strong> – University of South Africa (2021)</li>
+    </ul>
   `}
 
   ${certsData && certsData.length > 0 ? `
@@ -724,13 +773,18 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
             achievements: e.description ? e.description.split('\n').filter(l => l.trim()) : [],
             _wizard: { startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
           })),
-          education: educations.filter(e => e.school || e.degree).map(e => ({
-            institution: e.school || "Institution Name",
-            degree: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
-            qualification: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
-            dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`,
-            _wizard: { degree: e.degree, course: e.course, startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
-          })),
+          education: educations.filter(e => e.school || e.degree).map(e => {
+            const formattedDate = formatEducationDateForDisplay(e.endDate || e.startDate, e.current);
+            return {
+              institution: e.school || "Institution Name",
+              degree: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
+              qualification: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
+              dates: formattedDate || (e.startDate && e.endDate ? `${e.startDate} - ${e.endDate}` : e.startDate || e.endDate || ""),
+              endDate: formattedDate || e.endDate || "",
+              display_date: formattedDate,
+              _wizard: { degree: e.degree, course: e.course, startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
+            };
+          }),
           certifications: activeCerts,
           professional_memberships: [],
           professional_development: [],
@@ -1469,13 +1523,18 @@ const generateClientFallbackHtml = (formatData: any, contactData: any, expData: 
           achievements: e.description ? e.description.split('\n').filter(l => l.trim()) : [],
           _wizard: { startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
         })),
-        education: educations.filter(e => e.school || e.degree).map(e => ({
-          institution: e.school || "Institution Name",
-          degree: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
-          qualification: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
-          dates: `${e.startDate} - ${e.current ? 'Present' : e.endDate}`,
-          _wizard: { degree: e.degree, course: e.course, startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
-        })),
+        education: educations.filter(e => e.school || e.degree).map(e => {
+          const formattedDate = formatEducationDateForDisplay(e.endDate || e.startDate, e.current);
+          return {
+            institution: e.school || "Institution Name",
+            degree: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
+            qualification: e.course ? `${e.degree} - ${e.course}` : (e.degree || "Degree"),
+            dates: formattedDate || (e.startDate && e.endDate ? `${e.startDate} - ${e.endDate}` : e.startDate || e.endDate || ""),
+            endDate: formattedDate || e.endDate || "",
+            display_date: formattedDate,
+            _wizard: { degree: e.degree, course: e.course, startDate: e.startDate, endDate: e.endDate, current: e.current, city: e.city }
+          };
+        }),
         certifications: resumeCertificates
           .filter(c => c.selected && c.name.trim())
           .map(c => ({

@@ -216,13 +216,7 @@
         <ul>
             {% for edu in education %}
             <li>
-                <strong>{{ edu.degree }}</strong>
-                {% if edu.institution %} – {{ edu.institution }}{% endif %}
-                {% if edu.endDate %}
-                ({{ edu.endDate }})
-                {% elif edu.dates %}
-                ({{ edu.dates.split('-')[-1].strip() }})
-                {% endif %}
+                <strong>{{ edu.degree or edu.qualification }}</strong>{% if edu.institution %} – {{ edu.institution }}{% endif %}{% set d = edu.display_date or (edu.endDate | format_edu_date) or (edu.dates | format_edu_date) %}{% if d %} ({{ d }}){% endif %}
             </li>
             {% endfor %}
         </ul>
